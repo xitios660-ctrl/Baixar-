@@ -1240,6 +1240,7 @@ impl App {
     fn tocar_vod(&mut self, titulo: String, urls: Vec<String>, fonte: usize, nova: bool) {
         if self.aba != Aba::Canais { self.origem_do_vod = self.aba; }
         self.retomou_canal = true;
+        self.digitado.clear();
         self.lista_aberta = false;
         self.guia_aberto = false;
         // Trocar de filme fecha a conta do anterior antes de perder a posição.
@@ -2190,7 +2191,7 @@ impl App {
         let escrevendo = ctx.text_edit_focused();
 
         // Número de canal, e o código que revela a lista restrita.
-        if !escrevendo && self.aba == Aba::Canais {
+        if !escrevendo && self.aba == Aba::Canais && self.tocando_vod.is_none() {
             for c in texto_digitado.chars().filter(|c| c.is_ascii_digit()) {
                 self.digito(c);
             }
@@ -2274,16 +2275,16 @@ impl App {
             }
             egui::Key::F | egui::Key::F11 => self.alternar_tela_cheia(ctx),
             egui::Key::F1 | egui::Key::H => self.ajuda_aberta = !self.ajuda_aberta,
-            egui::Key::G => {
+            egui::Key::G if self.aba == Aba::Canais && self.tocando_vod.is_none() => {
                 self.guia_aberto = !self.guia_aberto;
                 self.abrir_secao(Aba::Canais);
             }
-            egui::Key::L => self.lista_aberta = !self.lista_aberta,
+            egui::Key::L if self.tocando_vod.is_none() => self.lista_aberta = !self.lista_aberta,
             egui::Key::M => self.alternar_mudo(),
             egui::Key::Plus | egui::Key::Equals => self.mudar_volume(5),
             egui::Key::Minus => self.mudar_volume(-5),
-            egui::Key::PageUp => self.pular_canal(-1),
-            egui::Key::PageDown => self.pular_canal(1),
+            egui::Key::PageUp if self.aba == Aba::Canais && self.tocando_vod.is_none() => self.pular_canal(-1),
+            egui::Key::PageDown if self.aba == Aba::Canais && self.tocando_vod.is_none() => self.pular_canal(1),
             egui::Key::D if self.aba == Aba::Canais => {
                 if self.outra_tela.is_some() {
                     self.sair_da_multi_tela();
@@ -2773,6 +2774,7 @@ impl App {
 
     /// Canal vizinho na lista que está na tela; -1 é o de cima.
     pub fn pular_canal(&mut self, passo: i64) {
+        if self.tocando_vod.is_some() { return; }
         let visiveis = self.visiveis();
         if visiveis.is_empty() {
             return;
