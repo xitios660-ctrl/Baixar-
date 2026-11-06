@@ -1,0 +1,26 @@
+name: GUHFLIX Windows native
+on:
+  push:
+    branches: [guhflix-windows]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  native-tests:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    env:
+      CARGO_PROFILE_RELEASE_LTO: false
+      CARGO_PROFILE_RELEASE_CODEGEN_UNITS: 16
+      CARGO_PROFILE_RELEASE_OPT_LEVEL: 2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Native tests including Windows DPAPI
+        run: cargo test --locked
+      - name: Build native Windows executable
+        run: cargo build --release --locked
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GUHFLIX-Windows-native
+          path: target/release/guhflix-windows.exe
