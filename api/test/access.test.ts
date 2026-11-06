@@ -1,16 +1,23 @@
 import {test} from 'node:test';import assert from 'node:assert/strict';import {randomUUID} from 'node:crypto';import {MongoMemoryReplSet} from 'mongodb-memory-server';import {connect} from '../src/db.js';import {createApp} from '../src/app.js';import argon2 from 'argon2';import {TOTP,Secret} from 'otpauth';
 test('GUHFLIX full subscription, authentication and concurrency flow',async()=>{
- const repl=await MongoMemoryReplSet.create({replSet:{count:1},binary:{version:'7.0.14'}});const {client,db}=await connect(repl.getUri(),'GUHFLIX_TEST');let clock=new Date();const now=()=>new Date(clock);const app=await createApp({client,db,secret:'x'.repeat(64),adminOrigin:'https://admin.example.com',production:false,now});
- const pass='Safe-Integration-Password-2026',secret=new Secret().base32;const admin=await db.collection('users').insertOne({username:'admin',passwordHash:await argon2.hash(pass),totpSecret:secret,role:'admin',status:'enabled',sessionVersion:1,expiresAt:null,slots:[],createdAt:now()});
+ const repl=await MongoMemoryReplSet.create({replSet:{count:1},binary:{version:'7.0.14'}});const {client,db}=await connect(repl.getUri(),'GUHFLIX_TEST');let clock=new Date();const now=()=>new Date(clock);const app=await createApp({client,db,secret:'x'.repeat(64),adminOrigin:'https://admin.example.com',production:false,now,bootstrapToken:'b'.repeat(64)});
+ const pass='Safe-Integration-Password-2026',secret=new Secret().base32;
  const request=async(method:string,url:string,body?:any,access?:string,extra:any={})=>app.inject({method:method as any,url,headers:{...(access?{authorization:'Bearer '+access}:{}),...extra},...(body?{payload:body}:{})});
  const login=async(user:string,clientType='tv')=>request('POST','/api/auth/login',{username:user,password:pass,installationId:randomUUID(),client:clientType,...(clientType==='admin'?{otp:new TOTP({secret:Secret.fromBase32(secret)}).generate({timestamp:clock.getTime()})}:{})});
  try{
+ const setup={token:'b'.repeat(64),username:'admin',password:pass,totpSecret:secret,otp:new TOTP({secret:Secret.fromBase32(secret)}).generate({timestamp:clock.getTime()})};
+ assert.equal((await request('POST','/api/setup/create',{...setup,token:'z'.repeat(64)})).statusCode,403);
+ assert.equal((await request('POST','/api/setup/create',setup)).statusCode,200);
+ assert.equal((await request('POST','/api/setup/create',setup)).statusCode,409);
  assert.equal((await request('GET','/api/admin/users')).statusCode,401);
  assert.equal((await request('POST','/api/auth/login',{username:{$ne:null},password:pass,installationId:randomUUID()})).statusCode,400);
  assert.equal((await request('POST','/api/auth/login',{username:'admin',password:'wrong',installationId:randomUUID()})).statusCode,401);
  const ar=await login('admin','admin');assert.equal(ar.statusCode,200,ar.body);const at=ar.json().accessToken;
  const created=await request('POST','/api/admin/users',{username:'customer',password:pass},at);assert.equal(created.statusCode,200,created.body);const uid=created.json().id;
- const first=await login('customer');assert.equal(first.statusCode,200);const one=first.json();assert.equal((await request('GET','/api/admin/users',undefined,one.accessToken)).statusCode,403);
+ const first=await login('customer');assert.equal(first.statusCode,200);const one=first.json();
+ const restarted=await createApp({client,db,secret:'x'.repeat(64),adminOrigin:'https://admin.example.com',production:false,now});
+ const resumed=await restarted.inject({method:'POST',url:'/api/auth/refresh',payload:{refreshToken:one.refreshToken}});assert.equal(resumed.statusCode,200);one.refreshToken=resumed.json().refreshToken;one.accessToken=resumed.json().accessToken;await restarted.close();
+assert.equal((await request('GET','/api/admin/users',undefined,one.accessToken)).statusCode,403);
  assert.equal((await request('GET','/api/app/access',undefined,one.accessToken)).json().state,'expired');assert.equal((await request('POST','/api/app/playback/start',{playbackId:randomUUID()},one.accessToken)).statusCode,403);
  const k=randomUUID(),renew={days:30,paymentConfirmed:true,amountCents:3000,method:'pix'};
  const duplicate=await Promise.all(Array.from({length:6},()=>request('POST',`/api/admin/users/${uid}/renew`,renew,at,{'idempotency-key':k})));assert(duplicate.every(r=>r.statusCode===200),duplicate.map(r=>r.body).join('\n'));assert.equal(await db.collection('payments').countDocuments({userId:uid}),1);assert.equal(new Date(duplicate[0].json().expiresAt).getTime(),clock.getTime()+30*86400000);
