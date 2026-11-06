@@ -122,7 +122,7 @@ pub fn erro_fatal(mensagem: &str) {
     );
     #[cfg(windows)]
     janela_de_erro(&format!(
-        "O Saimo TV não conseguiu abrir a janela.\n\n{mensagem}\n\nO detalhe ficou em:\n{}\n\nSe o problema continuar, envie esse arquivo (falhas.txt e inicio.txt) e informe a placa de vídeo e a versão do driver.",
+        "O GUHFLIX não conseguiu abrir a janela.\n\n{mensagem}\n\nO detalhe ficou em:\n{}\n\nSe o problema continuar, envie esse arquivo (falhas.txt e inicio.txt) e informe a placa de vídeo e a versão do driver.",
         arquivo("falhas.txt").display()
     ));
 }
@@ -133,7 +133,7 @@ fn janela_de_erro(texto: &str) {
         fn MessageBoxW(janela: *mut core::ffi::c_void, texto: *const u16, titulo: *const u16, tipo: u32) -> i32;
     }
     let texto: Vec<u16> = texto.encode_utf16().chain(Some(0)).collect();
-    let titulo: Vec<u16> = "Saimo TV".encode_utf16().chain(Some(0)).collect();
+    let titulo: Vec<u16> = "GUHFLIX".encode_utf16().chain(Some(0)).collect();
     // MB_OK | MB_ICONERROR
     unsafe { MessageBoxW(core::ptr::null_mut(), texto.as_ptr(), titulo.as_ptr(), 0x10) };
 }
