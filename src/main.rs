@@ -88,8 +88,14 @@ fn detectar_gpu(cc: &eframe::CreationContext<'_>) -> &'static str {
 }
 
 fn main() -> eframe::Result<()> {
-    let Some(_instance)=guhflix::single_instance() else{return Ok(())};
     diagnostico::iniciar();
+    diagnostico::etapa("verificando instância única");
+    let Some(_instance)=guhflix::single_instance() else {
+        diagnostico::etapa("instância não reservada; encerrando sem abrir outra janela");
+        diagnostico::encerrar();
+        return Ok(());
+    };
+    diagnostico::etapa("instância reservada");
     // Se o app cair, a causa fica em falhas.txt (pasta de dados do app, com
     // as últimas ocorrências): sem console no Windows, sem isto um "fechou
     // sozinho" chegava sem pista nenhuma.

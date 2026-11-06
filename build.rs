@@ -72,6 +72,16 @@ END
     )
     .expect("não deu para escrever o .rc");
 
+    if std::env::var("CARGO_CFG_TARGET_ENV").as_deref() == Ok("msvc") {
+        let resource = saida.join("guhflix.res");
+        let status = Command::new("rc.exe")
+            .arg("/nologo").arg("/fo").arg(&resource).arg(&rc)
+            .status().expect("Windows SDK rc.exe precisa estar no PATH");
+        assert!(status.success(), "falha ao compilar os recursos do GUHFLIX");
+        println!("cargo:rustc-link-arg-bins={}", resource.display());
+        return;
+    }
+
     let objeto = saida.join("saimo-rc.o");
     let windres = std::env::var("WINDRES").unwrap_or_else(|_| "x86_64-w64-mingw32-windres".into());
     let feito = Command::new(&windres)

@@ -8,7 +8,7 @@ permissions:
 jobs:
   native-tests:
     runs-on: windows-latest
-    timeout-minutes: 30
+    timeout-minutes: 35
     env:
       CARGO_PROFILE_RELEASE_LTO: false
       CARGO_PROFILE_RELEASE_CODEGEN_UNITS: 16
@@ -16,11 +16,43 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
+      - uses: ilammy/msvc-dev-cmd@v1
+      - uses: Swatinem/rust-cache@v2
       - name: Native tests including Windows DPAPI
         run: cargo test --locked
-      - name: Build native Windows executable
-        run: cargo build --release --locked
+      - name: Build Windows executable with static C runtime
+        run: cargo build --release --locked --target x86_64-pc-windows-msvc
+      - name: Verify entry into main and collect startup evidence
+        shell: powershell
+        run: |
+          $exe = Join-Path $pwd 'target/x86_64-pc-windows-msvc/release/guhflix-windows.exe'
+          $env:APPDATA = Join-Path $env:RUNNER_TEMP 'guhflix-startup-test'
+          New-Item -ItemType Directory -Force $env:APPDATA | Out-Null
+          $p = Start-Process -FilePath $exe -WorkingDirectory (Split-Path $exe) -PassThru
+          $null = $p.Handle
+          $finished = $p.WaitForExit(15000)
+          $log = Join-Path $env:APPDATA 'GUHFLIX/inicio.txt'
+          if (-not (Test-Path $log)) { throw 'No startup log: program did not reach main' }
+          Get-Content $log
+          $body = Get-Content $log -Raw
+          if ($body -notmatch 'instância reservada') { throw 'Did not reserve instance' }
+          if ($finished) {
+            $code = $p.ExitCode
+            Write-Output ('Exit code: 0x{0:X8}' -f [int]$code)
+            if ($code -lt 0) { throw 'Native exception during startup' }
+            if ($code -ne 0 -and $body -notmatch 'fatal') { throw 'Unexpected early exit' }
+            Write-Output 'Reached main; display initialization may fail on the headless CI runner. This does not validate a physical Windows 10 display or playback.'
+          } else {
+            Write-Output "Process remains running. Window: $($p.MainWindowTitle)"
+            $null = $p.CloseMainWindow()
+            if (-not $p.WaitForExit(5000)) { $p.Kill() }
+          }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: GUHFLIX-startup-evidence
+          path: ${{ runner.temp }}/guhflix-startup-test/GUHFLIX/*.txt
       - uses: actions/upload-artifact@v4
         with:
-          name: GUHFLIX-Windows-native
-          path: target/release/guhflix-windows.exe
+          name: GUHFLIX-Windows-native-3.0.1
+          path: target/x86_64-pc-windows-msvc/release/guhflix-windows.exe
