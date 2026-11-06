@@ -1816,6 +1816,7 @@ impl App {
                                 progresso::esquecer(&filme.titulo);
                             }
                             telemetria::parou();
+                            self.tocando_vod = None;
                             self.voltar_do_vod();
                         } else {
                             self.proxima_fonte_vod("a fonte não abriu");
