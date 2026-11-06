@@ -32,6 +32,18 @@ assert.equal((await request('GET','/api/admin/users',undefined,one.accessToken))
  assert.equal((await request('POST','/api/app/playback/heartbeat',{playbackId:pids[playing]},all[playing].accessToken)).statusCode,200);
  await request('POST','/api/app/playback/stop',{playbackId:pids[playing]},all[playing].accessToken);assert.equal((await request('POST','/api/app/playback/start',{playbackId:pids[blocked]},all[blocked].accessToken)).statusCode,200);
  clock=new Date(clock.getTime()+121000);assert.equal((await request('POST','/api/app/playback/start',{playbackId:randomUUID()},all[playing].accessToken)).statusCode,200);
+ // Windows can have multiple players in one authenticated session; all share the account limit.
+ clock=new Date(clock.getTime()+121000);
+ const winPids=Array.from({length:4},()=>randomUUID());
+ const winStarts=await Promise.all(winPids.map(playbackId=>request('POST','/api/app/playback/start',{playbackId},one.accessToken)));
+ assert.equal(winStarts.filter(r=>r.statusCode===200).length,3);assert.equal(winStarts.filter(r=>r.statusCode===409).length,1);
+ const winPlaying=winPids.filter((_,i)=>winStarts[i].statusCode===200);
+ assert.equal((await request('POST','/api/app/playback/stop',{playbackId:winPlaying[0]},one.accessToken)).statusCode,200);
+ const ownSession=(await request('GET','/api/app/sessions',undefined,one.accessToken)).json().find((s:any)=>s.playbackActive);
+ assert(ownSession,'Stopping one player must preserve other players in session metadata');
+ for(const playbackId of winPlaying.slice(1))assert.equal((await request('POST','/api/app/playback/heartbeat',{playbackId},one.accessToken)).statusCode,200);
+ for(const playbackId of winPlaying.slice(1))await request('POST','/api/app/playback/stop',{playbackId},one.accessToken);
+ assert((await request('GET','/api/app/sessions',undefined,one.accessToken)).json().every((s:any)=>!s.playbackActive));
  await request('POST',`/api/admin/users/${uid}/block`,{},at);const key2=randomUUID();await request('POST',`/api/admin/users/${uid}/renew`,renew,at,{'idempotency-key':key2});assert.equal((await request('GET','/api/app/access',undefined,one.accessToken)).json().state,'blocked');
  await request('POST',`/api/admin/users/${uid}/unblock`,{},at);assert.equal((await request('GET','/api/app/access',undefined,one.accessToken)).json().state,'active');
  await db.collection('users').updateOne({username:'customer'},{$set:{expiresAt:new Date(clock.getTime()-1)}});assert.equal((await request('GET','/api/app/access',undefined,one.accessToken)).json().state,'expired'); // server clock, independent of device
