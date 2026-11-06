@@ -14,7 +14,7 @@ Plano de R$ 30,00 / 30 dias exatos. Registro manual de pagamento confirmado, mé
 
 Vários dispositivos cadastrados e máximo de 3 reproduções concorrentes por conta. Controle com transação no documento do usuário; lease de 120s, stop, heartbeat, timeout e revogação. A quarta tentativa é recusada sem expulsar sessões anteriores. Relógio do servidor decide expiração.
 
-Coleções e índices: users, subscriptions, payments, sessions, devices, idempotency_keys e audit_logs. Banco e projeto exclusivos GUHFLIX. Exportação criptografada AES-GCM com snapshot consistente implementada e verificada localmente; agendamento, armazenamento externo e ensaio operacional de restauração ainda pendentes.
+Coleções e índices: users, subscriptions, payments, sessions, devices, idempotency_keys e audit_logs. Namespace de banco exclusivo GUHFLIX; na conta Guh Flix o usuário selecionou Project 0 / Cluster0. Exportação criptografada AES-GCM com snapshot consistente implementada e verificada localmente; agendamento, armazenamento externo e ensaio operacional de restauração ainda pendentes.
 
 ## Painel implementado e publicado
 
@@ -56,12 +56,16 @@ Foi encontrado e corrigido um crash no botão Voltar durante autorização/limit
 
 A build local de teste usa somente uma API descartável em 127.0.0.1 por adb reverse (também aceita 10.0.2.2 na ferramenta de build) e NÃO foi publicada. O APK candidato de produção usa HTTPS com validação padrão, sem bypass de certificado. As modificações no sistema descartável do emulador não fazem parte do APK.
 
-## Bloqueio externo atual
+## Estado atual de produção
 
-A conexão Atlas Primary criou o projeto GUHFLIX e cluster gratuito guhflix. A tentativa de criar o usuário exclusivo guhflix-api foi recusada pela ferramenta: “User did not confirm the execution ... so the operation was not performed.” A solicitação de confirmação foi apresentada no chat; nenhuma credencial de outro projeto foi usada e a recusa não foi contornada.
+A conta selecionada agora é Guh Flix, organização Marley’s Org - 2026-11-06, Project 0, Cluster0. O cluster e um usuário automático já existem. A criação de um novo usuário limitado pela ferramenta foi recusada por falta de confirmação; não foi contornada. A conexão fornecida depois pelo usuário ainda contém <db_password>, sem senha atual configurada no servidor.
 
-Após essa confirmação: criar usuário limitado a GUHFLIX/GUHFLIX_TEST; liberar somente saídas necessárias; configurar segredos no Render; implantar a API; fornecer link privado de primeiro administrador; executar o aceite online; só então substituir o APK no botão público. Não há admin/senha padrão.
+A API foi implantada em https://guhflix-api.onrender.com (Render srv-dbmk1g0m7kps73bj9v00, plano gratuito, Virginia). Deploy live verificado. /health retornou HTTP 503 com state=configuration_required, de forma prevista e sem liberar acesso. Falta preencher MONGODB_URI privadamente no Environment do Render e liberar os IPs reais de saída desse serviço em Network Access do Atlas. Os segredos de autenticação da API foram gerados e configurados privadamente, fora do fonte.
+
+O novo servidor tem inicialização protegida: atende 503 enquanto falta configuração/conexão e só encaminha requisições às rotas autenticadas depois de conectar e criar índices. Testes locais de prontidão HTTP e a suíte completa do MongoDB passaram (2 testes de integração). O namespace GUHFLIX e suas coleções serão inicializados após essa conexão.
+
+Depois de /health retornar 200: configurar o primeiro administrador com o link privado de setup, executar o aceite online e validar reprodução no hardware antes de substituir o APK público. A versão 1.0.1 permanece no botão de download.
 
 ## Limitações restantes
 
-Atlas/API de produção e administrador pendentes, instalação/reinício da TCL e reprodução real não validados, catálogo/streams dependem das fontes autorizadas e codecs, previews reais ainda não exercitados, desempenho não medido, backups automáticos e alertas externos não ativados. Plano Render gratuito sujeito a suspensão/cold start. Não há offline de conteúdo. Código Kotlin original não recuperado: o fonte Android inclui Java novo, Smali e recursos reconstruíveis.
+Conexão Atlas da API e configuração do administrador pendentes, instalação/reinício da TCL e reprodução real não validados, catálogo/streams dependem das fontes autorizadas e codecs, previews reais ainda não exercitados, desempenho não medido, backups automáticos e alertas externos não ativados. Plano Render gratuito sujeito a suspensão/cold start. Não há offline de conteúdo. Código Kotlin original não recuperado: o fonte Android inclui Java novo, Smali e recursos reconstruíveis.
