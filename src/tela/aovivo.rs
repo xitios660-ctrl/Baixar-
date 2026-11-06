@@ -23,6 +23,24 @@ const LARGURA_DA_LISTA: f32 = 400.0;
 const ALTURA_DA_LINHA: f32 = 68.0;
 
 pub fn tela(app: &mut App, ui: &mut egui::Ui) {
+    if let Some((titulo, erro)) = app.tocando_vod.as_ref()
+        .and_then(|t| t.erro.as_ref().map(|e| (t.titulo.clone(), e.clone()))) {
+        egui::CentralPanel::default().frame(egui::Frame::NONE.fill(FUNDO)).show(ui, |ui| {
+            ui.add_space(80.0);
+            ui.vertical_centered(|ui| {
+                ui.heading(titulo);
+                ui.add_space(14.0);
+                ui.label(erro);
+                ui.add_space(20.0);
+                let tentar = botao(ui, None, "Tentar novamente", true);
+                if ui.memory(|m| m.focused().is_none()) { tentar.request_focus(); }
+                if tentar.clicked() { app.tentar_vod_novamente(); }
+                if botao(ui, None, "Voltar ao catálogo", false).clicked() { app.voltar_do_vod(); }
+            });
+        });
+        return;
+    }
+
     let nada_no_ar = app.tocando.is_none() && app.tocando_vod.is_none() && app.outra_tela.is_none();
     let por_cima = app.controles_visiveis() || app.lista_aberta || nada_no_ar || app.guia_aberto;
     // O fundo do guia e o da rádio vêm antes do menu: pintados depois, na

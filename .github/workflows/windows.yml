@@ -57,5 +57,5 @@ jobs:
           path: ${{ runner.temp }}/guhflix-startup-test/GUHFLIX/*.txt
       - uses: actions/upload-artifact@v4
         with:
-          name: GUHFLIX-Windows-native-3.0.2
+          name: GUHFLIX-Windows-native-3.0.3
           path: target/x86_64-pc-windows-msvc/release/guhflix-windows.exe

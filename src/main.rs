@@ -251,6 +251,8 @@ pub struct TocandoVod {
     pub fonte: usize,
     pub desde: Instant,
     pub confirmado: bool,
+    /// Mantém o título selecionado mesmo quando todas as fontes falham.
+    pub erro: Option<String>,
     /// Quando é episódio: a série, o número e a lista para achar o seguinte.
     pub episodio: Option<EpisodioTocando>,
     /// Abertura, recapitulação e créditos, quando o TheIntroDB conhece.
@@ -265,6 +267,18 @@ pub struct TocandoVod {
     /// O cartão do próximo episódio: quando subiu, e se foi dispensado.
     pub proximo_desde: Option<Instant>,
     pub proximo_dispensado: bool,
+}
+
+impl TocandoVod {
+    fn proxima_apos_falha(&mut self) -> Option<usize> {
+        if self.erro.is_some() { return None; }
+        if let Some(proxima) = self.fonte.checked_add(1).filter(|n| *n < self.urls.len()) {
+            return Some(proxima);
+        }
+        self.confirmado = false;
+        self.erro = Some("Não foi possível abrir as fontes disponíveis deste título.".into());
+        None
+    }
 }
 
 #[derive(Clone)]
@@ -385,6 +399,7 @@ struct App {
     ultimo_progresso: Instant,
     foco_vod: usize,
     tocando_vod: Option<TocandoVod>,
+    origem_do_vod: Aba,
     /// Até quando a barra de controles fica à vista; mexer o mouse renova.
     controles_ate: Instant,
     ajuda_aberta: bool,
@@ -689,6 +704,7 @@ impl App {
             foco_vod: 0,
             fonte_preferida: None,
             tocando_vod: None,
+            origem_do_vod: Aba::Inicio,
             controles_ate: Instant::now() + Duration::from_secs(6),
             ajuda_aberta: false,
             velocidade: 1.0,
@@ -1137,7 +1153,7 @@ impl App {
 
     /// Abre no canal que estava no ar quando o programa fechou, como a TV.
     fn voltar_ao_ultimo_canal(&mut self) {
-        if self.retomou_canal || self.tocando.is_some() || self.tocando_vod.is_some() || self.mpv.is_none() {
+        if self.aba != Aba::Canais || self.retomou_canal || self.tocando.is_some() || self.tocando_vod.is_some() || self.mpv.is_none() {
             return;
         }
         // Com a abertura na frente o canal esperaria por trás dela, com som:
@@ -1222,6 +1238,10 @@ impl App {
     }
 
     fn tocar_vod(&mut self, titulo: String, urls: Vec<String>, fonte: usize, nova: bool) {
+        if self.aba != Aba::Canais { self.origem_do_vod = self.aba; }
+        self.retomou_canal = true;
+        self.lista_aberta = false;
+        self.guia_aberto = false;
         // Trocar de filme fecha a conta do anterior antes de perder a posição.
         self.guardar_progresso(true);
         // Filme ocupa a janela inteira e tem som próprio; o canal parado
@@ -1231,21 +1251,21 @@ impl App {
         self.radio = None;
         self.episodios_no_player = false;
         let Some(mpv) = self.mpv.as_ref() else { return };
-        let Some(url) = urls.get(fonte).cloned() else {
-            telemetria::caiu("vod", &titulo, urls.len());
-            self.aviso = Some((format!("{titulo}: nenhuma fonte abriu"), Instant::now()));
-            self.tocando_vod = None;
-            return;
-        };
+        let url = urls.get(fonte).cloned();
         // Trocar de fonte do mesmo título mantém o episódio, as marcas e a
         // legenda escolhida — que segue junto para o arquivo novo.
         let anterior = self.tocando_vod.take().filter(|t| t.titulo == titulo);
         let legenda = anterior.as_ref().and_then(|t| t.legenda_escolhida.as_ref().map(|(_, c)| c.clone()));
-        mpv.tocar_com_legenda(&url, None, None, legenda.as_deref());
-        mpv.pausa(false);
+        if let Some(url) = url.as_deref() {
+            mpv.tocar_com_legenda(url, None, None, legenda.as_deref());
+            mpv.pausa(false);
+            telemetria::comecou("vod", &titulo, url, fonte + 1, nova);
+        } else {
+            mpv.parar();
+            telemetria::caiu("vod", &titulo, urls.len());
+        }
         self.pausado = false;
         self.tocando = None;
-        telemetria::comecou("vod", &titulo, &url, fonte + 1, nova);
         let (episodio, marcas, legendas, legenda_escolhida) = anterior
             .map(|t| (t.episodio, t.marcas, t.legendas, t.legenda_escolhida))
             .unwrap_or((None, None, Vec::new(), None));
@@ -1255,6 +1275,7 @@ impl App {
             fonte,
             desde: Instant::now(),
             confirmado: false,
+            erro: url.is_none().then(|| "Este título não tem uma fonte disponível para reprodução.".into()),
             episodio,
             marcas,
             legendas,
@@ -1665,21 +1686,33 @@ impl App {
     }
 
     fn proxima_fonte_vod(&mut self, motivo: &str) {
-        let Some(t) = self.tocando_vod.as_ref() else { return };
+        let Some(t) = self.tocando_vod.as_mut() else { return };
+        if t.erro.is_some() { return; }
         let (titulo, fonte, urls) = (t.titulo.clone(), t.fonte, t.urls.clone());
+        let proxima = t.proxima_apos_falha();
         telemetria::falhou("vod", &titulo, urls.get(fonte).map(String::as_str).unwrap_or(""), fonte + 1, motivo);
-        if fonte + 1 >= urls.len() {
+        if let Some(proxima) = proxima {
+            self.aviso = Some((format!("{titulo}: trocando para a fonte {}", proxima + 1), Instant::now()));
+            self.tocar_vod(titulo, urls, proxima, false);
+        } else {
             telemetria::caiu("vod", &titulo, urls.len());
             telemetria::parou();
-            self.aviso = Some((format!("{titulo}: nenhuma das {} fontes abriu", urls.len()), Instant::now()));
-            self.tocando_vod = None;
-            if let Some(mpv) = self.mpv.as_ref() {
-                mpv.parar();
-            }
-            return;
+            diagnostico::etapa(&format!("falha de reprodução VOD: {titulo}; {motivo}; título mantido sem abrir canais"));
+            if let Some(mpv) = self.mpv.as_ref() { mpv.parar(); }
         }
-        self.aviso = Some((format!("{titulo}: trocando para a fonte {}", fonte + 2), Instant::now()));
-        self.tocar_vod(titulo, urls, fonte + 1, false);
+    }
+
+    pub fn tentar_vod_novamente(&mut self) {
+        let Some(t) = self.tocando_vod.as_ref() else { return };
+        let (titulo, urls) = (t.titulo.clone(), t.urls.clone());
+        self.tocar_vod(titulo, urls, 0, false);
+    }
+
+    pub fn voltar_do_vod(&mut self) {
+        self.lista_aberta = false;
+        self.guia_aberto = false;
+        self.canal_parado = None;
+        self.abrir_secao(self.origem_do_vod);
     }
 
     pub fn tocar(&mut self, canal: usize, fonte: usize, nova: bool) {
@@ -1747,6 +1780,8 @@ impl App {
                 continue;
             }
             if self.tocando_vod.is_some() {
+                // Eventos tardios após stop não podem reabrir/trocar o título.
+                if self.tocando_vod.as_ref().is_some_and(|t| t.erro.is_some()) { continue; }
                 match aviso {
                     mpv::Aviso::Tocando => {
                         if let Some(t) = self.tocando_vod.as_mut() {
@@ -1781,8 +1816,7 @@ impl App {
                                 progresso::esquecer(&filme.titulo);
                             }
                             telemetria::parou();
-                            self.tocando_vod = None;
-                            self.lista_aberta = true;
+                            self.voltar_do_vod();
                         } else {
                             self.proxima_fonte_vod("a fonte não abriu");
                         }
@@ -1833,7 +1867,7 @@ impl App {
         let estourou_vod = self
             .tocando_vod
             .as_ref()
-            .map(|t| !t.confirmado && t.desde.elapsed() > ESPERA_DA_FONTE)
+            .map(|t| t.erro.is_none() && !t.confirmado && t.desde.elapsed() > ESPERA_DA_FONTE)
             .unwrap_or(false);
         if estourou_vod {
             self.proxima_fonte_vod("a fonte não abriu em 14 s");
@@ -2214,6 +2248,12 @@ impl App {
     /// O que cada tecla faz. O controle remoto do celular passa por aqui
     /// também, com as mesmas teclas.
     pub fn tecla(&mut self, ctx: &egui::Context, key: egui::Key, modifiers: egui::Modifiers) {
+        if self.tocando_vod.as_ref().is_some_and(|t| t.erro.is_some()) {
+            match key {
+                egui::Key::Escape => { self.voltar_do_vod(); return; }
+                _ => return,
+            }
+        }
         // Enter com o botão de pular à vista faz o que o botão diz; Esc
         // dispensa o cartão do próximo episódio.
         if self.aba == Aba::Canais && self.tocando_vod.is_some() {
@@ -3796,6 +3836,7 @@ fn foto_de_teste(app: &mut App, ctx: &egui::Context) {
                     fonte: 0,
                     desde: Instant::now(),
                     confirmado: true,
+                    erro: None,
                     episodio: Some(EpisodioTocando { serie: "Ted Lasso".into(), temporada: 1, numero: 2, versao: "dub".into(),
                         lista: (1..=10).map(|n| vod::Episodio { temporada: 1, numero: n, versao: "dub".into(), urls: Vec::new() }).collect() }),
                     marcas: None,
@@ -4004,5 +4045,59 @@ mod testes_nome {
         assert!(!super::tem_nome("(2024)"));
         assert!(super::tem_nome("#Alive (2020)"));
         assert!(super::tem_nome("1917"));
+    }
+}
+
+#[cfg(test)]
+mod testes_falha_vod {
+    use super::*;
+
+    fn selecao(titulo: &str, total: usize) -> TocandoVod {
+        TocandoVod {
+            titulo: titulo.into(),
+            urls: (0..total).map(|i| format!("https://example.invalid/fonte-{i}")).collect(),
+            fonte: 0, desde: Instant::now(), confirmado: true, erro: None,
+            episodio: None, marcas: None, legendas: Vec::new(),
+            legenda_escolhida: None, legenda_atraso: 0.0, legenda_aviso: None,
+            visto: (120.0, 7200.0), proximo_desde: None, proximo_dispensado: false,
+        }
+    }
+
+    #[test]
+    fn odisseia_sem_fontes_validas_permanece_selecionada_com_erro() {
+        let mut filme = selecao("A Odisseia", 2);
+        assert_eq!(filme.proxima_apos_falha(), Some(1));
+        filme.fonte = 1;
+        assert_eq!(filme.proxima_apos_falha(), None);
+        assert_eq!(filme.titulo, "A Odisseia");
+        assert_eq!(filme.urls.len(), 2);
+        assert_eq!(filme.visto, (120.0, 7200.0));
+        assert!(!filme.confirmado);
+        assert!(filme.erro.is_some());
+        // Erros/eventos tardios não iniciam uma nova tentativa em loop.
+        assert_eq!(filme.proxima_apos_falha(), None);
+        assert_eq!(filme.fonte, 1);
+    }
+
+    #[test]
+    fn episodio_e_temporada_nao_desaparecem_apos_falha() {
+        let mut filme = selecao("Série · T4 E6", 1);
+        filme.episodio = Some(EpisodioTocando {
+            serie: "Série".into(), temporada: 4, numero: 6,
+            versao: "dub".into(), lista: Vec::new(),
+        });
+        assert_eq!(filme.proxima_apos_falha(), None);
+        let ep = filme.episodio.as_ref().unwrap();
+        assert_eq!((ep.temporada, ep.numero), (4, 6));
+        assert_eq!(ep.serie, "Série");
+        assert!(filme.erro.is_some());
+    }
+
+    #[test]
+    fn lista_de_fontes_vazia_mostra_erro_sem_descartar_titulo() {
+        let mut filme = selecao("Título sem fonte", 0);
+        assert_eq!(filme.proxima_apos_falha(), None);
+        assert_eq!(filme.titulo, "Título sem fonte");
+        assert!(filme.erro.is_some());
     }
 }
