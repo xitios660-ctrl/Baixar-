@@ -1,10 +1,10 @@
 {
   "app": "GUHFLIX TV",
   "package": "com.guhflix.tv",
-  "version": "2.2.0",
-  "versionCode": 2020000,
-  "file": "GUHFLIX-TV-2.2.0.apk",
-  "sha256": "c49ee5432850cee760f824d84bb12451eb0ff5fc94cca7007361b34720bd449c",
+  "version": "2.3.0",
+  "versionCode": 2030000,
+  "file": "GUHFLIX-TV-2.3.0.apk",
+  "sha256": "7cc6e7afad1d151d346c990bdb1b51f94edda0bfe783a35447fee85fe5b5fb6a",
   "api": "https://guhflix-marley-api.onrender.com",
   "admin": "https://guhflix-marley-admin.onrender.com"
 }
