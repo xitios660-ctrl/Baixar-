@@ -1,0 +1,5 @@
+import {connect} from './db.js';import argon2 from 'argon2';import {Secret,TOTP} from 'otpauth';
+const {MONGODB_URI,ADMIN_USERNAME,ADMIN_PASSWORD,ADMIN_TOTP_SECRET}=process.env;
+if(!MONGODB_URI||!ADMIN_USERNAME||!ADMIN_PASSWORD||ADMIN_PASSWORD.length<16||!ADMIN_TOTP_SECRET)throw new Error('Configure URI and initial admin credentials (password >=16 chars and TOTP base32 secret)');
+const {db,client}=await connect(MONGODB_URI);try{if(await db.collection('users').countDocuments({role:'admin'}))throw new Error('Administrator already exists; bootstrap refused');
+Secret.fromBase32(ADMIN_TOTP_SECRET);const time=new Date();await db.collection('users').insertOne({username:ADMIN_USERNAME.toLowerCase(),passwordHash:await argon2.hash(ADMIN_PASSWORD,{type:argon2.argon2id}),totpSecret:ADMIN_TOTP_SECRET,role:'admin',status:'enabled',sessionVersion:1,createdAt:time,updatedAt:time,expiresAt:null,slots:[]});console.log('Initial administrator created; no credentials logged.');}finally{await client.close()}
