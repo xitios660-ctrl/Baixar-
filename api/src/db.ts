@@ -2,7 +2,7 @@ import { MongoClient, type Db } from 'mongodb';
 export async function connect(uri:string,name='GUHFLIX') {
  if(!/^GUHFLIX(?:_TEST)?$/.test(name))throw new Error('Exclusive GUHFLIX database required');
  // One long-lived client. Low-traffic, single Render instance; use driver defaults until measured.
- const client=new MongoClient(uri,{appName:'GUHFLIX'});await client.connect();const db=client.db(name);await indexes(db);return {client,db};
+ const client=new MongoClient(uri,{appName:'GUHFLIX'});try{await client.connect();const db=client.db(name);await indexes(db);return {client,db};}catch(error){await client.close();throw error;}
 }
 export async function indexes(db:Db){
  await Promise.all([
