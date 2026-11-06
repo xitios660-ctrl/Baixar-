@@ -12,6 +12,7 @@
 mod abertura;
 mod guhflix;
 mod diagnostico;
+mod recuperacao;
 mod atualizacao;
 mod fontes_desativadas;
 mod fonte_preferida;
@@ -344,8 +345,8 @@ struct App {
     nova_versao: Option<atualizacao::Versao>,
     ultima_checagem: Instant,
     aviso: Option<(String, Instant)>,
-    /// Quadros seguidos em que o desenho da tela caiu (ver `ui`).
-    quadros_com_falha: u8,
+    /// Uma falha de desenho aguarda ação do usuário, preservando a navegação.
+    protecao_de_tela: recuperacao::Protecao,
     aba: Aba,
     pip: bool,
     tamanho_antes_pip: Option<egui::Vec2>,
@@ -657,7 +658,7 @@ impl App {
             nova_versao: None,
             ultima_checagem: Instant::now(),
             aviso: None,
-            quadros_com_falha: 0,
+            protecao_de_tela: recuperacao::Protecao::default(),
             aba: Aba::Inicio,
             pip: false,
             tamanho_antes_pip: None,
@@ -3861,6 +3862,39 @@ fn gravar_lista(nome: &str, itens: &[String]) {
     let _ = std::fs::write(catalogo::pasta().join(nome), itens.join("\n"));
 }
 
+impl App {
+    fn mostrar_recuperacao(&mut self, ui: &mut egui::Ui) {
+        let ctx = ui.ctx().clone();
+        egui::CentralPanel::default()
+            .frame(egui::Frame::NONE.fill(egui::Color32::from_rgb(8, 8, 8)))
+            .show(ui, |ui| {
+                ui.add_space(80.0);
+                ui.vertical_centered(|ui| {
+                    ui.heading("Não foi possível exibir esta tela");
+                    ui.add_space(12.0);
+                    ui.label("Você pode tentar novamente ou voltar ao início.");
+                    ui.add_space(20.0);
+                    if ui.button("Tentar novamente").clicked() {
+                        self.protecao_de_tela.tentar_novamente();
+                    }
+                    if ui.button("Voltar ao início").clicked() {
+                        self.protecao_de_tela.tentar_novamente();
+                        self.ficha_aberta = None;
+                        self.serie_aberta = None;
+                        self.explorar = false;
+                        self.abrir_secao(Aba::Inicio);
+                    }
+                    if ui.button("Copiar diagnóstico").clicked() {
+                        let texto = std::fs::read_to_string(catalogo::pasta().join("falhas.txt"))
+                            .unwrap_or_else(|_| "Nenhum detalhe de falha disponível.".into());
+                        let ultimas: Vec<_> = texto.lines().rev().take(12).collect();
+                        ctx.copy_text(ultimas.into_iter().rev().collect::<Vec<_>>().join("\n"));
+                    }
+                });
+            });
+    }
+}
+
 impl eframe::App for App {
     fn raw_input_hook(&mut self, _ctx: &egui::Context, raw_input: &mut egui::RawInput) {
         for key in self.teclas_do_celular.drain(..) {
@@ -3904,33 +3938,23 @@ impl eframe::App for App {
             self.baixar_logos_pendentes();
             return;
         }
+        if self.protecao_de_tela.pendente() {
+            self.mostrar_recuperacao(ui);
+            return;
+        }
         self.guhflix.account_window(ctx);
         self.teclado(ctx);
         self.baixar_logos_pendentes();
 
         foto_de_teste(self, ctx);
-        // Um erro de programação ao desenhar uma tela (um corte de texto no meio
-        // de uma letra acentuada, uma conta fora da lista) não pode fechar o
-        // app: o pânico dentro do laço de eventos do Windows aborta o processo
-        // sem aviso. Aqui o quadro é descartado, a queda vai para falhas.txt e o
-        // app volta para a tela principal; só se ela também cair é que o erro sobe.
-        let desenho = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| tela::desenhar(self, ui)));
-        match desenho {
-            Ok(()) => self.quadros_com_falha = 0,
-            Err(erro) => {
-                self.quadros_com_falha = self.quadros_com_falha.saturating_add(1);
-                diagnostico::etapa(&format!("tela {:?} caiu ao desenhar (quadro {})", self.aba, self.quadros_com_falha));
-                if self.quadros_com_falha >= 3 {
-                    std::panic::resume_unwind(erro);
-                }
-                let destino = if self.aba == Aba::Canais { Aba::Inicio } else { Aba::Canais };
-                self.explorar = false;
-                self.serie_aberta = None;
-                self.ficha_aberta = None;
-                self.aba = destino;
-                self.aviso = Some(("Essa tela teve um problema e foi fechada. Já anotamos o erro.".into(), Instant::now()));
-                ctx.request_repaint();
-            }
+        // O desenho pode falhar, mas isso nunca é um pedido de abrir Ao vivo.
+        let mut protecao = std::mem::take(&mut self.protecao_de_tela);
+        let desenhou = protecao.desenhar(|| tela::desenhar(self, ui));
+        self.protecao_de_tela = protecao;
+        if !desenhou {
+            diagnostico::etapa(&format!("tela {:?} falhou; aguardando ação sem trocar de seção", self.aba));
+            ctx.request_repaint();
+            return;
         }
         if let Some(a) = self.abertura.as_ref() {
             tela::veu_da_abertura(ctx, a.veu());
