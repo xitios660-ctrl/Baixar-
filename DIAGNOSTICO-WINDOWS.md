@@ -1,0 +1,3 @@
+# Diagnostico de abertura
+
+Ferramenta local para investigar fechamento antes da criacao de %APPDATA%\GUHFLIX. Executar sem administrador. Procura somente GUHFLIX.exe na propria pasta e em Downloads (ate4niveis); registra versaoWindows/arquitetura, caminho/hash/arquivosesperados, codigo de saida e ate2eventos Application/SideBySide relacionados ao GUHFLIX dos ultimos3minutos. Nao termina processos existentes, nao modifica o EXE, nao le sessoes/senhas, nao faz upload automatico, nao desbloqueia arquivos e nao altera politica de seguranca. O usuario escolhe enviar log/foto ao atendimento. Ferramenta de coleta, nao uma correcao confirmada.
