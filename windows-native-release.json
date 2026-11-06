@@ -1,0 +1,13 @@
+{
+  "versao": "3.0.0",
+  "tag": "v3.0.0",
+  "notas": "Aplicativo nativo GUHFLIX Windows com login do painel, assinatura e limite de 3 reproduções compartilhado com as TVs.",
+  "arquivos": {
+    "windows": {
+      "nome": "GUHFLIX-Windows-3.0.0.zip",
+      "url": "https://guhflix-tv-download.onrender.com/GUHFLIX-Windows-3.0.0.zip",
+      "bytes": 56170741,
+      "sha256": "0c67e3f039688344e3543cf5f1ceb961f23d3249315f6ca0e154361d763d6f61"
+    }
+  }
+}
