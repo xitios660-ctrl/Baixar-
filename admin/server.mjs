@@ -2,7 +2,7 @@ import http from 'node:http';import https from 'node:https';import {readFile} fr
 const api=new URL(process.env.API_URL||'https://guhflix-api.onrender.com');if(api.protocol!=='https:'&&!process.env.LOCAL_TEST)throw Error('HTTPS API required');
 const files={'/':'index.html','/app.js':'app.js','/style.css':'style.css','/icon.png':'icon.png'};
 http.createServer(async(req,res)=>{
- res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','no-referrer');res.setHeader('Cache-Control','no-store');res.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'");
+ res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','no-referrer');res.setHeader('Cache-Control','no-store, no-cache, must-revalidate');res.setHeader('Pragma','no-cache');res.setHeader('Expires','0');res.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'");
  const path=new URL(req.url,'http://localhost').pathname;
  if(path==='/health'){res.writeHead(200,{'Content-Type':'application/json'});return res.end('{"ok":true,"service":"guhflix-admin"}')}
  if(path.startsWith('/api/')&&['GET','POST','PATCH','OPTIONS'].includes(req.method)){
