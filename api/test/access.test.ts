@@ -25,6 +25,7 @@ assert.equal((await request('GET','/api/admin/users',undefined,one.accessToken))
  assert.equal((await request('POST',`/api/admin/users/${uid}/renew`,{...renew,paymentConfirmed:false},at,{'idempotency-key':randomUUID()})).statusCode,400);
  assert.equal((await request('GET','/api/app/access',undefined,one.accessToken)).json().state,'active');
  const two=(await login('customer')).json(),three=(await login('customer')).json(),four=(await login('customer')).json();const all=[one,two,three,four],pids=all.map(()=>randomUUID());
+ await request('POST','/api/admin/users',{username:'second-customer',password:pass},at);const stranger=(await login('second-customer')).json();const firstSession=await db.collection('sessions').findOne({userId:uid});assert.equal((await request('POST','/api/app/sessions/'+firstSession!._id.toString()+'/revoke',{},stranger.accessToken)).statusCode,404);
  const starts=await Promise.all(all.map((a,i)=>request('POST','/api/app/playback/start',{playbackId:pids[i]},a.accessToken)));assert.equal(starts.filter(r=>r.statusCode===200).length,3,starts.map(r=>r.body).join('\n'));assert.equal(starts.filter(r=>r.statusCode===409).length,1);
  const blocked=starts.findIndex(r=>r.statusCode===409),playing=starts.findIndex(r=>r.statusCode===200);
  assert.equal((await request('POST','/api/app/playback/heartbeat',{playbackId:pids[playing]},all[playing].accessToken)).statusCode,200);
