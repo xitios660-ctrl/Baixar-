@@ -6,9 +6,9 @@ Implementação dedicada ao GUHFLIX; não modifica GANOH, RR Motos ou TV DO GUH 
 
 - Download publicado: https://guhflix-tv-download.onrender.com — APK 1.0.1 com novo ícone.
 - Painel publicado: https://guhflix-admin.onrender.com — interface e proxy; integração de produção depende da API.
-- API prevista: https://guhflix-api.onrender.com — ainda NÃO implantada sem credencial Atlas confirmada.
+- API publicada: https://guhflix-api.onrender.com — modo de configuração, HTTP 503 em /health até preencher MONGODB_URI e liberar a rede do Render no Atlas.
 - Fonte: branch `guhflix-platform` em https://github.com/xitios660-ctrl/Baixar-.
-- Atlas: projeto GUHFLIX / cluster gratuito `guhflix`; banco GUHFLIX. A ferramenta não confirmou a criação de `guhflix-api`; conexão de produção pendente. Nenhuma credencial de outro projeto foi reutilizada.
+- Atlas atual selecionado pelo usuário: conexão Guh Flix, organização Marley’s Org - 2026-11-06, Project 0, Cluster0 (cluster0.qhjalci.mongodb.net). O namespace GUHFLIX será inicializado pela API após conectar. O projeto anterior na conexão Primary não é o destino atual. A senha atual não está configurada no Render.
 
 ## Instalar e executar
 
@@ -54,3 +54,9 @@ Painel também foi executado no Chromium com API e banco descartáveis reais: MF
 Há exportação criptografada AES-256-GCM com snapshot consistente em `api/src/run-backup.ts`; o teste local verifica descriptografia autenticada e presença de pagamentos/auditoria. Execute com `MONGODB_URI`, `BACKUP_KEY` de 64 caracteres hexadecimais e `BACKUP_FILE` privado. Guarde a chave separada. O arquivo contém cabeçalho GUHFLIX1, IV de 12 bytes, gzip cifrado e tag final de 16 bytes; autentique a tag antes de restaurar os registros EJSON em banco vazio. A restauração operacional e o agendamento ainda precisam ser exercitados. Backup automático NÃO está ativado. O cluster gratuito não oferece os mesmos recursos de snapshots de planos pagos. Antes de cadastrar clientes reais, configure uma rotina de exportação exclusiva do banco GUHFLIX, criptografia, armazenamento externo privado, retenção e teste de restauração. Não guarde backup na pasta pública do site ou no disco efêmero do Render. Essa dependência operacional está explicitamente pendente.
 
 Não considere concluído o aceite do PDF sem banco/API em produção, teste de ponta a ponta no APK e reprodução no hardware autorizado. A versão 2.0.0 candidata não deve substituir o download até essa conexão e validação.
+
+## Concluir a conexão de produção
+
+Abra https://dashboard.render.com/web/srv-dbmk1g0m7kps73bj9v00 e entre em Environment. Edite MONGODB_URI diretamente no painel, usando a URI do Atlas com a senha atual codificada para URL e o banco /GUHFLIX. Não compartilhe o valor completo em chat ou repositório. JWT_SECRET, BOOTSTRAP_TOKEN e ADMIN_ORIGIN já foram configurados privadamente.
+
+No mesmo serviço Render, Connect > Outbound mostra os intervalos reais de IP de saída. Adicione esses intervalos em Network Access do projeto Atlas Guh Flix. Evite confundir esses endereços de saída com a lista de IPs de entrada do serviço. Salve/reimplante e confira /health: deve retornar HTTP 200 com ok:true antes de cadastrar o administrador ou publicar APK2. Enquanto não houver URI válida, a API retorna HTTP 503 configuration_required; falhas de conexão retornam database_unavailable. O teste de prontidão confirma que rotas de reprodução/admin não são liberadas nesse estado.
