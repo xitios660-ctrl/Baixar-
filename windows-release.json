@@ -1,0 +1,9 @@
+{
+  "platform": "Windows x64",
+  "version": "1.0-experimental",
+  "base": "Saimo TV2.6.7",
+  "file": "GUHFLIX-Windows-Rapido-1.0.zip",
+  "sha256": "0f111663762476ff50a7547c98345171b7a0ea791579365006909f8715b805ce",
+  "windowsExecutionTested": false,
+  "launch": "GUHFLIX-Windows/INICIAR-RAPIDO.cmd"
+}
