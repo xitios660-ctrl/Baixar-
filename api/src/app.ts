@@ -5,7 +5,7 @@ import {createHash,randomBytes,timingSafeEqual} from 'node:crypto';import argon2
 const DAY=86400000,LEASE=120000,REFRESH_DAYS=30;
 const hash=(s:string)=>createHash('sha256').update(s).digest('hex');
 const token=()=>randomBytes(40).toString('base64url');const oid=(s:string)=>{if(!ObjectId.isValid(s))throw new Fault(400,'INVALID_ID','Identificador inválido');return new ObjectId(s)};
-const username=z.string().trim().toLowerCase().regex(/^[a-z0-9._-]{3,64}$/);const password=z.string().min(12).max(128);
+const username=z.string().trim().toLowerCase().regex(/^[a-z0-9._-]{3,64}$/);const password=z.string().min(8).max(128);
 class Fault extends Error{constructor(public status:number,public code:string,message:string){super(message)}}
 type Config={db:Db;client:MongoClient;secret:string;adminOrigin:string;production?:boolean;now?:()=>Date;logger?:boolean;bootstrapToken?:string};
 export async function createApp(c:Config){
