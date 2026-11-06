@@ -3944,6 +3944,9 @@ impl eframe::App for App {
 
     fn on_exit(&mut self, _gl: Option<&eframe::glow::Context>) {
         self.guardar_progresso(true);
+        self.parar_o_que_toca();
+        self.parar_radio();
+        guhflix::service().graceful_close();
         telemetria::fechando();
         diagnostico::encerrar();
     }

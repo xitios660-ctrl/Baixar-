@@ -471,6 +471,34 @@ impl Service {
             }
         });
     }
+    pub fn graceful_close(self: &Arc<Self>) {
+        let ids: Vec<String> = self
+            .leases
+            .lock()
+            .unwrap()
+            .iter()
+            .filter_map(Weak::upgrade)
+            .map(|l| l.id.clone())
+            .collect();
+        self.invalidate();
+        if ids.is_empty() {
+            return;
+        }
+        let svc = self.clone();
+        let (done, finished) = std::sync::mpsc::channel();
+        std::thread::spawn(move || {
+            let mut client = svc.client.lock().unwrap();
+            for id in ids {
+                let _ = client.request(
+                    "POST",
+                    "/api/app/playback/stop",
+                    Some(json!({"playbackId":id})),
+                );
+            }
+            let _ = done.send(());
+        });
+        let _ = finished.recv_timeout(Duration::from_secs(2));
+    }
     pub fn logout(self: &Arc<Self>) {
         self.invalidate();
         {
