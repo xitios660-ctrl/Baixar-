@@ -78,7 +78,15 @@ const PARAM_OPENGL_INIT_PARAMS: c_int = 2;
 const PARAM_OPENGL_FBO: c_int = 3;
 const PARAM_FLIP_Y: c_int = 4;
 
+#[repr(C)]
+struct MpvEventLogMessage {
+    prefix: *const c_char,
+    level: *const c_char,
+    text: *const c_char,
+    log_level: c_int,
+}
 const EVENT_SHUTDOWN: c_int = 1;
+const EVENT_LOG_MESSAGE: c_int = 2;
 const EVENT_START_FILE: c_int = 6;
 const EVENT_END_FILE: c_int = 7;
 const EVENT_FILE_LOADED: c_int = 8;
@@ -137,6 +145,8 @@ struct Simbolos {
     get_property_string: unsafe extern "C" fn(*mut mpv_handle, *const c_char) -> *mut c_char,
     free: unsafe extern "C" fn(*mut c_void),
     command: unsafe extern "C" fn(*mut mpv_handle, *const *const c_char) -> c_int,
+    error_string: unsafe extern "C" fn(c_int) -> *const c_char,
+    request_log_messages: unsafe extern "C" fn(*mut mpv_handle, *const c_char) -> c_int,
     wait_event: unsafe extern "C" fn(*mut mpv_handle, f64) -> *mut MpvEvent,
     wakeup: unsafe extern "C" fn(*mut mpv_handle),
     terminate_destroy: unsafe extern "C" fn(*mut mpv_handle),
@@ -162,6 +172,7 @@ static PROXIMO_ID: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::
 pub struct Mpv {
     license: Option<Arc<crate::guhflix::Lease>>,
     alive: Arc<Mutex<bool>>,
+    carregamento: Arc<crate::carregamento::Carregamento>,
     id: u64,
     simbolos: Arc<Simbolos>,
     handle: Arc<Ponteiro>,
@@ -235,6 +246,9 @@ impl Mpv {
     pub fn novo(caminho_da_dll: &std::path::Path) -> Result<Self, String> { Self::new_internal(caminho_da_dll,true) }
     pub fn novo_intro(caminho_da_dll: &std::path::Path) -> Result<Self, String> {Self::new_internal(caminho_da_dll,false)}
     fn new_internal(caminho_da_dll: &std::path::Path,protected:bool)->Result<Self,String>{
+        Self::new_with_options(caminho_da_dll, protected, &[])
+    }
+    fn new_with_options(caminho_da_dll: &std::path::Path, protected: bool, extras: &[(&str, &str)]) -> Result<Self,String> {
         let simbolos = unsafe {
             let lib = libloading::Library::new(caminho_da_dll)
                 .map_err(|e| format!("não achei o mpv ({}): {e}", caminho_da_dll.display()))?;
@@ -252,6 +266,8 @@ impl Mpv {
                 get_property_string: pega!("mpv_get_property_string"),
                 free: pega!("mpv_free"),
                 command: pega!("mpv_command"),
+                error_string: pega!("mpv_error_string"),
+                request_log_messages: pega!("mpv_request_log_messages"),
                 wait_event: pega!("mpv_wait_event"),
                 wakeup: pega!("mpv_wakeup"),
                 terminate_destroy: pega!("mpv_terminate_destroy"),
@@ -311,10 +327,17 @@ impl Mpv {
             let v = CString::new(valor).unwrap();
             unsafe { (simbolos.set_option_string)(handle, n.as_ptr(), v.as_ptr()) };
         }
+        for (nome, valor) in extras {
+            let n = CString::new(*nome).unwrap();
+            let v = CString::new(*valor).unwrap();
+            unsafe { (simbolos.set_option_string)(handle, n.as_ptr(), v.as_ptr()); }
+        }
         if unsafe { (simbolos.initialize)(handle) } < 0 {
             return Err("mpv_initialize falhou".into());
         }
 
+        unsafe { (simbolos.request_log_messages)(handle, b"warn\0".as_ptr() as *const c_char); }
+        let carregamento = Arc::new(crate::carregamento::Carregamento::default());
         let handle = Arc::new(Ponteiro(handle));
         let (emissor, avisos) = channel();
         let license=protected.then(crate::guhflix::Lease::new);
@@ -329,6 +352,7 @@ impl Mpv {
             let emissor = emissor.clone();
             let parar = parar_avisos.clone();
             let license=license.clone();
+            let carregamento = carregamento.clone();
             std::thread::spawn(move || {
                 let mut vigia = Vigia::default();
                 loop {
@@ -349,6 +373,17 @@ impl Mpv {
                     return;
                 }
                 let aviso = match evento.event_id {
+                    EVENT_LOG_MESSAGE if !evento.data.is_null() => {
+                        let log = unsafe { &*(evento.data as *const MpvEventLogMessage) };
+                        if !log.text.is_null() {
+                            let texto = unsafe { CStr::from_ptr(log.text) }.to_string_lossy();
+                            if let Some(resumo) = crate::carregamento::resumir_log(&texto) {
+                                crate::diagnostico::etapa(&format!("mpv: {resumo}"));
+                                carregamento.falha(carregamento.id(), resumo);
+                            }
+                        }
+                        None
+                    }
                     EVENT_START_FILE if !evento.data.is_null() => {
                         let inicio = unsafe { &*(evento.data as *const MpvEventStartFile) };
                         vigia.comecou(inicio.playlist_entry_id);
@@ -356,7 +391,16 @@ impl Mpv {
                     }
                     EVENT_END_FILE if !evento.data.is_null() => {
                         let fim = unsafe { &*(evento.data as *const MpvEventEndFile) };
-                        vigia.acabou(fim.playlist_entry_id, fim.reason)
+                        let aviso = vigia.acabou(fim.playlist_entry_id, fim.reason);
+                        if aviso == Some(Aviso::Falhou) && carregamento.ultimo_erro().is_none() {
+                            let texto = unsafe { (simbolos.error_string)(fim.error) };
+                            let descricao = if texto.is_null() { "erro desconhecido".into() }
+                                else { unsafe { CStr::from_ptr(texto) }.to_string_lossy().into_owned() };
+                            let resumo = format!("Player retornou {}: {descricao}", fim.error);
+                            crate::diagnostico::etapa(&format!("mpv: {resumo}"));
+                            carregamento.falha(carregamento.id(), resumo);
+                        }
+                        aviso
                     }
                     EVENT_FILE_LOADED | EVENT_PLAYBACK_RESTART => Some(Aviso::Tocando),
                     _ => None,
@@ -371,7 +415,7 @@ impl Mpv {
         };
 
         Ok(Mpv {
-            license,alive,
+            license,alive,carregamento,
             id: PROXIMO_ID.fetch_add(1, std::sync::atomic::Ordering::SeqCst),
             simbolos,
             handle,
@@ -598,19 +642,57 @@ impl Mpv {
         unsafe { (self.simbolos.set_property_string)(self.handle.0, n.as_ptr(), v.as_ptr()) };
     }
 
+    pub fn tempo_de_carregamento(&self) -> Option<std::time::Duration> {
+        self.carregamento.tempo()
+    }
+
+    pub fn ultimo_erro_de_reproducao(&self) -> Option<String> {
+        self.carregamento.ultimo_erro()
+    }
+
     fn comando(&self, partes: &[&str]) {
-        if let Some(lease)=&self.license {
-            if partes.first()==Some(&"loadfile") {
-                let owned:Vec<String>=partes.iter().map(|s|s.to_string()).collect();let symbols=self.simbolos.clone();let handle=self.handle.clone();
-                lease.load(self.alive.clone(),move||{let texts:Vec<CString>=owned.iter().map(|s|CString::new(s.as_str())).collect::<Result<_,_>>().unwrap_or_default();if texts.len()!=owned.len(){return}let mut args:Vec<*const c_char>=texts.iter().map(|s|s.as_ptr()).collect();args.push(std::ptr::null());unsafe{(symbols.command)(handle.0,args.as_ptr());}});return;
-            }
-            if partes.first()==Some(&"stop"){lease.stop();}
+        if partes.first() == Some(&"loadfile") {
+            let pedido = self.carregamento.solicitar();
+            crate::diagnostico::etapa("mpv: pedido de abertura registrado");
+            let owned: Vec<String> = partes.iter().map(|s| s.to_string()).collect();
+            let symbols = self.simbolos.clone();
+            let handle = self.handle.clone();
+            let clock = self.carregamento.clone();
+            let sender = self._emissor.clone();
+            let dispatch = move || {
+                if !clock.despachar(pedido) { return; }
+                let texts: Result<Vec<CString>, _> = owned.iter().map(|s| CString::new(s.as_str())).collect();
+                let Ok(texts) = texts else {
+                    clock.falha(pedido, "Endereço de vídeo inválido.".into());
+                    let _ = sender.send(Aviso::Falhou);
+                    return;
+                };
+                let mut args: Vec<*const c_char> = texts.iter().map(|s| s.as_ptr()).collect();
+                args.push(std::ptr::null());
+                let result = unsafe { (symbols.command)(handle.0, args.as_ptr()) };
+                crate::diagnostico::etapa(&format!("mpv: abertura despachada ao player; resultado {result}"));
+                if result < 0 {
+                    let ptr = unsafe { (symbols.error_string)(result) };
+                    let desc = if ptr.is_null() { "erro desconhecido".into() }
+                        else { unsafe { CStr::from_ptr(ptr) }.to_string_lossy().into_owned() };
+                    clock.falha(pedido, format!("Comando de abertura retornou {result}: {desc}"));
+                    let _ = sender.send(Aviso::Falhou);
+                }
+            };
+            if let Some(lease) = &self.license { lease.load(self.alive.clone(), dispatch); }
+            else { dispatch(); }
+            return;
+        }
+        if partes.first() == Some(&"stop") {
+            self.carregamento.solicitar();
+            if let Some(lease) = &self.license { lease.stop(); }
         }
         let textos: Vec<CString> = partes.iter().filter_map(|p| CString::new(*p).ok()).collect();
         let mut ponteiros: Vec<*const c_char> = textos.iter().map(|t| t.as_ptr()).collect();
         ponteiros.push(std::ptr::null());
         unsafe { (self.simbolos.command)(self.handle.0, ponteiros.as_ptr()) };
     }
+
 }
 
 impl Drop for Mpv {
@@ -681,5 +763,112 @@ mod testes {
             assert_eq!(v.acabou(antigo, STOP), None);
         }
         assert_eq!(v.acabou(5, END_FILE_ERROR), Some(Aviso::Falhou));
+    }
+}
+
+#[cfg(all(test, windows))]
+mod integracao {
+    use super::*;
+    use std::{io::{Read, Write}, net::{TcpListener, TcpStream}, sync::atomic::{AtomicBool, AtomicUsize, Ordering}, time::{Duration, Instant}};
+
+    struct Fixture {
+        url: String,
+        stop: Arc<AtomicBool>,
+        requests: Arc<AtomicUsize>,
+        join: Option<std::thread::JoinHandle<()>>,
+    }
+    impl Fixture {
+        fn nova() -> Self {
+            let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+            let address = listener.local_addr().unwrap();
+            listener.set_nonblocking(true).unwrap();
+            let stop = Arc::new(AtomicBool::new(false));
+            let requests = Arc::new(AtomicUsize::new(0));
+            let quit = stop.clone();
+            let counter = requests.clone();
+            let join = std::thread::spawn(move || {
+                while !quit.load(Ordering::SeqCst) {
+                    let (mut stream, _) = match listener.accept() {
+                        Ok(v) => v,
+                        Err(_) => { std::thread::sleep(Duration::from_millis(10)); continue; }
+                    };
+                    stream.set_read_timeout(Some(Duration::from_secs(2))).unwrap();
+                    let mut data = Vec::new();
+                    let mut buf = [0u8; 2048];
+                    while !data.windows(4).any(|w| w == b"\r\n\r\n") && data.len() < 16000 {
+                        match stream.read(&mut buf) { Ok(0) | Err(_) => break, Ok(n) => data.extend_from_slice(&buf[..n]) }
+                    }
+                    let head = String::from_utf8_lossy(&data);
+                    let path = head.lines().next().and_then(|s| s.split_whitespace().nth(1)).unwrap_or("");
+                    let content: Option<&[u8]> = match path {
+                        "/manifest.txt" => Some(include_bytes!("../assets/test-hls/manifest.txt")),
+                        "/segment-00.js" => Some(include_bytes!("../assets/test-hls/segment-00.js")),
+                        "/segment-01.js" => Some(include_bytes!("../assets/test-hls/segment-01.js")),
+                        "/segment-02.js" => Some(include_bytes!("../assets/test-hls/segment-02.js")),
+                        "/segment-03.js" => Some(include_bytes!("../assets/test-hls/segment-03.js")),
+                        _ => None,
+                    };
+                    if let Some(body) = content {
+                        // Confere os mesmos cabeçalhos usados pelo aplicativo original.
+                        assert!(head.contains(crate::AGENTE), "user-agent diferente do Saímo");
+                        assert!(head.to_ascii_lowercase().contains("accept: */*"));
+                        counter.fetch_add(1, Ordering::SeqCst);
+                        let _ = write!(stream, "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {}\r\nConnection: close\r\n\r\n", body.len());
+                        let _ = stream.write_all(body);
+                    } else {
+                        let _ = stream.write_all(b"HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
+                    }
+                }
+            });
+            Self { url: format!("http://{address}"), stop, requests, join: Some(join) }
+        }
+    }
+    impl Drop for Fixture {
+        fn drop(&mut self) {
+            self.stop.store(true, Ordering::SeqCst);
+            if let Some(join) = self.join.take() { let _ = join.join(); }
+        }
+    }
+
+    #[test]
+    #[ignore = "requer a DLL original: executado explicitamente pelo workflow Windows"]
+    fn mpv_integracao_hls_com_dll_original() {
+        let path = std::env::var("GUHFLIX_TEST_MPV_DLL").expect("DLL original ausente no teste");
+        let fixture = Fixture::nova();
+        // Somente neste teste de mídia sintética: sem janela/dispositivo de áudio.
+        // Não é um caminho alternativo para reprodução de catálogo no aplicativo.
+        let mpv = Mpv::new_with_options(std::path::Path::new(&path), false,
+            &[("vo", "null"), ("ao", "null"), ("hwdec", "no")]).unwrap();
+        mpv.tocar(&format!("{}/manifest.txt", fixture.url), None, None);
+        let start = Instant::now();
+        let mut tocou = false;
+        while start.elapsed() < Duration::from_secs(12) {
+            for aviso in mpv.avisos() {
+                assert_ne!(aviso, Aviso::Falhou, "erro: {:?}", mpv.ultimo_erro_de_reproducao());
+                if aviso == Aviso::Tocando { tocou = true; }
+            }
+            if tocou && mpv.ler("time-pos").and_then(|s| s.parse::<f64>().ok()).is_some_and(|p| p > 0.2) { break; }
+            std::thread::sleep(Duration::from_millis(30));
+        }
+        assert!(tocou, "o HLS não carregou: {:?}", mpv.ultimo_erro_de_reproducao());
+        let pos = mpv.ler("time-pos").and_then(|s| s.parse::<f64>().ok()).unwrap_or(0.0);
+        assert!(pos > 0.2, "a posição não avançou: {pos}");
+        assert!(fixture.requests.load(Ordering::SeqCst) >= 2, "playlist e segmento não foram lidos");
+        assert!(mpv.tempo_de_carregamento().is_some());
+        mpv.parar();
+        assert!(mpv.tempo_de_carregamento().is_none());
+        let _ = mpv.avisos().collect::<Vec<_>>();
+        mpv.tocar(&format!("{}/inexistente.m3u8", fixture.url), None, None);
+        let began = Instant::now();
+        let mut falhou = false;
+        while began.elapsed() < Duration::from_secs(8) {
+            if mpv.avisos().any(|a| a == Aviso::Falhou) { falhou = true; break; }
+            std::thread::sleep(Duration::from_millis(30));
+        }
+        assert!(falhou, "o player não informou o erro HTTP");
+        let erro = mpv.ultimo_erro_de_reproducao().expect("erro real do player não foi capturado");
+        assert!(!erro.contains("http://"));
+        println!("PASS: HLS .txt + segmentos .js abriu e avançou {pos:.2}s com a DLL original; erro HTTP capturado: {erro}");
+        mpv.parar();
     }
 }

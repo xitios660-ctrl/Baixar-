@@ -13,6 +13,7 @@ mod abertura;
 mod guhflix;
 mod diagnostico;
 mod recuperacao;
+mod carregamento;
 mod atualizacao;
 mod fontes_desativadas;
 mod fonte_preferida;
@@ -1687,10 +1688,17 @@ impl App {
     }
 
     fn proxima_fonte_vod(&mut self, motivo: &str) {
+        let detalhe = self.mpv.as_ref().and_then(|m| m.ultimo_erro_de_reproducao());
         let Some(t) = self.tocando_vod.as_mut() else { return };
         if t.erro.is_some() { return; }
         let (titulo, fonte, urls) = (t.titulo.clone(), t.fonte, t.urls.clone());
         let proxima = t.proxima_apos_falha();
+        if proxima.is_none() {
+            if let Some(detalhe) = &detalhe {
+                t.erro = Some(format!("Não foi possível abrir este título.\n{detalhe}"));
+            }
+        }
+        diagnostico::etapa(&format!("VOD: {titulo}; fonte {}/{}; {motivo}; {}", fonte + 1, urls.len(), detalhe.as_deref().unwrap_or("sem código de erro do player")));
         telemetria::falhou("vod", &titulo, urls.get(fonte).map(String::as_str).unwrap_or(""), fonte + 1, motivo);
         if let Some(proxima) = proxima {
             self.aviso = Some((format!("{titulo}: trocando para a fonte {}", proxima + 1), Instant::now()));
@@ -1857,11 +1865,14 @@ impl App {
                 mpv::Aviso::Fim => self.proxima_fonte("a transmissão terminou"),
             }
         }
+        // O prazo começa no despacho ao mpv, depois da autorização de acesso.
+        let prazo_vencido = self.mpv.as_ref().and_then(|m| m.tempo_de_carregamento())
+            .is_some_and(|tempo| tempo > ESPERA_DA_FONTE);
         // Fonte que nunca abre não manda erro nenhum: o relógio é quem decide.
         let estourou = self
             .tocando
             .as_ref()
-            .map(|t| !t.confirmado && t.desde.elapsed() > ESPERA_DA_FONTE)
+            .map(|t| !t.confirmado && prazo_vencido)
             .unwrap_or(false);
         if estourou {
             self.proxima_fonte("a fonte não abriu em 14 s");
@@ -1869,12 +1880,12 @@ impl App {
         let estourou_vod = self
             .tocando_vod
             .as_ref()
-            .map(|t| t.erro.is_none() && !t.confirmado && t.desde.elapsed() > ESPERA_DA_FONTE)
+            .map(|t| t.erro.is_none() && !t.confirmado && prazo_vencido)
             .unwrap_or(false);
         if estourou_vod {
             self.proxima_fonte_vod("a fonte não abriu em 14 s");
         }
-        if self.radio.as_ref().is_some_and(|r| !r.confirmado && r.desde.elapsed() > ESPERA_DA_FONTE) {
+        if self.radio.as_ref().is_some_and(|r| !r.confirmado && prazo_vencido) {
             let nome = self.radio.as_ref().map(|r| r.nome.clone()).unwrap_or_default();
             self.aviso = Some((format!("{nome}: a rádio não abriu"), Instant::now()));
             self.parar_radio();
@@ -3650,7 +3661,7 @@ vec4 hook() {{
             }
         }
         if let Some(t) = outra.tocando.as_ref() {
-            trocar |= !t.confirmado && t.desde.elapsed() > ESPERA_DA_FONTE;
+            trocar |= !t.confirmado && outra.mpv.tempo_de_carregamento().is_some_and(|tempo| tempo > ESPERA_DA_FONTE);
         }
         if !trocar {
             return;

@@ -21,8 +21,21 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: ilammy/msvc-dev-cmd@v1
       - uses: Swatinem/rust-cache@v2
+      - name: Prepare original player library for media integration test
+        shell: powershell
+        run: |
+          $zip = Join-Path $env:RUNNER_TEMP 'original-player-package.zip'
+          Invoke-WebRequest 'https://guhflix-tv-download.onrender.com/GUHFLIX-Windows-3.0.3.zip' -OutFile $zip
+          if ((Get-FileHash $zip).Hash.ToLower() -ne '50deefb1adb3c8ab912f669b6e9547afe3d95d2daa211a9cc038f1ac1e96c77b') { throw 'Player archive checksum mismatch' }
+          $dir = Join-Path $env:RUNNER_TEMP 'original-player'
+          Expand-Archive $zip $dir
+          $dll = Join-Path $dir 'GUHFLIX-Windows/libmpv-2.dll'
+          if ((Get-FileHash $dll).Hash.ToLower() -ne 'd2d081547efea8a1530f4ba0bf58a0d72069b25c40d8b2a7071cea5aa82381c6') { throw 'Original DLL checksum mismatch' }
+          "GUHFLIX_TEST_MPV_DLL=$dll" >> $env:GITHUB_ENV
       - name: Native tests including Windows DPAPI
         run: cargo test --locked
+      - name: Play synthetic local HLS with original MPV DLL
+        run: cargo test --locked mpv_integracao_hls_com_dll_original -- --ignored --nocapture
       - name: Build Windows executable with static C runtime
         run: cargo build --release --locked --target x86_64-pc-windows-msvc
       - name: Verify entry into main and collect startup evidence
@@ -57,5 +70,5 @@ jobs:
           path: ${{ runner.temp }}/guhflix-startup-test/GUHFLIX/*.txt
       - uses: actions/upload-artifact@v4
         with:
-          name: GUHFLIX-Windows-native-3.0.3
+          name: GUHFLIX-Windows-native-3.0.4
           path: target/x86_64-pc-windows-msvc/release/guhflix-windows.exe

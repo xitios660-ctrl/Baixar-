@@ -1048,18 +1048,28 @@ mod client_tests {
             playing: AtomicBool::new(false),
         });
         let alive = Arc::new(Mutex::new(true));
+        let load_clock = Arc::new(crate::carregamento::Carregamento::default());
+        let first_id = load_clock.solicitar();
+        let first_clock = load_clock.clone();
         let first = Arc::new(AtomicBool::new(false));
         let invoked = first.clone();
         lease.load(alive.clone(), move || {
+            first_clock.despachar(first_id);
             invoked.store(true, Ordering::SeqCst);
         });
         received.recv_timeout(Duration::from_secs(5)).unwrap();
+        assert_eq!(load_clock.tempo(), None, "não contar mídia enquanto aguarda autorização");
         let (done, completed) = std::sync::mpsc::channel();
+        let new_id = load_clock.solicitar();
+        let dispatched_clock = load_clock.clone();
         lease.load(alive, move || {
+            assert!(dispatched_clock.despachar(new_id));
             done.send(()).unwrap();
         });
+        assert_eq!(load_clock.tempo(), None);
         barrier.wait();
         completed.recv_timeout(Duration::from_secs(5)).unwrap();
+        assert!(load_clock.tempo().is_some());
         assert!(!first.load(Ordering::SeqCst));
         assert!(lease.playing.load(Ordering::SeqCst));
         assert!(!lease.expired());
