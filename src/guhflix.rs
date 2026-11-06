@@ -627,6 +627,7 @@ pub struct Gui {
     username: String,
     password: String,
     pub account: bool,
+    pending_revoke: Option<String>,
 }
 impl Default for Gui {
     fn default() -> Self {
@@ -634,6 +635,7 @@ impl Default for Gui {
             username: String::new(),
             password: String::new(),
             account: false,
+            pending_revoke: None,
             started: Instant::now(),
             intro_done: false,
         }
@@ -727,7 +729,9 @@ impl Gui {
                 if !status.active {
                     ui.add_sized(
                         [350., 36.],
-                        egui::TextEdit::singleline(&mut self.username).hint_text("Usuário"),
+                        egui::TextEdit::singleline(&mut self.username)
+                            .char_limit(40)
+                            .hint_text("Usuário da assinatura"),
                     );
                     let password = ui.add_sized(
                         [350., 36.],
@@ -794,7 +798,7 @@ impl Gui {
                             ui.label(row["label"].as_str().unwrap_or("Dispositivo"));
                             if ui.button("Encerrar sessão").clicked() {
                                 if let Some(id) = row["id"].as_str() {
-                                    svc.revoke(id.to_owned());
+                                    self.pending_revoke = Some(id.to_owned());
                                 }
                             }
                         });
@@ -804,6 +808,9 @@ impl Gui {
                     }
                 });
             });
+        if let Some(id) = self.pending_revoke.clone() {
+            egui::Window::new("Encerrar esta sessão?").collapsible(false).resizable(false).show(ctx,|ui|{ui.label("Todas as reproduções deste dispositivo serão encerradas e será necessário entrar novamente.");ui.horizontal(|ui|{if ui.button("Cancelar").clicked(){self.pending_revoke=None;}if ui.add(egui::Button::new("Encerrar sessão").fill(crate::tela::ACENTO)).clicked(){self.pending_revoke=None;svc.revoke(id.clone());}});});
+        }
     }
 }
 pub fn brand(ui: &mut egui::Ui) {

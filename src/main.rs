@@ -107,6 +107,7 @@ fn main() -> eframe::Result<()> {
         .with_title("GUHFLIX")
         .with_inner_size([1280.0, 720.0])
         .with_min_inner_size([800.0, 480.0]);
+    if let Ok(icon)=image::load_from_memory(include_bytes!("../assets/guhflix.png")){let rgba=icon.to_rgba8();let(w,h)=rgba.dimensions();janela=janela.with_icon(egui::IconData{rgba:rgba.into_raw(),width:w,height:h});}
     if std::env::var("SAIMO_FOTO").is_ok() {
         // Foto de teste: abre sem tomar o foco de quem está usando a máquina.
         janela = janela.with_active(false);
