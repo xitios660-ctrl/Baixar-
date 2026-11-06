@@ -1,62 +1,41 @@
-# GUHFLIX · plataforma de acesso
+# GUHFLIX — plataforma atual Marley
 
-Implementação dedicada ao GUHFLIX; não modifica GANOH, RR Motos ou TV DO GUH AI. API Fastify/TypeScript e painel Node separado no Render. Banco MongoDB exclusivo, transações obrigatórias (replica set/Atlas). Não é gateway de vídeo, DRM ou autorização de provedores: as permissões do catálogo continuam independentes.
+API: https://guhflix-marley-api.onrender.com
+Painel: https://guhflix-marley-admin.onrender.com
+Download: https://guhflix-tv-download.onrender.com/GUHFLIX-TV-2.0.1.apk
 
-## Serviços
+Render: Marley's workspace, conexão Conta Para Tv Dog Marley, confirmado pelo proprietário. Serviços guhflix-marley-api e guhflix-marley-admin. MongoDB: conexão Guh Flix, Project0 / Cluster0, banco EXISTENTE `guhflix` em minúsculas. Preservar coleções e dados; não mudar capitalização nem voltar para os serviços antigos sem Marley.
 
-- Download publicado: https://guhflix-tv-download.onrender.com — APK 1.0.1 com novo ícone.
-- Painel publicado: https://guhflix-admin.onrender.com — interface e proxy; integração de produção depende da API.
-- API publicada: https://guhflix-api.onrender.com — modo de configuração, HTTP 503 em /health até preencher MONGODB_URI e liberar a rede do Render no Atlas.
-- Fonte: branch `guhflix-platform` em https://github.com/xitios660-ctrl/Baixar-.
-- Atlas atual selecionado pelo usuário: conexão Guh Flix, organização Marley’s Org - 2026-11-06, Project 0, Cluster0 (cluster0.qhjalci.mongodb.net). O namespace GUHFLIX será inicializado pela API após conectar. O projeto anterior na conexão Primary não é o destino atual. A senha atual não está configurada no Render.
+## Estado e acesso
 
-## Instalar e executar
+Health da API e do painel retornaram200. APK2.0.1 com.guhflix.tv aponta para a API Marley e inclui tela nativa de usuário/senha. O aplicativo recebe a conta de cliente cadastrada no painel, com assinatura ativa. Login MongoDB e login da TV são coisas distintas.
 
-Node 22+ e MongoDB replica set. `cd api && npm ci && npm run build`. Configure em variáveis de ambiente:
+O proprietário configurou acesso administrativo somente com usuário e senha, sem autenticador/MFA, e senhas de no mínimo8 caracteres. Essas mudanças remotas foram preservadas. Não declarar MFA ativo nem reintroduzir campos de autenticador sem considerar as escolhas atuais do proprietário. Argon2id, JWT curto, hash/rotação de refresh e role no servidor continuam presentes.
 
-```
-MONGODB_URI=mongodb+srv://USUARIO:SENHA@SEU_CLUSTER/GUHFLIX
-JWT_SECRET=segredo-aleatorio-com-pelo-menos-48-caracteres
-ADMIN_ORIGIN=https://guhflix-admin.onrender.com
-BOOTSTRAP_TOKEN=segredo-privado-aleatorio-com-pelo-menos-48-caracteres
-```
+## Compilar/executar
 
-Não use os textos de exemplo como segredos. O usuário Mongo deve ter `readWrite` somente em GUHFLIX (e GUHFLIX_TEST para testes isolados). Libere na lista de acesso do projeto apenas os endereços de saída exibidos no serviço da API e os endereços do operador necessários; não use liberação mundial por conveniência. A implantação usa o mecanismo de variáveis do Render como fonte de verdade.
+Node22+, MongoDB replica set/Atlas. API: `npm ci --prefix api --include=dev && npm run build --prefix api`; start `node api/dist/server.js`. Painel: `node admin/server.mjs`, com API_URL para a API Marley. Proxy de mesma origem e cookie HttpOnly/Secure/SameSite Strict; não há refresh/senha em localStorage.
 
-Build API: `npm ci --prefix api --include=dev && npm run build --prefix api`; start: `node api/dist/server.js`; plano gratuito inicial, região Virginia; health `/health`. O cliente Mongo é único por processo e usa os limites padrão do driver; medir conexões, fila e latência antes de ajustar o pool ou escalar. Duas instâncias exigiriam rate limiting compartilhado; o limite de reproduções já é transacional no banco.
+Variáveis MONGODB_URI, JWT_SECRET e ADMIN_ORIGIN são privadas no Render. Não imprimir ou versionar valores. ADMIN_ORIGIN corresponde ao painel Marley. O token de bootstrap, quando presente, é segredo de primeiro acesso; não recriar administrador se já existir. O serviço só ativa rotas autenticadas depois de conectar ao Mongo e criar índices. Antes disso retorna503; /health200 não significa que todas as funções de vídeo da TV foram homologadas.
 
-Painel: start `node admin/server.mjs`; `API_URL` aponta para a URL HTTPS real da API. O proxy de mesma origem permite cookie HttpOnly/Secure/SameSite Strict também no Safari. Não há senha ou refresh token em localStorage; apenas identificador aleatório de instalação.
+## Regras de acesso
 
-## Primeiro administrador
+Plano BRL3000 centavos/30 dias exatos. Renovação parte do maior entre agora e vencimento atual, usa relógio UTC do servidor e exige confirmação manual do pagamento. Não há cobrança automática ou cartão/webhook ativados. Registrar método, período e operador. Transação grava assinatura, pagamento, vencimento, auditoria e chave idempotente. Renovação não apaga bloqueio manual.
 
-Após configurar o backend, abra privadamente `https://guhflix-admin.onrender.com/#setup=SEU_BOOTSTRAP_TOKEN`. O fragmento é removido do histórico visível e não é enviado no HTTP. Escolha usuário, senha >=16 caracteres e registre a chave exibida num autenticador TOTP (SHA1, 6 dígitos, 30 segundos). Confirme o código. O endpoint recusa recriar administrador, usa token privado, limite de tentativas e transação. Depois remova BOOTSTRAP_TOKEN no Render. Não publique esse link nem a chave MFA. Não existe admin/senha padrão.
+Vários dispositivos podem estar cadastrados; máximo3 leases simultâneos de reprodução por conta. Lease120s, heartbeat35s e watchdog monotônico local antes de110s; quarta tentativa recusada sem derrubar outro usuário. Parada, timeout e revogação liberam/invalidam sessões. Cada cliente só gerencia suas sessões. O servidor deve continuar aplicando as regras, independentemente do relógio da TV.
 
-Alternativa operacional, antes de existir admin: `ADMIN_USERNAME`, `ADMIN_PASSWORD`, `ADMIN_TOTP_SECRET` e `npm run bootstrap` na pasta api. Senhas são Argon2id; a chave MFA precisa ser guardada pelo administrador. O reset do autenticador é operação administrativa com acesso ao banco e auditoria, não um endpoint público.
+JWT10min, refresh rotativo com hash no banco e detecção de reutilização, sessão renovável de30 dias separada do vencimento da assinatura. O app Android usa AES-GCM/AndroidKeyStore e dados sem backup automático. Não é proxy/DRM de filmes nem substitui autorização do provedor.
 
-## Regras
+## Testes e limites
 
-Vários dispositivos podem ser cadastrados; no máximo três reproduções por conta. Cada sessão pode ter uma reprodução. Slots ficam num vetor limitado do usuário, atualizado com transação, para serializar concorrência entre instâncias. Lease de 120s, heartbeat do app a cada 35s e watchdog monotônico local antes de 110s desde o pedido; perda de rede não permite reprodução indefinida. Pausar fora do app/fechar player libera a sessão; sessões abandonadas expiram pelo relógio do servidor. TTL do Mongo limpa sessões de autenticação, mas a API verifica expiração sem depender da execução do TTL.
+`cd api && npm test`: testes em MongoDB replica set real descartável `guhflix_test`, sem acessar clientes reais. Autenticação/RBAC, isolamento de sessão, renovação concorrente/idempotência, limite3/4, parada/timeout, bloqueio, refresh/revogação/logout, auditoria/receita, backup e prontidão HTTP passaram. Testes foram alinhados ao banco em minúsculas e a exportação de backup usa a mesma capitalização.
 
-JWT de 10 min, refresh aleatório com hash no banco, rotação e detecção de reutilização anterior. Sessão renovável de 30 dias, separada do vencimento da assinatura. Bloqueio manual não é apagado por renovação. Sessões existentes podem consultar a reativação sem novo login; sessão revogada ou senha redefinida exige login. Android salva refresh com AES-GCM/AndroidKeyStore e desativa backup dos dados.
+Painel atual testado localmente no Chromium: login usuário/senha, criar cliente, confirmar pagamento de teste isolado, renovar, consultar telas, bloquear/desbloquear e restaurar sessão após reload; sem erros JavaScript. Em produção foram verificados health e o contrato de login inválido de TV. Não houve acesso a conta real nesse teste.
 
-Renovação custa BRL 3000 centavos por 30 dias exatos, a partir do maior entre agora e vencimento atual. Exige confirmação explícita do recebimento e Idempotency-Key UUID. Pagamento, assinatura, vencimento, chave e auditoria são escritos na mesma transação. Repetir a mesma chave com corpo diferente falha. Não há gateway automático, cartão ou webhook ativado.
+A reprodução e login de cliente real na TCL, reinício físico, áudio/legendas, episódios, desempenho/4K ainda exigem validação no aparelho. Não apresentar testes sintéticos ou de licença como vídeos efetivamente tocando.
 
-## Testes
+## Backups e operação
 
-`cd api && npm test` sobe MongoDB replica set descartável exclusivo e testa criação inicial protegida, senha/role, rejeição de objeto em usuário, expiração, renovação duplicada concorrente, preservação do bloqueio, 3/4 reproduções concorrentes, stop/timeout, rotação/reutilização de token, persistência entre instâncias da API, revogação, logout, receita e auditoria.
+Exportação de snapshot com AES-256-GCM em api/src/run-backup.ts. Usar MONGODB_URI, BACKUP_KEY privado (64 caracteres hexadecimais) e BACKUP_FILE privado. Formato GUHFLIX1 + IV12 bytes + gzip cifrado + tag16 bytes. Guardar chave separada e autenticar tag antes de restaurar EJSON em ambiente isolado. Script e criptografia foram testados localmente; agendamento, armazenamento externo/retencão, alertas e ensaio operacional de restauração permanecem pendentes. Não guardar backup na pasta pública de downloads ou disco efêmero do Render.
 
-Painel também foi executado no Chromium com API e banco descartáveis reais: MFA, criar cliente, confirmar pagamento, renovar, consultar telas, bloquear/desbloquear e restaurar sessão após reload. As capturas locais contêm somente clientes de teste. Não confundir esses testes com homologação no Atlas de produção ou TCL física.
-
-## Operação e backups
-
-`/health` verifica ping no banco. A API gera logs estruturados sem corpos/senhas/tokens. Use os eventos e métricas do Render e configure alertas externos para o health após implantar. O plano gratuito pode suspender por inatividade; a primeira conexão fica sujeita ao cold start. Não há garantia de SLA comercial nesse plano.
-
-Há exportação criptografada AES-256-GCM com snapshot consistente em `api/src/run-backup.ts`; o teste local verifica descriptografia autenticada e presença de pagamentos/auditoria. Execute com `MONGODB_URI`, `BACKUP_KEY` de 64 caracteres hexadecimais e `BACKUP_FILE` privado. Guarde a chave separada. O arquivo contém cabeçalho GUHFLIX1, IV de 12 bytes, gzip cifrado e tag final de 16 bytes; autentique a tag antes de restaurar os registros EJSON em banco vazio. A restauração operacional e o agendamento ainda precisam ser exercitados. Backup automático NÃO está ativado. O cluster gratuito não oferece os mesmos recursos de snapshots de planos pagos. Antes de cadastrar clientes reais, configure uma rotina de exportação exclusiva do banco GUHFLIX, criptografia, armazenamento externo privado, retenção e teste de restauração. Não guarde backup na pasta pública do site ou no disco efêmero do Render. Essa dependência operacional está explicitamente pendente.
-
-Não considere concluído o aceite do PDF sem banco/API em produção, teste de ponta a ponta no APK e reprodução no hardware autorizado. A versão 2.0.0 candidata não deve substituir o download até essa conexão e validação.
-
-## Concluir a conexão de produção
-
-Abra https://dashboard.render.com/web/srv-dbmk1g0m7kps73bj9v00 e entre em Environment. Edite MONGODB_URI diretamente no painel, usando a URI do Atlas com a senha atual codificada para URL e o banco /GUHFLIX. Não compartilhe o valor completo em chat ou repositório. JWT_SECRET, BOOTSTRAP_TOKEN e ADMIN_ORIGIN já foram configurados privadamente.
-
-No mesmo serviço Render, Connect > Outbound mostra os intervalos reais de IP de saída. Adicione esses intervalos em Network Access do projeto Atlas Guh Flix. Evite confundir esses endereços de saída com a lista de IPs de entrada do serviço. Salve/reimplante e confira /health: deve retornar HTTP 200 com ok:true antes de cadastrar o administrador ou publicar APK2. Enquanto não houver URI válida, a API retorna HTTP 503 configuration_required; falhas de conexão retornam database_unavailable. O teste de prontidão confirma que rotas de reprodução/admin não são liberadas nesse estado.
+Planos gratuitos sujeitos a cold start. Nenhuma configuração desta plataforma autoriza modificar GANOH, RR Motos, TV DO GUH AI ou outros projetos.
