@@ -1,0 +1,27 @@
+name: Validate Windows startup diagnostics
+on:
+  push:
+    branches: [main]
+    paths: ['GUHFLIX-Diagnostico.cmd', 'GUHFLIX-Diagnostico.zip', '.github/workflows/windows-diagnostics.yml']
+permissions:
+  contents: read
+jobs:
+  parse:
+    runs-on: windows-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Parse with Windows PowerShell and verify ZIP
+        shell: powershell
+        run: |
+          $line = Get-Content GUHFLIX-Diagnostico.cmd | Where-Object { $_.StartsWith('powershell.exe ') }
+          $offset = $line.IndexOf('-Command "') + 10
+          $body = $line.Substring($offset).TrimEnd('"')
+          $tokens = $null
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseInput($body,[ref]$tokens,[ref]$errors) | Out-Null
+          if ($errors.Count -gt 0) { throw ($errors | Out-String) }
+          Expand-Archive GUHFLIX-Diagnostico.zip diagnostic-extracted
+          if ((Get-FileHash GUHFLIX-Diagnostico.cmd).Hash -ne (Get-FileHash diagnostic-extracted/GUHFLIX-Diagnostico.cmd).Hash) { throw 'Archive mismatch' }
+          if ($line.Length -gt 8000) { throw 'CMD line too long' }
+          Write-Output 'PASS: Windows PowerShell parser and ZIP consistency. No app execution or security settings changes.'
