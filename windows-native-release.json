@@ -1,13 +1,13 @@
 {
-  "versao": "3.0.3",
-  "tag": "v3.0.3",
-  "notas": "Falha ao abrir um filme mantém o título e oferece nova tentativa, sem cair na lista de canais. Corrige retomada de canal e atalhos de canal durante filmes.",
+  "versao": "3.0.4",
+  "tag": "v3.0.4",
+  "notas": "Corrige prazo de abertura de vídeo após a autorização da conta e captura o erro real do player. Validado com HLS sintético e DLL original do Saímo no Windows.",
   "arquivos": {
     "windows": {
-      "nome": "GUHFLIX-Windows-3.0.3.zip",
-      "url": "https://guhflix-tv-download.onrender.com/GUHFLIX-Windows-3.0.3.zip",
-      "bytes": 53324234,
-      "sha256": "50deefb1adb3c8ab912f669b6e9547afe3d95d2daa211a9cc038f1ac1e96c77b"
+      "nome": "GUHFLIX-Windows-3.0.4.zip",
+      "url": "https://guhflix-tv-download.onrender.com/GUHFLIX-Windows-3.0.4.zip",
+      "bytes": 53326954,
+      "sha256": "f6abddfede7f790a941a1bcb9df45b5cb5fec5db1d7270183f6c2272d2e97e67"
     }
   }
 }
