@@ -1,0 +1,2 @@
+import {defineConfig,devices} from '@playwright/test';
+export default defineConfig({testDir:'test',timeout:45000,fullyParallel:false,workers:1,use:{baseURL:'http://127.0.0.1:4280',trace:'retain-on-failure'},webServer:{command:'../api/node_modules/.bin/tsx ../api/test/pwa-server.ts',url:'http://127.0.0.1:4280/health',reuseExistingServer:false,timeout:90000},projects:[{name:'iPhone-WebKit',use:{...devices['iPhone 13'],browserName:'webkit'}},{name:'Chromium-mobile',use:{...devices['Pixel 7'],browserName:'chromium'}}]});

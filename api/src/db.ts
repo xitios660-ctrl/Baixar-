@@ -1,4 +1,5 @@
 import { MongoClient, type Db } from 'mongodb';
+import {connectIndexes} from './connect.js';
 export async function connect(uri:string,name='guhflix') {
  if(!/^guhflix(?:_test)?$/.test(name))throw new Error('Exclusive guhflix database required');
  // One long-lived client. Low-traffic, single Render instance; use driver defaults until measured.
@@ -16,4 +17,5 @@ export async function indexes(db:Db){
  db.collection('idempotency_keys').createIndex({actorId:1,key:1},{unique:true}),
  db.collection('audit_logs').createIndex({createdAt:-1}),
  db.collection('audit_logs').createIndex({targetUserId:1,createdAt:-1})]);
+ await connectIndexes(db);
 }

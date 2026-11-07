@@ -1,0 +1,20 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <color name="surface">#080808</color>
+    <color name="surface_card">#d9080808</color>
+    <color name="surface_panel">#F00B0E14</color>
+    <color name="surface_raised">#14ffffff</color>
+
+    <color name="accent">#e50914</color>
+    <color name="accent_dim">#33e50914</color>
+    <color name="accent_edge">#66e50914</color>
+
+    <color name="text_primary">#ffffffff</color>
+    <color name="text_secondary">#b3b3b3</color>
+    <color name="text_faint">#66ffffff</color>
+
+    <color name="live">#ff4d4f</color>
+
+    
+    <color name="abertura_fundo">#080808</color>
+</resources>

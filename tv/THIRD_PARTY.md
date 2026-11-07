@@ -1,0 +1,1 @@
+GUHFLIX TV mantém componentes do Saímo TV Android (https://github.com/SaimoTV/SaimoTV-Android), base a0f080c6eeadca36f503964884c8ecbf088bab82, conforme autorização declarada pelo titular. Consulte LICENSE e os avisos das dependências AndroidX, Media3, Kotlin, Coil, OkHttp e apksig. A marca GUHFLIX é a identidade personalizada; nenhum logotipo da Netflix foi usado.

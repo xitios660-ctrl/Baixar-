@@ -4,3 +4,14 @@ dist/
 *.jks
 *.secret
 credentials*
+
+tv/.gradle/
+tv/**/build/
+tv/local.properties
+tv/keystore.properties
+*.keystore
+*.p12
+*.pfx
+*.env
+pwa/test-results/
+pwa/playwright-report/
