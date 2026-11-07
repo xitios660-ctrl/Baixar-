@@ -9,7 +9,7 @@ async function proxyApi(req,res,path){
  if(req.method==='POST'||req.method==='PATCH')headers['content-length']=String(body.length);
  const target=new URL(path==='/api/health'?'/health':req.url,api);let proxy;
  const fail=(code)=>{console.error(JSON.stringify({service:'guhflix-admin',event:'api_unavailable',path,code}));json(res,503,unavailable)};
- try{proxy=(api.protocol==='https:'?https:http).request(target,{method:req.method,headers,timeout:45000},up=>{
+ try{proxy=(api.protocol==='https:'?https:http).request(target,{method:req.method,headers,timeout:105000},up=>{
   const chunks=[];let size=0,failed=false;
   up.on('data',chunk=>{size+=chunk.length;if(size>1048576){failed=true;up.destroy();fail('RESPONSE_TOO_LARGE');return}chunks.push(chunk)});
   up.on('error',()=>{if(!failed)fail('RESPONSE_INTERRUPTED')});
