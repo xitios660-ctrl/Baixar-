@@ -321,7 +321,7 @@ class PlayerActivity : AppCompatActivity(), Connect.Listener {
                 val entries = (0 until episodes.length()).map { val e=episodes.getJSONObject(it)
                     Titulos.Ep(e.getInt("season"),e.getInt("episode"),if(e.getInt("season")==season && e.getInt("episode")==number) sources else emptyMap())
                 }
-                val r = Titulos.Resolvido(alvo, alvo.titulo, if(alvo.serie) null else Filme(alvo.titulo,sources), entries, alvo.tmdbId)
+                val r = Titulos.Resolvido(alvo, if(alvo.serie) Serie(alvo.titulo,alvo.ano,-1,0).nomeCompleto else alvo.titulo, if(alvo.serie) null else Filme(alvo.titulo,sources), entries, alvo.tmdbId)
                 resolvido=r;ep=if(alvo.serie) r.episodio(season,number) else null
                 require(!alvo.serie || ep!=null)
                 mostrarLogo(r)

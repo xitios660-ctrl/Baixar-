@@ -19,3 +19,7 @@
 - Testes num iPhone físico/Safari instalado e na TCL real, indisponíveis nesta execução.
 
 A compilação demonstra consistência de código; não substitui esses testes de dispositivo. Consulte notas posteriores para a publicação HTTPS e otimização release.
+
+## Publicação HTTPS confirmada
+
+Render deploy dep-dbn8ohqvcj2c7386ivjg, commit 91217396cbd52b9e4cadc0ae794d4735628d5e24, estado live. Endpoints públicos /pwa/, sw.js e manifest.webmanifest retornaram 200. /api/connect/health informou catalog.available=true. /api/connect/catalog sem autenticação retornou 401. WebKit abriu a página HTTPS pública, service worker ficou ativo e não houve erro de página. Não foi feito login com uma conta real de cliente neste smoke test. A versão Windows e os arquivos de download anteriores permanecem intocados.

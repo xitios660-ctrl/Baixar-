@@ -50,7 +50,7 @@ object CloudRemote {
                 val duration=vod.optLong("dur").coerceIn(0,172800000)
                 out.put("title",title).put("positionMs",position).put("durationMs",duration)
                 out.put("mode",if(raw.optBoolean("playing"))"playing" else if(duration>0)"paused" else "loading")
-                if(lastId!=null&&lastTitle.isNotBlank()&&title.startsWith(lastTitle.substringBefore(" (")))out.put("contentId",lastId)
+                if(lastId!=null&&lastTitle.isNotBlank()&&(title==lastTitle||title==lastTitle.substringBefore(" (")))out.put("contentId",lastId)
             }
             out
         }catch(_:Exception){out.put("mode","loading")}

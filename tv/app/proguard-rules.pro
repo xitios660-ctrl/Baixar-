@@ -14,3 +14,6 @@
 }
 
 -keepclassmembers class br.com.saimo.tv.** { public void guhflixInitialize(android.os.Bundle); }
+# Branding uses reflective activity fields; preserve names through release R8.
+-keep class com.guhflix.shell.** { *; }
+-keep class br.com.saimo.tv.*Activity { *; }
