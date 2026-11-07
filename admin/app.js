@@ -6,7 +6,7 @@ function el(tag,text,cls){const e=document.createElement(tag);if(text!==undefine
 function notice(message){$('notice').textContent=message;$('notice').hidden=false;clearTimeout(timer);timer=setTimeout(()=>$('notice').hidden=true,7000)}
 function serviceError(message='Servidor temporariamente indisponível. Aguarde alguns segundos e tente novamente.',code='SERVICE_UNAVAILABLE'){const error=new Error(message);error.code=code;return error}
 async function requestJson(path,{method='GET',body,headers={}}={}){
- const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),55000);let r,text;
+ const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),110000);let r,text;
  try{const url=new URL('/api/'+path,location.origin);r=await fetch(url.href,{method,credentials:'same-origin',signal:controller.signal,headers:{Accept:'application/json','Content-Type':'application/json',...headers},...(body?{body:JSON.stringify(body)}:{})});text=await r.text();}
  catch(e){throw serviceError(e.name==='AbortError'?'O servidor está demorando para responder. Tente novamente em instantes.':'Não foi possível conectar ao servidor. Confira sua conexão e tente novamente.','NETWORK_ERROR')}
  finally{clearTimeout(timeout)}
@@ -16,7 +16,7 @@ async function requestJson(path,{method='GET',body,headers={}}={}){
  return {r,data};
 }
 let readiness=null;
-async function waitForService(){if(!readiness)readiness=(async()=>{const deadline=Date.now()+90000;let lastError;do{try{const {r,data}=await requestJson('health');if(r.ok&&data.ok===true)return;lastError=serviceError();}catch(error){lastError=error;}if(Date.now()>=deadline)break;notice('Servidor iniciando. Aguarde nesta tela; sua senha ainda não foi enviada.');await new Promise(resolve=>setTimeout(resolve,3000));}while(Date.now()<deadline);throw lastError||serviceError();})().finally(()=>readiness=null);return readiness}
+async function waitForService(){if(!readiness)readiness=(async()=>{const deadline=Date.now()+180000;let lastError;do{try{const {r,data}=await requestJson('health');if(r.ok&&data.ok===true)return;lastError=serviceError();}catch(error){lastError=error;}if(Date.now()>=deadline)break;notice('Servidor iniciando. Aguarde nesta tela; sua senha ainda não foi enviada.');await new Promise(resolve=>setTimeout(resolve,5000));}while(Date.now()<deadline);throw lastError||serviceError();})().finally(()=>readiness=null);return readiness}
 async function refresh(){if(!refreshing)refreshing=(async()=>{const {r,data}=await requestJson('auth/refresh',{method:'POST',body:{client:'admin'}});if(!r.ok)throw Error('Sua sessão terminou. Entre novamente.');if(typeof data.accessToken!=='string'||!data.accessToken)throw serviceError();access=data.accessToken;return data;})().finally(()=>refreshing=null);return refreshing}
 async function api(path,{method='GET',body,key,retry=true}={}){const {r,data}=await requestJson(path,{method,body,headers:{...(access?{Authorization:'Bearer '+access}:{}),...(key?{'Idempotency-Key':key}:{})}});if(r.status===401&&retry&&path!=='auth/login'){try{await refresh();return await api(path,{method,body,key,retry:false})}catch(e){showLogin();throw e}}if(!r.ok)throw Error(typeof data.message==='string'?data.message:'Não foi possível concluir.');return data}
 function showLogin(){$('login').hidden=false;$('dashboard').hidden=true;access=''}
