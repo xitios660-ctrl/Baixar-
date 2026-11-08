@@ -14,6 +14,8 @@ mod guhflix;
 mod diagnostico;
 mod recuperacao;
 mod carregamento;
+mod retentativa;
+mod relacionados;
 mod atualizacao;
 mod fontes_desativadas;
 mod fonte_preferida;
@@ -254,6 +256,7 @@ pub struct TocandoVod {
     pub confirmado: bool,
     /// Mantém o título selecionado mesmo quando todas as fontes falham.
     pub erro: Option<String>,
+    pub retentativa: retentativa::Reconexao,
     /// Quando é episódio: a série, o número e a lista para achar o seguinte.
     pub episodio: Option<EpisodioTocando>,
     /// Abertura, recapitulação e créditos, quando o TheIntroDB conhece.
@@ -277,6 +280,7 @@ impl TocandoVod {
             return Some(proxima);
         }
         self.confirmado = false;
+        self.retentativa.agendar(Instant::now());
         self.erro = Some("Não foi possível abrir as fontes disponíveis deste título.".into());
         None
     }
@@ -1268,9 +1272,10 @@ impl App {
         }
         self.pausado = false;
         self.tocando = None;
-        let (episodio, marcas, legendas, legenda_escolhida) = anterior
-            .map(|t| (t.episodio, t.marcas, t.legendas, t.legenda_escolhida))
-            .unwrap_or((None, None, Vec::new(), None));
+        let (episodio, marcas, legendas, legenda_escolhida, mut retentativa, visto) = anterior
+            .map(|t| (t.episodio, t.marcas, t.legendas, t.legenda_escolhida, t.retentativa, t.visto))
+            .unwrap_or((None, None, Vec::new(), None, Default::default(), (0.0,0.0)));
+        retentativa.consumir();
         self.tocando_vod = Some(TocandoVod {
             titulo,
             urls,
@@ -1278,13 +1283,14 @@ impl App {
             desde: Instant::now(),
             confirmado: false,
             erro: url.is_none().then(|| "Este título não tem uma fonte disponível para reprodução.".into()),
+            retentativa,
             episodio,
             marcas,
             legendas,
             legenda_escolhida,
             legenda_atraso: 0.0,
             legenda_aviso: None,
-            visto: (0.0, 0.0),
+            visto,
             proximo_desde: None,
             proximo_dispensado: false,
         });
@@ -1516,9 +1522,9 @@ impl App {
     /// Volta ao ponto em que parou, quando há um.
     fn retomar(&mut self) {
         let (Some(filme), Some(mpv)) = (self.tocando_vod.as_ref(), self.mpv.as_ref()) else { return };
-        let Some(marca) = progresso::onde_parou(&filme.titulo) else { return };
-        mpv.ir_para(marca.posicao);
-        let minutos = (marca.posicao / 60.0).round() as i64;
+        let posicao = if filme.visto.0>0.0 {filme.visto.0} else {let Some(marca)=progresso::onde_parou(&filme.titulo) else{return};marca.posicao};
+        mpv.ir_para(posicao);
+        let minutos = (posicao / 60.0).round() as i64;
         self.aviso = Some((format!("continuando de {minutos} min"), Instant::now()));
     }
 
@@ -1796,6 +1802,7 @@ impl App {
                         if let Some(t) = self.tocando_vod.as_mut() {
                             if !t.confirmado {
                                 t.confirmado = true;
+                                t.retentativa = Default::default();
                                 let (titulo, fonte, ms) =
                                     (t.titulo.clone(), t.fonte, t.desde.elapsed().as_millis());
                                 let url = t.urls.get(fonte).cloned().unwrap_or_default();
@@ -1895,6 +1902,8 @@ impl App {
         if self.tocando.is_some() || self.tocando_vod.is_some() || outra_no_ar || self.radio.is_some() {
             ctx.request_repaint_after(Duration::from_millis(16));
         }
+        let pode_repetir = { let status=guhflix::service().snapshot();status.active && !status.playback_blocked };
+        if pode_repetir && self.tocando_vod.as_ref().is_some_and(|t|t.erro.is_some() && !t.urls.is_empty() && t.retentativa.pronta(Instant::now())) { self.tentar_vod_novamente(); }
         self.acompanhar_vod();
         self.contar_video();
         self.guardar_progresso(false);
@@ -3850,7 +3859,7 @@ fn foto_de_teste(app: &mut App, ctx: &egui::Context) {
                     fonte: 0,
                     desde: Instant::now(),
                     confirmado: true,
-                    erro: None,
+                    erro: None, retentativa: Default::default(),
                     episodio: Some(EpisodioTocando { serie: "Ted Lasso".into(), temporada: 1, numero: 2, versao: "dub".into(),
                         lista: (1..=10).map(|n| vod::Episodio { temporada: 1, numero: n, versao: "dub".into(), urls: Vec::new() }).collect() }),
                     marcas: None,
@@ -4070,7 +4079,7 @@ mod testes_falha_vod {
         TocandoVod {
             titulo: titulo.into(),
             urls: (0..total).map(|i| format!("https://example.invalid/fonte-{i}")).collect(),
-            fonte: 0, desde: Instant::now(), confirmado: true, erro: None,
+            fonte: 0, desde: Instant::now(), confirmado: true, erro: None, retentativa: Default::default(),
             episodio: None, marcas: None, legendas: Vec::new(),
             legenda_escolhida: None, legenda_atraso: 0.0, legenda_aviso: None,
             visto: (120.0, 7200.0), proximo_desde: None, proximo_dispensado: false,

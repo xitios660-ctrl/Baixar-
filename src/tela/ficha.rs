@@ -188,6 +188,20 @@ pub fn ficha_tela(app: &mut App, ui: &mut egui::Ui) {
                     });
                 });
             }
+            if let Some(id)=app.generos.id(&titulo,serie) {
+                if let Some(related)=crate::relacionados::obter(id,serie).filter(|r|!r.items.is_empty()) {
+                    ui.add_space(28.0);ui.label(egui::RichText::new(&related.label).font(forte(22.0)).color(TEXTO));
+                    egui::ScrollArea::horizontal().id_salt(("relacionados",id)).show(ui,|ui|{ui.horizontal_top(|ui|{
+                        for item in related.items {ui.vertical(|ui|{ui.set_width(154.0);
+                            let (rect,_)=ui.allocate_exact_size(egui::vec2(148.0,222.0),Sense::hover());
+                            ui.painter().rect_filled(rect,10.0,ELEVADO);
+                            if let Some(texture)=item.poster.as_ref().and_then(|url|app.imagem(url,185)){pintar_cobrindo(ui,&texture,rect,10.0,0.5,1.0);}
+                            if botao(ui,None,&item.title,false).clicked(){acao=Some(AcaoDaFicha::Titulo(vod::Achado{titulo:item.title.clone(),serie:item.kind=="series",letra:item.letter.clone(),ano:item.year.clone()}));}
+                            if let Some(reason)=item.reason{ui.label(egui::RichText::new(reason).font(normal(11.0)).color(SECUNDARIO));}
+                        });}
+                    });});
+                } else { ui.ctx().request_repaint_after(std::time::Duration::from_millis(500)); }
+            }
             ui.add_space(30.0);
         });
     });
@@ -197,7 +211,8 @@ pub fn ficha_tela(app: &mut App, ui: &mut egui::Ui) {
         Some(AcaoDaFicha::Assistir) => app.assistir_da_ficha(),
         Some(AcaoDaFicha::Favoritar) => app.favoritar_vod(titulo),
         Some(AcaoDaFicha::Ator(id, nome, foto)) => app.abrir_ator(id, nome, foto),
-        Some(AcaoDaFicha::Titulo(_)) | None => {}
+        Some(AcaoDaFicha::Titulo(achado)) => {let item=ItemNaTela{titulo:achado.titulo.clone(),detalhe:if achado.serie{"Série".into()}else{"Filme".into()},serie:achado.serie,letra:achado.letra.clone()};app.abrir_ficha(achado.titulo,achado.serie,Destino::Item(item));},
+        None => {}
     }
 }
 

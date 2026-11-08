@@ -31,6 +31,7 @@ pub fn tela(app: &mut App, ui: &mut egui::Ui) {
                 ui.heading(titulo);
                 ui.add_space(14.0);
                 ui.label(erro);
+                if let Some(seconds)=app.tocando_vod.as_ref().and_then(|t|t.retentativa.segundos()){ui.label(format!("Nova tentativa em {seconds} s · o filme continuará selecionado."));}
                 ui.add_space(20.0);
                 let tentar = botao(ui, None, "Tentar novamente", true);
                 if ui.memory(|m| m.focused().is_none()) { tentar.request_focus(); }

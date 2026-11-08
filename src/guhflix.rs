@@ -674,7 +674,7 @@ impl Gui {
         if self.intro_done {
             return false;
         }
-        let t = self.started.elapsed().as_secs_f32() / 1.4;
+        let t = self.started.elapsed().as_secs_f32() / 3.8;
         if t >= 1.0
             || ui.input(|i| {
                 i.pointer.any_click()
@@ -689,7 +689,7 @@ impl Gui {
         let p = ui.painter();
         p.rect_filled(rect, 0.0, egui::Color32::from_rgb(8, 8, 8));
         let pulse = (1.0 - (t - 0.45).abs() * 1.4).clamp(0.0, 1.0);
-        for i in 0..8 {
+        for i in 0..18 {
             let x = rect.right() - i as f32 * 35.0;
             p.line_segment(
                 [
@@ -702,12 +702,12 @@ impl Gui {
                         229,
                         9,
                         20,
-                        (pulse * (35 - i * 3) as f32) as u8,
+                        (pulse * (50 - i * 2) as f32) as u8,
                     ),
                 ),
             );
         }
-        let size = (rect.width() * 0.065).clamp(32.0, 80.0);
+        let size = (rect.width() * 0.095).clamp(38.0, 108.0) * (0.82 + 0.18*(1.0-(1.0-t).powi(3)));
         let center = rect.center();
         p.text(
             egui::pos2(center.x - 5.0, center.y),
@@ -1136,4 +1136,10 @@ pub struct Instance;
 #[cfg(not(windows))]
 pub fn single_instance() -> Option<Instance> {
     Some(Instance)
+}
+
+/// Only called by catalog worker threads, never from the UI renderer.
+pub fn catalog_json(path:&str)->Option<Value>{
+ if !path.starts_with("/api/connect/") || !service().snapshot().active{return None}
+ service().client.lock().ok()?.request("GET",path,None).ok()
 }
