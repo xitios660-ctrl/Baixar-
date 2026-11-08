@@ -12,6 +12,7 @@
 ## Validação executada
 
 - API: build TypeScript e 7 testes de integração/lógica, incluindo autenticação, pagamentos idempotentes, limites de reprodução, vínculos, catálogo e recomendações.
+- Catálogo real: consulta de Homem de Ferro retornou recomendações Marvel e continuações sem repetir o mesmo TMDB; sete carrosséis carregados. Não houve execução do stream.
 - Web: 8 testes Playwright aprovados em WebKit/iPhone e Chromium/Android, com API e MongoDB locais e TV simulada.
 - Painel: 2 testes Playwright aprovados em Chromium desktop e WebKit/iPhone; login, criação de teste, filtro, ausência de pagamento fictício e logout. Teste Node do proxy aprovado.
 - Android: builds de release assinados, 9 testes JVM de OTA/retentativa por edição. Inspeção do APK final: assinatura, launcher, componentes, identificador, providers e manifesto OTA.
