@@ -1,0 +1,14 @@
+{
+  "package": "com.guhflix.tv.connect",
+  "versionCode": 2050001,
+  "version": "2.5.1",
+  "file": "GUHFLIX-Connect-TV-2.5.1.apk",
+  "apkUrl": "https://guhflix-tv-download.onrender.com/GUHFLIX-Connect-TV-2.5.1.apk",
+  "sha256": "cdc9277ef5183bc42da0a8c76967a16c81a545a0a7882a8b65453c8b9dd9d919",
+  "bytes": 5016888,
+  "signerSha256": "fe13bf8634b76a4450b70833a7a6eb6aa01429729371a33dccc75c8eaa72b76b",
+  "notes": "GUHFLIX Connect 2.5.1\n\n• Aplicativo independente que instala ao lado do GUHFLIX antigo.\n• Login com a mesma conta GUHFLIX usada no site do iPhone.\n• Vínculo individual da TV, escolha explícita do destino e controle de filmes e episódios.\n• Menu Conta / iPhone com código de vínculo e verificação de atualização.\n• Atualizações assinadas pela chave privada fornecida pelo proprietário.\n\nOs dados do app antigo ficam preservados e não são transferidos automaticamente. Instalação e reprodução na TCL real ainda precisam ser conferidas no aparelho.\n",
+  "mandatory": false,
+  "api": "https://guhflix-marley-api.onrender.com",
+  "admin": "https://guhflix-marley-admin.onrender.com"
+}
