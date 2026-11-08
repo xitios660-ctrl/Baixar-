@@ -219,6 +219,7 @@ sub navigation(event as Object)
  end if
  m.top.findNode("detail").visible = false
  m.episodes.visible = false
+ m.top.findNode("episodesBg").visible = false
  if index = 0
   send("home", "/api/connect/home", "GET", {})
  else if index = 1
@@ -322,12 +323,14 @@ sub seasonSelected(event as Object)
   end if
  end for
  m.episodes.content = content
+ m.top.findNode("episodesBg").visible = true
  m.episodes.visible = true
  m.episodes.setFocus(true)
 end sub
 sub episodeSelected(event as Object)
  episode = m.episodeItems[event.GetData()]
  m.episodes.visible = false
+ m.top.findNode("episodesBg").visible = false
  watchItem(m.activeItem.id, episode.season, episode.episode)
 end sub
 sub watchItem(id as String, season = invalid as Dynamic, episode = invalid as Dynamic)
@@ -366,7 +369,7 @@ sub retrySource()
  if m.grant = "" or m.retryPending then return
  m.retryPending = true
  m.position = m.video.position
- m.savedPosition = m.position
+ if m.position > m.savedPosition then m.savedPosition = m.position
  m.video.control = "stop"
  m.video.visible = false
  m.top.findNode("watchdog").control = "stop"
@@ -396,6 +399,7 @@ sub videoState(event as Object)
   end if
  else if state = "finished"
   closeVideo()
+  m.top.findNode("detail").visible = false
   m.catalog.setFocus(true)
  end if
 end sub
@@ -454,10 +458,13 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
  if key = "back"
   if m.grant <> "" or m.wantsVideo
    closeVideo()
+   m.top.findNode("detail").visible = true
    m.actions.setFocus(true)
    return true
   else if m.episodes.visible
    m.episodes.visible = false
+ m.top.findNode("episodesBg").visible = false
+   m.top.findNode("detail").visible = true
    m.actions.setFocus(true)
    return true
   else if m.top.findNode("detail").visible
@@ -465,10 +472,10 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
    m.catalog.setFocus(true)
    return true
   end if
- else if key = "up" and m.catalog.hasFocus()
+ else if key = "up" and m.catalog.isInFocusChain()
   m.nav.setFocus(true)
   return true
- else if key = "down" and m.nav.hasFocus() and m.access <> ""
+ else if key = "down" and m.nav.isInFocusChain() and m.access <> ""
   m.catalog.setFocus(true)
   return true
  end if

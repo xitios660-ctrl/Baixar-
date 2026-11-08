@@ -14,7 +14,7 @@
    <Label id="synopsis" translation="[310,245]" width="880" height="140" wrap="true" color="#bfb9c1"><Font role="font" size="19"/></Label>
    <ButtonGroup id="actions" translation="[310,410]"/>
   </Group>
-  <LabelList id="episodes" translation="[100,150]" width="1100" itemSize="[1080,46]" numRows="10" visible="false"/>
+  <Rectangle id="episodesBg" translation="[0,100]" width="1280" height="620" color="#080808" visible="false"/><LabelList id="episodes" translation="[100,150]" width="1100" itemSize="[1080,46]" numRows="10" visible="false"/>
   <Video id="video" width="1280" height="720" visible="false" notificationInterval="1"/>
   <Group id="intro">
    <Rectangle width="1280" height="720" color="#080808"/>
