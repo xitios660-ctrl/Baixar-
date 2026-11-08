@@ -1,25 +1,29 @@
-[
-  {
-    "file": "GUHFLIX-Windows-3.1.0.zip",
-    "bytes": 53340073,
-    "sha256": "107c4f31ccae04703a4a9374962460bd767cd2081fdb5e53415f40e63b82741d",
-    "http": 200,
-    "hashVerified": true
-  },
-  {
-    "file": "GUHFLIX-Connect-TV-2.6.0.apk",
-    "bytes": 5019623,
-    "sha256": "29dc355190bd793acd0cda3929396995c763714eeab9e6ffdaca458dcbb0c769",
-    "http": 200,
-    "hashVerified": true,
-    "httpRange": 206
-  },
-  {
-    "file": "GUHFLIX-Android-2.6.0.apk",
-    "bytes": 5019630,
-    "sha256": "821a1d1313e2514a711df5414d8db2b1655a32efbfdf882d0e4c9525923a8495",
-    "http": 200,
-    "hashVerified": true,
-    "httpRange": 206
-  }
-]
+{
+  "checkedLocally": [
+    {
+      "file": "GUHFLIX-Windows-3.1.1.zip",
+      "bytes": 53340311,
+      "sha256": "b164e2711a2cca67bcd92d56de5410bcec935bc46897a4a555e0f7ec6b973ec8",
+      "localIntegrityVerified": true
+    },
+    {
+      "file": "GUHFLIX-Connect-TV-2.6.1.apk",
+      "bytes": 5019681,
+      "sha256": "28838b30ae4f711bde8f743e16b4a0cdd38b529e7005f6316465205210989e26",
+      "localIntegrityVerified": true
+    },
+    {
+      "file": "GUHFLIX-Android-2.6.1.apk",
+      "bytes": 5019639,
+      "sha256": "b36fc8779cc3f5185c66d3b825317a48df0efc3d3d25bd76ad62fb8eddbdcf9d",
+      "localIntegrityVerified": true
+    },
+    {
+      "file": "GUHFLIX-Roku-1.0.0-desenvolvedor.zip",
+      "bytes": 347768,
+      "sha256": "2c241b7823c31fcfe50c0b9076c0334f1aeb1cda6d8d321176351508e5ef82e2",
+      "localIntegrityVerified": true
+    }
+  ],
+  "publicVerification": "Os arquivos públicos desta atualização serão conferidos após a publicação; veja ATUALIZACAO-2.6.1.md para os testes executados."
+}
