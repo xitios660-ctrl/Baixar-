@@ -16,10 +16,10 @@
       "sha256": "b164e2711a2cca67bcd92d56de5410bcec935bc46897a4a555e0f7ec6b973ec8"
     },
     {
-      "file": "GUHFLIX-Roku-1.0.0-desenvolvedor.zip",
-      "bytes": 347848,
-      "sha256": "aac6a7960948985ba041151391caf07ccc0b849cfedd5de5ebfa0486c98fe356"
+      "file": "GUHFLIX-Roku-1.0.1-desenvolvedor.zip",
+      "bytes": 348553,
+      "sha256": "c0560f40afbba7f6f182f36f6c08440de3cb2136a99f82ce6b30d81abdf02a4c"
     }
   ],
-  "verification": "SHA-256 e tamanho conferidos nos arquivos completos. A correção OTA foi testada após a otimização R8; a instalação na TV física permanece pendente."
+  "verification": "SHA-256 e tamanho conferidos. A correção OTA passou pela regressão R8. O canal Roku 1.0.1 compilou, mas não foi validado em aparelho físico nem publicado na loja."
 }

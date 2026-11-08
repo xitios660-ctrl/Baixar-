@@ -5,7 +5,7 @@
 | Windows 10/11 x64 | 3.1.1 | Catálogo e reprodução nativos |
 | Android TV / Google TV | Connect 2.6.2 | Catálogo, player e vínculo com o iPhone |
 | Android celular/tablet | 2.6.2 | Aplicativo nativo na horizontal |
-| Roku TV | 1.0.0 em validação | ZIP de desenvolvedor; ainda sem publicação na loja |
+| Roku TV | 1.0.1 em validação | ZIP de desenvolvedor; ainda sem publicação na loja |
 | iPhone / iPad | Web atualizada | Catálogo, reprodução no Safari e controle da TV |
 
 ## Teste de quatro horas e Roku

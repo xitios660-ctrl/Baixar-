@@ -1,9 +1,10 @@
 {
-  "version": "1.0.0",
-  "file": "GUHFLIX-Roku-1.0.0-desenvolvedor.zip",
-  "sha256": "aac6a7960948985ba041151391caf07ccc0b849cfedd5de5ebfa0486c98fe356",
-  "bytes": 347848,
+  "version": "1.0.1",
+  "file": "GUHFLIX-Roku-1.0.1-desenvolvedor.zip",
+  "sha256": "c0560f40afbba7f6f182f36f6c08440de3cb2136a99f82ce6b30d81abdf02a4c",
+  "bytes": 348553,
   "status": "developer-testing",
   "rokuStorePublished": false,
-  "physicalDeviceTested": false
+  "physicalDeviceTested": false,
+  "reviewTarget": "Roku OS 16.0, HD"
 }
