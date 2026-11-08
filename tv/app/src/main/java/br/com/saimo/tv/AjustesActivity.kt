@@ -31,6 +31,11 @@ import java.io.File
 @UnstableApi
 class AjustesActivity : TelaComMenu() {
 
+    override fun onResume() {
+        super.onResume()
+        com.guhflix.shell.OtaManager.resume(this)
+    }
+
     override val aba = Aba.AJUSTES
 
 

@@ -17,3 +17,8 @@
 # Branding uses reflective activity fields; preserve names through release R8.
 -keep class com.guhflix.shell.** { *; }
 -keep class br.com.saimo.tv.*Activity { *; }
+
+# apksig reads ASN.1/PKCS#7 models by reflection. Removing annotations or fields
+# makes the release updater reject correctly signed APKs (debug is unaffected).
+-keepattributes *Annotation*,Signature,InnerClasses,EnclosingMethod
+-keep class com.android.apksig.** { *; }

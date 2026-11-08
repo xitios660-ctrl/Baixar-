@@ -37,7 +37,7 @@ object OtaManager {
   checking=true;lastCheck=System.currentTimeMillis()
   worker.execute {
    try {
-    val c=connection(MANIFEST);val text=try{check(c.responseCode==200);c.inputStream.use{val bytes=it.readBytesLimited(32768);String(bytes,Charsets.UTF_8)}}finally{c.disconnect()}
+    val c=connection(MANIFEST+(if(MANIFEST.contains("?"))"&" else "?")+"check="+System.currentTimeMillis());val text=try{check(c.responseCode==200);c.inputStream.use{val bytes=it.readBytesLimited(32768);String(bytes,Charsets.UTF_8)}}finally{c.disconnect()}
     val manifest=JSONObject(text)
     require(manifest.getString("package")==a.packageName)
     if(manifest.getLong("versionCode")<=BuildConfig.VERSION_CODE){if(manual)notify(a,"Seu GUHFLIX está atualizado.");return@execute}
@@ -91,7 +91,11 @@ object OtaManager {
  private fun verify(a:Activity,file:File,r:OtaPolicy.Release){
   require(file.length()==r.bytes&&OtaPolicy.hash(file)==r.hash){"Integridade inválida. Baixe novamente."}
   val result=ApkVerifier.Builder(file).setMinCheckedPlatformVersion(23).build().verify()
-  require(result.isVerified){"A assinatura do APK não é válida."}
+  if(!result.isVerified){
+   val issues=(result.errors+result.v1SchemeSigners.flatMap{it.errors}+result.v2SchemeSigners.flatMap{it.errors}).map{it.issue.name}.distinct().joinToString(",")
+   android.util.Log.w("GUHFLIX-OTA","Verificação recusada: $issues")
+   error("Não foi possível confirmar a assinatura da atualização. O arquivo não foi instalado.")
+  }
   @Suppress("DEPRECATION") val installed=if(Build.VERSION.SDK_INT>=28)a.packageManager.getPackageInfo(a.packageName,PackageManager.GET_SIGNING_CERTIFICATES).signingInfo!!.apkContentsSigners.map{it.toByteArray()} else a.packageManager.getPackageInfo(a.packageName,PackageManager.GET_SIGNATURES).signatures!!.map{it.toByteArray()}
   fun digest(bytes:ByteArray)=MessageDigest.getInstance("SHA-256").digest(bytes).toList()
   require(result.signerCertificates.map{digest(it.encoded)}.toSet()==installed.map{digest(it)}.toSet()){ "A chave não corresponde à versão instalada. Atualização recusada." }
