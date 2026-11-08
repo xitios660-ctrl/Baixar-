@@ -6,6 +6,7 @@ sub init()
  m.nav.observeField("buttonSelected", "navigation")
  m.catalog = m.top.findNode("catalog")
  m.catalog.observeField("rowItemSelected", "titleSelected")
+ m.catalog.observeField("rowItemFocused", "titleFocused")
  m.actions = m.top.findNode("actions")
  m.actions.observeField("buttonSelected", "detailAction")
  m.episodes = m.top.findNode("episodes")
@@ -45,7 +46,12 @@ end sub
 sub finishIntro()
  m.top.findNode("intro").visible = false
  m.introFinished = true
- if m.access = "" then showLogin() else m.nav.setFocus(true)
+ if m.access = ""
+  showLogin()
+ else
+  m.nav.setFocus(true)
+  if m.pendingInput <> invalid then applyLaunchInput()
+ end if
 end sub
 sub send(tag as String, path as String, method as String, body as Object, extra = invalid as Dynamic)
  if tag = "poll" or tag = "heartbeat"
@@ -106,6 +112,7 @@ sub handleResult(result as Object)
   status("Sua conta: " + m.username + " · Preparando o catálogo…")
   send("home", "/api/connect/home", "GET", {})
   m.top.findNode("poll").control = "start"
+  if m.pendingInput <> invalid and m.introFinished then applyLaunchInput()
  else if tag = "home"
   showRows(data.rows)
   if data.featured <> invalid then status(data.featured.title)
@@ -128,7 +135,11 @@ sub handleResult(result as Object)
   if m.remotePlay <> invalid
    command = m.remotePlay
    m.remotePlay = invalid
-   watchItem(data.id, command.season, command.episode)
+   if data.kind = "series" and command.season = invalid
+    chooseSeason()
+   else
+    watchItem(data.id, command.season, command.episode)
+   end if
   else
    m.actions.setFocus(true)
   end if
@@ -177,6 +188,8 @@ function safeText(value as Dynamic) as String
  return value
 end function
 sub showLogin()
+ m.top.findNode("focusedTitle").visible = false
+ m.top.findNode("focusedMeta").visible = false
  m.catalog.visible = false
  m.top.findNode("detail").visible = false
  m.nav.buttons = ["Entrar na conta"]
@@ -274,6 +287,8 @@ sub showRows(rows as Object)
  end for
  m.catalog.content = content
  m.catalog.visible = true
+ m.top.findNode("focusedTitle").visible = true
+ m.top.findNode("focusedMeta").visible = true
  if m.introFinished then m.catalog.setFocus(true)
 end sub
 sub titleSelected(event as Object)
@@ -481,3 +496,42 @@ function onKeyEvent(key as String, press as Boolean) as Boolean
  end if
  return false
 end function
+
+sub titleFocused(event as Object)
+ selected = event.GetData()
+ if m.catalog.content = invalid then return
+ row = m.catalog.content.GetChild(selected[0])
+ if row = invalid then return
+ node = row.GetChild(selected[1])
+ if node = invalid then return
+ item = node.guhItem
+ m.top.findNode("focusedTitle").text = item.title
+ kind = "Filme"
+ if item.kind = "series" then kind = "Série"
+ m.top.findNode("focusedMeta").text = kind + " · " + safeText(item.year) + " · OK para detalhes"
+end sub
+sub onLaunchInput()
+ data = m.top.launchInput
+ if data = invalid then return
+ if data.contentId = invalid then return
+ id = data.contentId
+ if type(id) <> "String" and type(id) <> "roString" then return
+ if not CreateObject("roRegex", "^[a-f0-9]{32}$", "i").IsMatch(id) then return
+ m.pendingInput = {contentId: LCase(id)}
+ if data.season <> invalid and data.episode <> invalid
+  season = Val(data.season.ToStr())
+  episode = Val(data.episode.ToStr())
+  if season >= 0 and season <= 1000 and episode >= 1 and episode <= 100000
+   m.pendingInput.season = Int(season)
+   m.pendingInput.episode = Int(episode)
+  end if
+ end if
+ if m.access <> "" and m.introFinished then applyLaunchInput()
+end sub
+sub applyLaunchInput()
+ if m.pendingInput = invalid then return
+ m.remotePlay = m.pendingInput
+ m.pendingInput = invalid
+ closeVideo()
+ send("detail", "/api/connect/catalog/" + m.remotePlay.contentId, "GET", {})
+end sub
