@@ -51,11 +51,11 @@ export async function registerConnect(app:FastifyInstance,c:Config){
  });
  app.post('/api/connect/pairing/claim',{config:{rateLimit:{max:8,timeWindow:'1 minute'}}},async req=>{
    const {s,u}=await owner(req);if(s.client!=='pwa')throw new Fault(403,'PHONE_REQUIRED','Vincule usando o site do iPhone');
-   const input=z.object({code:z.string().max(30)}).parse(req.body);const code=input.code.replace(/[\s-]/g,'').toUpperCase();if(!/^[A-F0-9]{10}$/.test(code))throw new Fault(400,'INVALID_CODE','Código de vínculo inválido');
+   const input=z.object({code:z.string().max(30),label:z.string().trim().min(1).max(60).optional()}).parse(req.body);const code=input.code.replace(/[\s-]/g,'').toUpperCase();if(!/^[A-F0-9]{10}$/.test(code))throw new Fault(400,'INVALID_CODE','Código de vínculo inválido');
    const pair=await db.collection('connect_pairings').findOneAndUpdate({codeHash:sha(code),userId:u._id.toString(),claimed:false,expiresAt:{$gt:now()}},{$set:{claimed:true,phoneSessionId:s._id.toString()}},{returnDocument:'after'});
    if(!pair)throw new Fault(404,'PAIRING_EXPIRED','Código incorreto, já utilizado ou expirado. Confira se a mesma conta GUHFLIX está conectada no site e na TV.');
    const live=await db.collection('sessions').findOne({_id:id(pair.tvSessionId),userId:u._id.toString(),revoked:false,expiresAt:{$gt:now()}});if(!live)throw new Fault(409,'TV_OFFLINE','A sessão da TV precisa ser renovada');
-   const link=await db.collection('connect_links').findOneAndUpdate({tvSessionId:pair.tvSessionId,phoneSessionId:s._id.toString()},{$set:{userId:u._id.toString(),label:pair.label,revoked:false,updatedAt:now()},$setOnInsert:{createdAt:now()}},{upsert:true,returnDocument:'after'});
+   const link=await db.collection('connect_links').findOneAndUpdate({tvSessionId:pair.tvSessionId,phoneSessionId:s._id.toString()},{$set:{userId:u._id.toString(),label:input.label??pair.label,revoked:false,updatedAt:now()},$setOnInsert:{createdAt:now()}},{upsert:true,returnDocument:'after'});
    return {id:link!._id.toString(),label:link!.label};
  });
  app.delete('/api/connect/tv/devices',async req=>{
@@ -68,6 +68,7 @@ export async function registerConnect(app:FastifyInstance,c:Config){
    const {s,u}=await owner(req,false);const links=await db.collection('connect_links').find({phoneSessionId:s._id.toString(),userId:u._id.toString(),revoked:false}).limit(30).toArray();
    return {devices:await Promise.all(links.map(async link=>{const [current,session]=await Promise.all([db.collection('connect_state').findOne({tvSessionId:link.tvSessionId,expiresAt:{$gt:now()}}),db.collection('sessions').findOne({_id:id(link.tvSessionId),revoked:false,expiresAt:{$gt:now()},version:u.sessionVersion})]);return {id:link._id.toString(),label:link.label,online:!!session&&!!current&&now().getTime()-new Date(current.updatedAt).getTime()<18000,state:current?.value??{mode:'idle',title:'',positionMs:0,durationMs:0},lastSeenAt:current?.updatedAt??null}}))};
  });
+ app.patch('/api/connect/devices/:id',async req=>{const {link}=await linkFor(req,(req.params as any).id,false);const b=z.object({label:z.string().trim().min(1).max(60)}).parse(req.body);await db.collection('connect_links').updateOne({_id:link._id},{$set:{label:b.label,updatedAt:now()}});return {id:link._id.toString(),label:b.label}});
  app.delete('/api/connect/devices/:id',async req=>{const {link}=await linkFor(req,(req.params as any).id,false);await db.collection('connect_links').updateOne({_id:link._id},{$set:{revoked:true,updatedAt:now()}});await db.collection('connect_commands').updateMany({linkId:link._id.toString(),state:{$ne:'acked'}},{$set:{state:'revoked'}});return {success:true}});
  app.post('/api/connect/devices/:id/commands',{config:{rateLimit:{max:120,timeWindow:'1 minute'}}},async req=>{
    const {s,u,link}=await linkFor(req,(req.params as any).id);const b=z.object({requestId:z.string().uuid(),command}).parse(req.body);
