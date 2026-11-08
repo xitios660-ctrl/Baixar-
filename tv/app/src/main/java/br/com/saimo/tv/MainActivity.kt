@@ -315,7 +315,7 @@ class MainActivity : AppCompatActivity(), Connect.Listener, Painel.Ouvinte {
 
         // A sessão é o que expõe o app pro Assistant (Mi Box) e pra Alexa
         // (Fire TV): "próximo/canal anterior" e "abrir <canal>" chegam por ela
-        // enquanto o Saimo TV está na tela, sem precisar de servidor nem de
+        // enquanto o GUHFLIX está na tela, sem precisar de servidor nem de
         // skill cadastrada. O player de fachada existe porque o de verdade
         // troca de fonte trocando o MediaSource inteiro — nunca tem um
         // "próximo item" de playlist para a sessão pedir sozinha.
@@ -2120,7 +2120,7 @@ override fun onVideoSizeChanged(videoSize: VideoSize) {
             .replace(Regex("[^a-z0-9]+"), " ")
             .trim()
 
-    // MARK: - Saimo Connect (Controle Remoto e Celular)
+    // MARK: - GUHFLIX Connect (Controle Remoto e Celular)
 
     private fun mostrarDialogoConectar() {
         val ip = Connect.obterIpLocal()

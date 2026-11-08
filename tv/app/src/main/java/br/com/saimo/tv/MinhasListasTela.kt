@@ -23,7 +23,7 @@ import kotlinx.coroutines.launch
  * "Adicionar por link", "Escolher arquivo" e uma linha por lista; OK numa lista
  * abre Atualizar / Ativar-Desativar / Remover. O link é digitado num diálogo
  * igual ao do "Endereço das listas": OK no campo abre o teclado e o celular
- * conectado (Saimo Connect) escreve no campo em foco. Nunca mostra o link.
+ * conectado (GUHFLIX Connect) escreve no campo em foco. Nunca mostra o link.
  */
 object MinhasListasTela {
 

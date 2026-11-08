@@ -7,7 +7,7 @@ import androidx.media3.exoplayer.audio.AudioSink
 import androidx.media3.exoplayer.audio.DefaultAudioSink
 
 /**
- * Fábrica de renderizadores do Saimo TV:
+ * Fábrica de renderizadores do GUHFLIX:
  * - Ativa fallback automático de decodificadores de hardware para software se a fonte falhar.
  * - Acopla o [NormalizadorAudioProcessor] diretamente ao AudioSink para nivelar o volume
  *   de canais baixos (ex: Cartoon) e altos (ex: Warner) em tempo real.

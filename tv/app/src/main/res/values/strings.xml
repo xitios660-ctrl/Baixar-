@@ -237,7 +237,7 @@
     <string name="ajustes_recarregar_dica">para quando algo parecer desatualizado</string>
     <string name="ajustes_recarregado">Catálogo recarregado</string>
     <string name="ajustes_telemetria">Enviar uso anônimo (ajuda a achar canais fora do ar)</string>
-    <string name="timer_aviso">O Saimo vai fechar em 1 minuto</string>
+    <string name="timer_aviso">O GUHFLIX vai fechar em 1 minuto</string>
     <string name="timer_mais_30">Continuar por mais 30 minutos</string>
     <string name="timer_cancelar">Cancelar o desligamento</string>
     <string name="escolha_ajustes">Ajustes</string>
@@ -370,12 +370,12 @@
 
     
     <string name="connect_titulo">Conectar Celular</string>
-    <string name="connect_conectado">Saimo Connect: %1$s conectado</string>
-    <string name="ajustes_connect">Saimo Connect</string>
+    <string name="connect_conectado">GUHFLIX Connect: %1$s conectado</string>
+    <string name="ajustes_connect">GUHFLIX Connect</string>
     <string name="ajustes_connect_n">%1$d celular(es) autorizado(s)</string>
     <string name="ajustes_connect_esquecer">Esquecer todos os celulares</string>
     <string name="ajustes_connect_esquecido">Celulares esquecidos. Na próxima conexão a TV vai perguntar de novo.</string>
-    <string name="connect_aprovar_titulo">Saimo Connect</string>
+    <string name="connect_aprovar_titulo">GUHFLIX Connect</string>
     <string name="connect_aprovar_msg">%1$s quer se conectar a esta TV.\nDeseja permitir?</string>
     <string name="connect_permitir">Permitir</string>
     <string name="connect_recusar">Recusar</string>
@@ -399,7 +399,7 @@
     <string name="listas_verificando">Verificando os endereços…</string>
     <string name="listas_salvo">Endereços salvos. Carregando as listas…</string>
     <string name="listas_apagado">Endereço apagado e dados da lista removidos.</string>
-    <string name="listas_celular_dica">Ou escreva o endereço pelo celular (Saimo Connect).</string>
+    <string name="listas_celular_dica">Ou escreva o endereço pelo celular (GUHFLIX Connect).</string>
     <string name="ajustes_listas">Listas</string>
     <string name="ajustes_listas_resumo">Canais: %1$s · Filmes e séries: %2$s</string>
     <string name="listas_informado">ativa</string>
@@ -420,5 +420,5 @@
     <string name="ml_nome">Nome (opcional)</string>
     <string name="ml_adicionar">Adicionar</string>
     <string name="ml_baixando">Baixando a lista…</string>
-    <string name="ml_celular_dica">Ou escreva o link pelo celular (Saimo Connect).</string>
+    <string name="ml_celular_dica">Ou escreva o link pelo celular (GUHFLIX Connect).</string>
 </resources>

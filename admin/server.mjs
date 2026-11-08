@@ -21,7 +21,7 @@ http.createServer(async(req,res)=>{
  res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','no-referrer');res.setHeader('Cache-Control','no-store, no-cache, must-revalidate');res.setHeader('Pragma','no-cache');res.setHeader('Expires','0');res.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'");
  if(!req.url?.startsWith('/')||req.url.startsWith('//'))return json(res,400,{error:'INVALID_URL',message:'Endereço inválido.'});
  let path;try{path=new URL(req.url,'http://localhost').pathname}catch{return json(res,400,{error:'INVALID_URL',message:'Endereço inválido.'})}
- if(path==='/health')return json(res,200,{ok:true,service:'guhflix-admin',version:'2.1.0'});
+ if(path==='/health')return json(res,200,{ok:true,service:'guhflix-admin',version:'2.1.1'});
  if(path.startsWith('/api/')&&['GET','POST','PATCH','OPTIONS'].includes(req.method))return proxyApi(req,res,path);
  if(req.method!=='GET'||!files[path]){res.writeHead(404);return res.end('Não encontrado')}
  try{const data=await readFile(fileURLToPath(new URL('./'+files[path],import.meta.url)));res.setHeader('Content-Type',path.endsWith('.js')?'text/javascript; charset=utf-8':path.endsWith('.css')?'text/css; charset=utf-8':path.endsWith('.png')?'image/png':'text/html; charset=utf-8');res.end(data)}catch{res.writeHead(404);res.end('Não encontrado')}

@@ -23,7 +23,7 @@ import kotlinx.coroutines.launch
  * aparece sozinho. Tudo
  * pelo controle: cima/baixo anda entre os campos e botões, OK num campo abre o
  * teclado e VOLTAR fecha. Digitar link no controle é penoso, então enquanto o
- * diálogo está aberto o celular conectado (Saimo Connect) recebe o pedido de
+ * diálogo está aberto o celular conectado (GUHFLIX Connect) recebe o pedido de
  * texto e o que ele escrever cai no campo em foco.
  */
 object ListasDialogo {

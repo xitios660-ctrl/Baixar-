@@ -39,13 +39,13 @@ import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.random.Random
 
 /**
- * Servidor do Saimo Connect para TV Box.
+ * Servidor do GUHFLIX Connect para TV Box.
  *
  * Implementa na porta 8999:
  * 1. GET /info — Descoberta HTTP rápida pela rede local.
  * 2. GET /ws   — Conexão WebSocket em tempo real para controle remoto,
  *                espelhamento de estado e controle de áudio independente da multi-tela.
- * 3. Anúncio mDNS (_saimotv._tcp) como suporte adicional à descoberta.
+ * 3. Anúncio mDNS (_guhflix._tcp) como suporte adicional à descoberta.
  */
 @UnstableApi
 object Connect {
@@ -296,9 +296,9 @@ object Connect {
     fun nomeDaTv(): String {
         val modelo = Build.MODEL.trim()
         return if (modelo.contains("TV", ignoreCase = true) || modelo.contains("Box", ignoreCase = true)) {
-            "Saimo TV ($modelo)"
+            "GUHFLIX ($modelo)"
         } else {
-            "Saimo TV - $modelo"
+            "GUHFLIX - $modelo"
         }
     }
 
@@ -442,7 +442,7 @@ object Connect {
     private fun rodarServidor(context: Context) {
         try {
             serverSocket = ServerSocket(PORTA)
-            Log.i(TAG, "Saimo Connect escutando em ${obterIpLocal()}:$PORTA")
+            Log.i(TAG, "GUHFLIX Connect escutando em ${obterIpLocal()}:$PORTA")
             while (ativo) {
                 val socket = serverSocket?.accept() ?: break
                 Thread({
@@ -450,7 +450,7 @@ object Connect {
                 }, "connect-client-${socket.inetAddress.hostAddress}").start()
             }
         } catch (e: Exception) {
-            if (ativo) Log.w(TAG, "Servidor Saimo Connect encerrado com erro", e)
+            if (ativo) Log.w(TAG, "Servidor GUHFLIX Connect encerrado com erro", e)
         }
     }
 
@@ -484,7 +484,7 @@ object Connect {
             // 1. GET /info (Descoberta HTTP rápida)
             if (primeiraLinha.startsWith("GET /info")) {
                 val infoJson = JSONObject().apply {
-                    put("app", "saimo-tv")
+                    put("app", "guhflix")
                     put("id", tvId)
                     put("name", nomeDaTv())
                     put("version", BuildConfig.VERSION_NAME)
@@ -578,7 +578,7 @@ object Connect {
             nsdManager = context.getSystemService(Context.NSD_SERVICE) as? NsdManager
             val serviceInfo = NsdServiceInfo().apply {
                 serviceName = nomeDaTv()
-                serviceType = "_saimotv._tcp."
+                serviceType = "_guhflix._tcp."
                 port = PORTA
             }
             nsdRegistrationListener = object : NsdManager.RegistrationListener {

@@ -21,3 +21,7 @@ tv/keystore-connect.properties
 __pycache__/
 
 pwa/admin-test-results/
+
+roku/node_modules/
+roku/dist/
+roku/.roku-deploy-staging/
