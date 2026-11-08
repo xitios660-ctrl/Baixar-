@@ -1,5 +1,5 @@
 {
-  "checkedLocally": [
+  "files": [
     {
       "file": "GUHFLIX-Windows-3.1.1.zip",
       "bytes": 53340311,
@@ -20,10 +20,10 @@
     },
     {
       "file": "GUHFLIX-Roku-1.0.0-desenvolvedor.zip",
-      "bytes": 347768,
-      "sha256": "2c241b7823c31fcfe50c0b9076c0334f1aeb1cda6d8d321176351508e5ef82e2",
+      "bytes": 347848,
+      "sha256": "aac6a7960948985ba041151391caf07ccc0b849cfedd5de5ebfa0486c98fe356",
       "localIntegrityVerified": true
     }
   ],
-  "publicVerification": "Os arquivos públicos desta atualização serão conferidos após a publicação; veja ATUALIZACAO-2.6.1.md para os testes executados."
+  "verification": "Compare o SHA-256 com o arquivo completo baixado. O pacote Roku continua sendo uma edição de desenvolvimento, sem validação em aparelho físico."
 }
