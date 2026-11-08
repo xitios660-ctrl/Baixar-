@@ -1,0 +1,13 @@
+{
+  "package": "com.guhflix.android",
+  "version": "2.6.0",
+  "versionCode": 2060000,
+  "bytes": 5019630,
+  "sha256": "821a1d1313e2514a711df5414d8db2b1655a32efbfdf882d0e4c9525923a8495",
+  "signerSHA256": "fe13bf8634b76a4450b70833a7a6eb6aa01429729371a33dccc75c8eaa72b76b",
+  "signatureVerified": true,
+  "launcherVerified": true,
+  "isolatedProviderAndDeepLinks": true,
+  "dedicatedUpdateManifest": true,
+  "realDevicePlaybackTested": false
+}

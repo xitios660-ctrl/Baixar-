@@ -1,13 +1,17 @@
 {
-  "versao": "3.0.4",
-  "tag": "v3.0.4",
-  "notas": "Corrige prazo de abertura de vídeo após a autorização da conta e captura o erro real do player. Validado com HLS sintético e DLL original do Saímo no Windows.",
+  "versao": "3.1.0",
+  "version": "3.1.0",
+  "tag": "v3.1.0",
+  "file": "GUHFLIX-Windows-3.1.0.zip",
+  "bytes": 53340073,
+  "sha256": "107c4f31ccae04703a4a9374962460bd767cd2081fdb5e53415f40e63b82741d",
+  "notas": "Abertura cinematografica, recomendacoes e novas tentativas sem sair do filme.",
   "arquivos": {
     "windows": {
-      "nome": "GUHFLIX-Windows-3.0.4.zip",
-      "url": "https://guhflix-tv-download.onrender.com/GUHFLIX-Windows-3.0.4.zip",
-      "bytes": 53326954,
-      "sha256": "f6abddfede7f790a941a1bcb9df45b5cb5fec5db1d7270183f6c2272d2e97e67"
+      "nome": "GUHFLIX-Windows-3.1.0.zip",
+      "url": "https://guhflix-tv-download.onrender.com/GUHFLIX-Windows-3.1.0.zip",
+      "bytes": 53340073,
+      "sha256": "107c4f31ccae04703a4a9374962460bd767cd2081fdb5e53415f40e63b82741d"
     }
   }
 }

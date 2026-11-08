@@ -1,0 +1,14 @@
+{
+  "package": "com.guhflix.android",
+  "versionCode": 2060000,
+  "version": "2.6.0",
+  "file": "GUHFLIX-Android-2.6.0.apk",
+  "apkUrl": "https://guhflix-tv-download.onrender.com/GUHFLIX-Android-2.6.0.apk",
+  "sha256": "821a1d1313e2514a711df5414d8db2b1655a32efbfdf882d0e4c9525923a8495",
+  "bytes": 5019630,
+  "signerSha256": "fe13bf8634b76a4450b70833a7a6eb6aa01429729371a33dccc75c8eaa72b76b",
+  "notes": "Nova abertura cinematográfica GUHFLIX, recomendações por coleção/universo e novas tentativas sem sair do filme. Catálogo autenticado e atualizações separadas por dispositivo.\n",
+  "mandatory": false,
+  "api": "https://guhflix-marley-api.onrender.com",
+  "admin": "https://guhflix-marley-admin.onrender.com"
+}
