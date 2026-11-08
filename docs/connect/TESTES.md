@@ -33,3 +33,13 @@ API: testes adicionais verificam que outra conta não lista TVs vinculadas, não
 APK: recompilação debug e oito testes de política OTA aprovados. A tela Conta / iPhone ganhou a identificação da conta da TV e o endereço do site integrado ao fluxo de vínculo. A publicação do APK de atualização permanece pendente do arquivo original .jks/.keystore, não recebido. Não foi distribuída assinatura de teste como atualização.
 
 Publicação deste complemento: deploy Render dep-dbnum929lscs73cffmp0 em estado live, commit 9dd01d227ec6d7449b458f904c2cc11b33dc0a8e. O HTML público contém a orientação de mesma conta e assets 20261108.1; WebKit abriu a versão HTTPS, confirmou service worker ativo e nenhum erro de página. Otimização release R8 também concluída com sucesso. Assinatura e instalação release continuam pendentes da chave original.
+
+## Edição Connect com chave enviada — 2026-11-08
+
+A chave recebida é válida (certificado fe13bf8634b76a4450b70833a7a6eb6aa01429729371a33dccc75c8eaa72b76b), mas diferente da 2.4.2. A edição independente com.guhflix.tv.connect evita conflito de assinatura e preserva os dados do app instalado. Requer novo login e vínculo; não migra os dados automaticamente.
+
+Uma inspeção do APK detectou ausência das activities de abertura/login/conexão e do FileProvider de OTA no manifesto. O empacotamento foi corrigido antes da publicação. A auditoria do manifesto de origem agora encontra todas as 17 activities e o verificador do APK exige launcher Android TV, telas de acesso/conexão, provedores e esquema próprios. A primeira compilação incompleta não foi publicada.
+
+Os seis testes do PWA passaram novamente, assim como os oito testes release da política OTA. Instalação e reprodução em TCL real permanecem pendentes; não são comprovadas pela compilação ou pelos simuladores de API. A assinatura e o SHA-256 da edição final serão conferidos também no arquivo público baixado.
+
+Publicação confirmada: site de downloads live no deploy dep-dbnvej8ae00c73967udg; API/PWA live no deploy dep-dbnvela9lscs73cg18k0. O APK público de 5.016.888 bytes foi baixado e teve SHA-256 cdc9277ef5183bc42da0a8c76967a16c81a545a0a7882a8b65453c8b9dd9d919 e assinatura fe13bf8634b76a4450b70833a7a6eb6aa01429729371a33dccc75c8eaa72b76b conferidos. O CDN respondeu Range HTTP 206 (bytes 0-1023/5016888), permitindo retomada de download. O manifesto antigo segue 2.4.2/com.guhflix.tv, separado do release-connect.json. O PWA público retorna 200, usa assets 20261108.2 e aponta o download para connect.html. Nenhuma chave privada foi publicada. Reprodução, instalação e desempenho na TCL real permanecem pendentes.
