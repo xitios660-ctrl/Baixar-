@@ -1,0 +1,9 @@
+GUHFLIX Connect 2.5.1
+
+• Aplicativo independente que instala ao lado do GUHFLIX antigo.
+• Login com a mesma conta GUHFLIX usada no site do iPhone.
+• Vínculo individual da TV, escolha explícita do destino e controle de filmes e episódios.
+• Menu Conta / iPhone com código de vínculo e verificação de atualização.
+• Atualizações assinadas pela chave privada fornecida pelo proprietário.
+
+Os dados do app antigo ficam preservados e não são transferidos automaticamente. Instalação e reprodução na TCL real ainda precisam ser conferidas no aparelho.

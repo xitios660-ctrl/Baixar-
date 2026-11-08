@@ -22,7 +22,7 @@ import java.util.concurrent.Executors
 
 /** Signed, resumable updates. Installation always belongs to Android's confirmation UI. */
 object OtaManager {
- const val MANIFEST="https://guhflix-tv-download.onrender.com/release.json"
+ val MANIFEST=BuildConfig.GUHFLIX_UPDATE_MANIFEST
  private val worker=Executors.newSingleThreadExecutor()
  private val main=Handler(Looper.getMainLooper())
  @Volatile private var checking=false

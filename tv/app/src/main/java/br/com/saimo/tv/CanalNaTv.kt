@@ -41,7 +41,7 @@ object CanalNaTv {
                 canal = ajudante.publishDefaultChannel(
                     PreviewChannel.Builder()
                         .setDisplayName(fila.titulo)
-                        .setAppLinkIntentUri(Uri.parse("saimo://inicio"))
+                        .setAppLinkIntentUri(Uri.parse(BuildConfig.GUHFLIX_URI_SCHEME+"://inicio"))
                         .setLogo(logo)
                         .build())
                 if (canal < 0) return@withContext

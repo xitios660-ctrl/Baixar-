@@ -19,3 +19,7 @@ O certificado SHA-256 precisa ser 0f1c1118520d99353f57e756c5801362d12ba10e36dcf3
     apksigner verify --verbose --print-certs app/build/outputs/apk/release/app-release.apk
 
 Pacote com.guhflix.tv, versionCode 2050000, versão 2.5.0. Sem chave correspondente não há garantia de atualização por cima.
+
+## Edição Connect independente
+
+A chave recebida em 2026-11-08 é válida, porém não é a chave da 2.4.2. A edição Connect usa com.guhflix.tv.connect, nome GUHFLIX Connect, links/provedores próprios e manifesto release-connect.json. Consulte docs/connect/CONNECT-2.5.1.md. A assinatura é configurada em keystore-connect.properties, nunca no Git. Compile com -PguhflixConnect=true. Sem essa propriedade, o projeto continua exigindo a assinatura antiga para o pacote original.

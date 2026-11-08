@@ -5,7 +5,7 @@
     android:hint="@string/busca_sistema_rotulo"
     android:searchSettingsDescription="@string/busca_sistema_rotulo"
     android:includeInGlobalSearch="true"
-    android:searchSuggestAuthority="br.com.saimo.tv.busca"
+    android:searchSuggestAuthority="@string/guhflix_search_authority"
     android:searchSuggestIntentAction="android.intent.action.VIEW"
     android:searchSuggestSelection=" ?"
     android:voiceSearchMode="showVoiceSearchButton|launchRecognizer" />

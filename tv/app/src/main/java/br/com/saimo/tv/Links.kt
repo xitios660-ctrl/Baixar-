@@ -15,7 +15,7 @@ import androidx.media3.common.util.UnstableApi
 @UnstableApi
 object Links {
 
-    private fun base(acao: String, alvo: Alvo) = Uri.Builder().scheme("saimo").authority(acao)
+    private fun base(acao: String, alvo: Alvo) = Uri.Builder().scheme(BuildConfig.GUHFLIX_URI_SCHEME).authority(acao)
         .appendQueryParameter("t", alvo.titulo)
         .appendQueryParameter("s", if (alvo.serie) "1" else "0")
         .appendQueryParameter("l", alvo.letra)
@@ -31,7 +31,7 @@ object Links {
     fun ficha(alvo: Alvo): Uri = base("titulo", alvo).build()
 
     fun canal(nome: String): Uri =
-        Uri.Builder().scheme("saimo").authority("canal").appendQueryParameter("n", nome).build()
+        Uri.Builder().scheme(BuildConfig.GUHFLIX_URI_SCHEME).authority("canal").appendQueryParameter("n", nome).build()
 
     private fun alvo(uri: Uri): Alvo? {
         val titulo = uri.getQueryParameter("t")?.takeIf { it.isNotBlank() } ?: return null
@@ -45,7 +45,7 @@ object Links {
      * incompleto — aí quem chamou segue o caminho normal da abertura.
      */
     fun abrir(context: Context, uri: Uri?): Boolean {
-        if (uri?.scheme != "saimo") return false
+        if (uri?.scheme != BuildConfig.GUHFLIX_URI_SCHEME) return false
         when (uri.host) {
             "assistir" -> {
                 val alvo = alvo(uri) ?: return false

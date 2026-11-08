@@ -1,0 +1,13 @@
+{
+  "package": "com.guhflix.tv.connect",
+  "version": "2.5.1",
+  "versionCode": 2050001,
+  "bytes": 5016888,
+  "sha256": "cdc9277ef5183bc42da0a8c76967a16c81a545a0a7882a8b65453c8b9dd9d919",
+  "signerSHA256": "fe13bf8634b76a4450b70833a7a6eb6aa01429729371a33dccc75c8eaa72b76b",
+  "signatureVerified": true,
+  "androidTVLauncher": true,
+  "isolatedProviderAndDeepLinks": true,
+  "dedicatedUpdateManifest": true,
+  "realDevicePlaybackTested": false
+}

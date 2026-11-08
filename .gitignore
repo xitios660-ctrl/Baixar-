@@ -15,3 +15,7 @@ tv/keystore.properties
 *.env
 pwa/test-results/
 pwa/playwright-report/
+
+tv/keystore-connect.properties
+
+__pycache__/

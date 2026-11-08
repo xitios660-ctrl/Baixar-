@@ -12,8 +12,9 @@ plugins {
  * chave é a identidade do aplicativo: perdê-la obriga todo mundo a desinstalar
  * e instalar de novo.
  */
+val connectEdition = providers.gradleProperty("guhflixConnect").orNull == "true"
 val chave = Properties().apply {
-    val arquivo = rootProject.file("keystore.properties")
+    val arquivo = rootProject.file(if (connectEdition) "keystore-connect.properties" else "keystore.properties")
     if (arquivo.exists()) arquivo.inputStream().use { load(it) }
 }
 
@@ -22,14 +23,21 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.guhflix.tv"
+        applicationId = if (connectEdition) "com.guhflix.tv.connect" else "com.guhflix.tv"
         // Android 6: o mínimo do Media3 e das bibliotecas androidx atuais.
         // Até a 2.0.2 era o 5 (21); quem ainda tem Android 5 fica na 2.0.2.
         minSdk = 23
         targetSdk = 35
-        versionCode = 2050000
-        versionName = "2.5.0"
+        versionCode = if (connectEdition) 2050001 else 2050000
+        versionName = if (connectEdition) "2.5.1" else "2.5.0"
         buildConfigField("String", "GUHFLIX_API", "\"https://guhflix-marley-api.onrender.com\"")
+        val updateFile = if (connectEdition) "release-connect.json" else "release.json"
+        buildConfigField("String", "GUHFLIX_UPDATE_MANIFEST", "\"https://guhflix-tv-download.onrender.com/$updateFile\"")
+        buildConfigField("String", "GUHFLIX_URI_SCHEME", if (connectEdition) "\"guhflix-connect\"" else "\"saimo\"")
+        resValue("string", "guhflix_search_authority", if (connectEdition) "com.guhflix.tv.connect.busca" else "com.guhflix.tv.busca")
+        manifestPlaceholders["guhflixAppLabel"] = if (connectEdition) "GUHFLIX Connect" else "GUHFLIX"
+        manifestPlaceholders["guhflixUriScheme"] = if (connectEdition) "guhflix-connect" else "saimo"
+
     }
 
     signingConfigs {
@@ -122,5 +130,5 @@ kotlin {
 configurations.all { resolutionStrategy.force("androidx.core:core:1.15.0", "androidx.core:core-ktx:1.15.0") }
 
 tasks.matching { it.name == "packageRelease" || it.name == "validateSigningRelease" }.configureEach {
-    doFirst { require(chave.getProperty("storeFile") != null) { "Release exige a chave original em keystore.properties; assinatura de depuração proibida." } }
+    doFirst { require(chave.getProperty("storeFile") != null) { "Release exige o arquivo de assinatura da edição selecionada; assinatura de depuração proibida." } }
 }
