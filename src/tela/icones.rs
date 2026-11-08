@@ -54,7 +54,7 @@ pub enum Icone {
     Parar,
     Direita,
     Esquerda,
-    /// O "Cast" da TV Box: o Saimo Connect.
+    /// O "Cast" da TV Box: o GUHFLIX Connect.
     Cast,
     Link,
 }

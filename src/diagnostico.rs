@@ -12,7 +12,7 @@
 //! * o modo seguro: se a abertura anterior não passou de 90 segundos sem fechar
 //!   direito, esta sobe com menos recursos, e a cada queda seguida tira mais um:
 //!   1 = decodificação por software; 2 = sem os controles de mídia do Windows;
-//!   3 = sem o Saimo Connect. Sessão de 90 segundos (ou fechamento normal) zera.
+//!   3 = sem o GUHFLIX Connect. Sessão de 90 segundos (ou fechamento normal) zera.
 
 use std::io::Write;
 use std::path::PathBuf;

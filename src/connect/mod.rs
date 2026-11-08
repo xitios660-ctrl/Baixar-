@@ -1,9 +1,9 @@
-//! Saimo Connect: o celular manda neste computador como manda na TV Box.
+//! GUHFLIX Connect: o celular manda neste computador como manda na TV Box.
 //!
 //! O mesmo servidor do `Connect.kt` da TV Box, na porta 8999:
 //!
 //! 1. `GET /info` — o celular varre a rede pedindo isto a cada endereço e
-//!    reconhece o app pelo `"app": "saimo-tv"`.
+//!    reconhece o app pelo `"app": "guhflix"`.
 //! 2. `GET /hls` — a lista do canal na régua comum ([`hls`], [`historico`]),
 //!    para o celular tocar o som junto com a imagem daqui. O mpv do próprio
 //!    app também toca o ao vivo por ela.
@@ -150,8 +150,8 @@ fn ler_ou_criar_id() -> String {
 pub fn nome() -> String {
     let maquina = std::env::var("COMPUTERNAME").ok().map(|n| n.trim().to_string()).filter(|n| !n.is_empty());
     match maquina {
-        Some(m) => format!("Saimo TV - {m}"),
-        None => "Saimo TV - Windows".to_string(),
+        Some(m) => format!("GUHFLIX - {m}"),
+        None => "GUHFLIX - Windows".to_string(),
     }
 }
 
@@ -208,7 +208,7 @@ pub fn iniciar(ctx: egui::Context) -> Receiver<Pedido> {
     let ouvinte = match TcpListener::bind(SocketAddr::from(([0, 0, 0, 0], porta()))) {
         Ok(o) => o,
         Err(e) => {
-            crate::telemetria::erro(format!("Saimo Connect sem a porta {}: {e}", porta()));
+            crate::telemetria::erro(format!("GUHFLIX Connect sem a porta {}: {e}", porta()));
             return recebe;
         }
     };
@@ -537,7 +537,7 @@ impl Servidor {
         }
         if metodo == "GET" && (alvo == "/info" || alvo.starts_with("/info?")) {
             let corpo = json!({
-                "app": "saimo-tv",
+                "app": "guhflix",
                 "id": self.tv_id,
                 "name": nome(),
                 "version": crate::VERSAO,

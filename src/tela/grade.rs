@@ -321,7 +321,7 @@ pub fn ajustes(app: &mut App, ui: &mut egui::Ui) {
             rotulo_de_secao(ui, "GUHFLIX Connect");
             ui.add_space(4.0);
             let onde = match (crate::connect::ativo(), crate::connect::ip_local()) {
-                (true, Some(ip)) => format!("No ar em {ip}:{}: o app Saimo do celular acha este computador na mesma rede", crate::connect::porta()),
+                (true, Some(ip)) => format!("No ar em {ip}:{}: o app GUHFLIX do celular acha este computador na mesma rede", crate::connect::porta()),
                 (true, None) => "No ar, mas sem rede local: ligue o computador ao Wi-Fi ou ao cabo".to_string(),
                 (false, _) => format!("Fora do ar: a porta {} está ocupada por outro programa", crate::connect::porta()),
             };

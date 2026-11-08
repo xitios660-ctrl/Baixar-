@@ -1,4 +1,4 @@
-//! O lado do app no Saimo Connect: o que o celular manda fazer e o estado
+//! O lado do app no GUHFLIX Connect: o que o celular manda fazer e o estado
 //! que volta para ele.
 //!
 //! Os comandos são os da TV Box (`Connect.Listener`), traduzidos para o que o
@@ -61,7 +61,7 @@ impl App {
                 }
                 Pedido::Desistiu { cliente } => self.aprovacoes.retain(|(c, _, _)| *c != cliente),
                 Pedido::Conectou(nome) => {
-                    self.aviso = Some((format!("Saimo Connect: {nome} conectado"), Instant::now()));
+                    self.aviso = Some((format!("GUHFLIX Connect: {nome} conectado"), Instant::now()));
                     mudou = true;
                 }
                 Pedido::Comando(tipo, msg) => {

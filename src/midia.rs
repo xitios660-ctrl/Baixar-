@@ -177,7 +177,7 @@ mod janela {
             let musica = quadro.MusicProperties()?;
             musica.SetTitle(&HSTRING::from(no_ar.titulo.as_str()))?;
             musica.SetArtist(&HSTRING::from(no_ar.subtitulo.as_str()))?;
-            musica.SetAlbumTitle(&HSTRING::from("Saimo TV"))?;
+            musica.SetAlbumTitle(&HSTRING::from("GUHFLIX"))?;
             if let Some(imagem) = no_ar.imagem.as_deref() {
                 // Endereço que o Windows não aceita só deixa o quadro sem
                 // imagem; o título vai mesmo assim.

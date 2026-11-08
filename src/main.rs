@@ -1,4 +1,4 @@
-//! Saimo TV para Windows.
+//! GUHFLIX para Windows.
 //!
 //! Aplicativo nativo: a janela, a lista e o letreiro são desenhados pela GPU
 //! (egui sobre OpenGL) e o vídeo é do mpv, que desenha no mesmo framebuffer.
@@ -507,7 +507,7 @@ struct App {
     pub pedir_foco_na_busca: bool,
     /// A abertura animada, enquanto está na tela.
     abertura: Option<abertura::Abertura>,
-    /// Os pedidos do Saimo Connect (o celular como controle remoto).
+    /// Os pedidos do GUHFLIX Connect (o celular como controle remoto).
     connect: Receiver<connect::Pedido>,
     /// Celulares esperando o "Permitir": o cliente, o nome e desde quando.
     pub aprovacoes: std::collections::VecDeque<(u64, String, Instant)>,
@@ -1662,11 +1662,11 @@ impl App {
         let no_ar = match (self.tocando_vod.as_ref(), canal) {
             (Some(t), _) => {
                 let imagem = logo.or_else(|| obra.and_then(|(nome, serie)| self.endereco_da_capa(nome, serie)));
-                Some(midia::NoAr { titulo: t.titulo.clone(), subtitulo: "Saimo TV".into(), imagem, ao_vivo: false })
+                Some(midia::NoAr { titulo: t.titulo.clone(), subtitulo: "GUHFLIX".into(), imagem, ao_vivo: false })
             }
             (None, Some(c)) => Some(midia::NoAr {
                 titulo: c.nome.clone(),
-                subtitulo: epg::agora_e_depois(&c.nome).map(|(p, _)| p.titulo).unwrap_or_else(|| "Saimo TV".into()),
+                subtitulo: epg::agora_e_depois(&c.nome).map(|(p, _)| p.titulo).unwrap_or_else(|| "GUHFLIX".into()),
                 imagem: c.logo.clone(),
                 ao_vivo: true,
             }),
@@ -3634,7 +3634,7 @@ vec4 hook() {{
     }
 
     /// Só uma tela tem som: duas transmissões falando juntas não servem a
-    /// ninguém. É a em foco; com um celular ouvindo pelo Saimo Connect, a que
+    /// ninguém. É a em foco; com um celular ouvindo pelo GUHFLIX Connect, a que
     /// ele escolheu para ficar aqui ("0" a da esquerda, "1" a da direita), e
     /// nenhuma quando ele calou o computador.
     fn ajustar_som_das_telas(&self) {

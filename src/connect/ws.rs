@@ -1,4 +1,4 @@
-//! O WebSocket do Saimo Connect, escrito à mão (RFC 6455), como o da TV Box.
+//! O WebSocket do GUHFLIX Connect, escrito à mão (RFC 6455), como o da TV Box.
 //!
 //! São poucas peças: o aperto de mão (SHA-1 + base64 da chave do celular), o
 //! quadro de texto que a TV manda e a leitura dos quadros mascarados que o

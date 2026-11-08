@@ -152,7 +152,7 @@ pub fn atualizacao(app: &mut App, ctx: &egui::Context) {
     }
 }
 
-/// Saimo Connect: um celular novo quer mandar neste computador. Só entra com
+/// GUHFLIX Connect: um celular novo quer mandar neste computador. Só entra com
 /// alguém clicando em "Permitir" aqui; sem resposta em um minuto, fica de fora.
 pub fn aprovacao(app: &mut App, ctx: &egui::Context) {
     let Some((cliente, nome, desde)) = app.aprovacoes.front().cloned() else { return };

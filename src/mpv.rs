@@ -165,7 +165,7 @@ struct Render(*mut mpv_render_context);
 unsafe impl Send for Render {}
 unsafe impl Sync for Render {}
 
-/// O número de cada mpv do app: o Saimo Connect usa para saber que lista
+/// O número de cada mpv do app: o GUHFLIX Connect usa para saber que lista
 /// cada um está tocando.
 static PROXIMO_ID: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
 
@@ -491,7 +491,7 @@ impl Mpv {
         self.id
     }
 
-    /// Ao vivo: a lista passa pela régua do Saimo Connect (`connect::hls`),
+    /// Ao vivo: a lista passa pela régua do GUHFLIX Connect (`connect::hls`),
     /// a mesma que o celular lê, para o som no celular tocar junto com a
     /// imagem daqui. Os pedaços continuam vindo direto da origem. Sem o
     /// Connect no ar, ou fora do HLS, toca direto como sempre.
