@@ -3,8 +3,8 @@
 | Dispositivo | Versão | Uso |
 | --- | --- | --- |
 | Windows 10/11 x64 | 3.1.1 | Catálogo e reprodução nativos |
-| Android TV / Google TV | Connect 2.6.1 | Catálogo, player e vínculo com o iPhone |
-| Android celular/tablet | 2.6.1 | Aplicativo nativo na horizontal |
+| Android TV / Google TV | Connect 2.6.2 | Catálogo, player e vínculo com o iPhone |
+| Android celular/tablet | 2.6.2 | Aplicativo nativo na horizontal |
 | Roku TV | 1.0.0 em validação | ZIP de desenvolvedor; ainda sem publicação na loja |
 | iPhone / iPad | Web atualizada | Catálogo, reprodução no Safari e controle da TV |
 
@@ -14,7 +14,13 @@ No painel, Novo cliente oferece quatro horas sem cobrança; TESTE 4H atende clie
 
 [Roku: pacote de desenvolvimento e instruções](roku.html). Compilação BrighterScript aprovada; falta validar em uma Roku física, assinar e publicar na loja para distribuição comum. Não é um APK.
 
-[Detalhes da atualização, segurança e testes](ATUALIZACAO-2.6.1.md).
+[Detalhes da atualização, segurança e testes](ATUALIZACAO-2.6.2.md).
+
+## Atualizador Android corrigido
+
+A versão 2.6.2 preserva os modelos de verificação de assinatura após a otimização R8. O teste reproduziu a falha anterior e confirmou: APK legítimo aceito; chave diferente e arquivo alterado recusados. Nenhuma validação foi desativada. Para reparar uma versão antiga, instale o APK novo manualmente por cima do Connect, sem desinstalar. A instalação real na TCL ainda precisa ser conferida.
+
+[Relatório da correção OTA](ATUALIZACAO-2.6.2-OTA.md).
 
 ## Melhorias
 
@@ -42,11 +48,11 @@ iOS oferece catálogo, reprodução no próprio aparelho e controle da televisã
 
 Use um acesso de cliente ativo. O administrador serve para o painel. Até três reproduções simultâneas continuam sendo verificadas no servidor. Nenhuma conta real foi renovada ou alterada durante os testes.
 
-O Connect 2.6.1 atualiza o Connect 2.5.1. O antigo GUHFLIX 2.4.2 permanece um aplicativo separado. No Windows, extraia o ZIP completo em uma pasta nova.
+O Connect 2.6.2 atualiza o Connect 2.5.1. O antigo GUHFLIX 2.4.2 permanece um aplicativo separado. No Windows, extraia o ZIP completo em uma pasta nova.
 
 ## Código-fonte
 
-- [TV, Android, API, painel e catálogo web](GUHFLIX-2.6.1-fonte.zip)
+- [TV, Android, API, painel e catálogo web](GUHFLIX-2.6.2-fonte.zip)
 - [Windows 3.1.1](GUHFLIX-Windows-3.1.1-fonte.zip)
 
 Os arquivos privados de assinatura e senhas não estão nos downloads.

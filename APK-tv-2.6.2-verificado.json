@@ -1,0 +1,14 @@
+{
+  "package": "com.guhflix.tv.connect",
+  "version": "2.6.2",
+  "versionCode": 2060002,
+  "bytes": 5105927,
+  "sha256": "6d138f71d8b6e3e606f97b33fb2974d21ef942c1d204e9adf32996ff7051e085",
+  "signerSHA256": "fe13bf8634b76a4450b70833a7a6eb6aa01429729371a33dccc75c8eaa72b76b",
+  "signatureVerified": true,
+  "embeddedVerificationModelsPreserved": true,
+  "launcherVerified": true,
+  "isolatedProviderAndDeepLinks": true,
+  "dedicatedUpdateManifest": true,
+  "realDevicePlaybackTested": false
+}

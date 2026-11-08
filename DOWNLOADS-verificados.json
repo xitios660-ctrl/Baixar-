@@ -1,29 +1,25 @@
 {
   "files": [
     {
+      "file": "GUHFLIX-Connect-TV-2.6.2.apk",
+      "bytes": 5105927,
+      "sha256": "6d138f71d8b6e3e606f97b33fb2974d21ef942c1d204e9adf32996ff7051e085"
+    },
+    {
+      "file": "GUHFLIX-Android-2.6.2.apk",
+      "bytes": 5105776,
+      "sha256": "47a883edd1016fcbe7d0f66afc9fd7ef57fb14431796fdb499d58d329d111d51"
+    },
+    {
       "file": "GUHFLIX-Windows-3.1.1.zip",
       "bytes": 53340311,
-      "sha256": "b164e2711a2cca67bcd92d56de5410bcec935bc46897a4a555e0f7ec6b973ec8",
-      "localIntegrityVerified": true
-    },
-    {
-      "file": "GUHFLIX-Connect-TV-2.6.1.apk",
-      "bytes": 5019681,
-      "sha256": "28838b30ae4f711bde8f743e16b4a0cdd38b529e7005f6316465205210989e26",
-      "localIntegrityVerified": true
-    },
-    {
-      "file": "GUHFLIX-Android-2.6.1.apk",
-      "bytes": 5019639,
-      "sha256": "b36fc8779cc3f5185c66d3b825317a48df0efc3d3d25bd76ad62fb8eddbdcf9d",
-      "localIntegrityVerified": true
+      "sha256": "b164e2711a2cca67bcd92d56de5410bcec935bc46897a4a555e0f7ec6b973ec8"
     },
     {
       "file": "GUHFLIX-Roku-1.0.0-desenvolvedor.zip",
       "bytes": 347848,
-      "sha256": "aac6a7960948985ba041151391caf07ccc0b849cfedd5de5ebfa0486c98fe356",
-      "localIntegrityVerified": true
+      "sha256": "aac6a7960948985ba041151391caf07ccc0b849cfedd5de5ebfa0486c98fe356"
     }
   ],
-  "verification": "Compare o SHA-256 com o arquivo completo baixado. O pacote Roku continua sendo uma edição de desenvolvimento, sem validação em aparelho físico."
+  "verification": "SHA-256 e tamanho conferidos nos arquivos completos. A correção OTA foi testada após a otimização R8; a instalação na TV física permanece pendente."
 }
