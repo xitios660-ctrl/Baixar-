@@ -1,0 +1,6 @@
+.buildResult/
+.sign/
+.package/
+*.wgt
+*.p12
+profiles.xml
