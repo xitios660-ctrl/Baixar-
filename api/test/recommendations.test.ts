@@ -1,0 +1,8 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {recommend} from '../src/recommendations.js';import {Metadata} from '../src/metadata.js';import type {CatalogItem} from '../src/catalog.js';
+test('Marvel and collection recommendations outrank generic films and only include available catalog titles',async()=>{
+ const item=(id:number,title:string,genres=['Ação']):CatalogItem=>({id:String(id),tmdbId:id,title,kind:'movie',letter:'A',year:'2026',genres});
+ const source=item(1,'Filme selecionado');const all=[source,item(2,'Filme Marvel'),item(3,'Continuação'),item(4,'Recomendação genérica'),item(5,'Outro gênero',['Drama'])];
+ const metadata=new Metadata('fake-only-test',async(url:any)=>{const path=new URL(String(url)).pathname;return Response.json(path.includes('/collection/')?{parts:[{id:3},{id:999}]}:path.includes('/discover/')?{results:[{id:2},{id:999}]}:{production_companies:[{id:420,name:'Marvel Studios'}],belongs_to_collection:{id:77},recommendations:{results:[{id:4},{id:999}]}})});
+ const result=await recommend(source,all,metadata);assert.equal(result.label,'Mais do universo Marvel');assert.deepEqual(result.items.slice(0,3).map(i=>i.id),['3','2','4']);assert(!result.items.some(i=>i.id==='999'||i.id==='1'));assert.match(result.items[1].reason!,/Marvel/);
+});
+test('metadata failure keeps genre fallback without claiming a Marvel connection',async()=>{const source:CatalogItem={id:'one',title:'Um filme',kind:'movie',letter:'U',year:'',tmdbId:1,genres:['Drama']};const result=await recommend(source,[source,{...source,id:'two',title:'Outro',tmdbId:2}],new Metadata(undefined));assert.equal(result.label,'Mais como este');assert.deepEqual(result.items.map(i=>i.id),['two'])});

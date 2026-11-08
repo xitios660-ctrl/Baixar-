@@ -1,0 +1,2 @@
+import {defineConfig,devices} from '@playwright/test';
+export default defineConfig({testDir:'admin-browser-test',outputDir:'admin-test-results',workers:1,timeout:45000,use:{baseURL:'http://127.0.0.1:4291',trace:'retain-on-failure'},webServer:{command:'../api/node_modules/.bin/tsx ../api/test/admin-server.ts',url:'http://127.0.0.1:4291/health',reuseExistingServer:false,timeout:90000},projects:[{name:'Desktop',use:{browserName:'chromium',viewport:{width:1440,height:1000}}},{name:'iPhone',use:{...devices['iPhone 13'],browserName:'webkit'}}]});

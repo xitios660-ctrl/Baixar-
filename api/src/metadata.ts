@@ -1,6 +1,6 @@
 import {Fault} from './errors.js';
-const allowed=/^(?:(?:movie|tv)\/\d+(?:\/(?:season\/\d+|recommendations|similar|credits|release_dates|content_ratings|images))?|person\/\d+(?:\/combined_credits)?|search\/(?:movie|tv|person|multi))$/;
-const params=new Set(['language','append_to_response','include_image_language','query','year','first_air_date_year','include_adult','page']);
+const allowed=/^(?:(?:movie|tv)\/\d+(?:\/(?:season\/\d+|recommendations|similar|credits|release_dates|content_ratings|images))?|trending\/(?:movie|tv)\/week|collection\/\d+|discover\/(?:movie|tv)|person\/\d+(?:\/combined_credits)?|search\/(?:movie|tv|person|multi))$/;
+const params=new Set(['language','append_to_response','include_image_language','query','year','first_air_date_year','include_adult','page','with_companies','sort_by']);
 export class Metadata {
  private cache=new Map<string,{until:number;value:any}>();
  constructor(private key=process.env.TMDB_API_KEY,private get:typeof fetch=fetch){}

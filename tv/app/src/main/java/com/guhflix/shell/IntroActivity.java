@@ -42,7 +42,7 @@ public final class IntroActivity extends Activity {
     @Override // android.app.Activity
     protected void onResume() {
         super.onResume();
-        this.handler.postDelayed(this.finishIntro, Math.max(0L, 2600 - (SystemClock.uptimeMillis() - this.start)));
+        this.handler.postDelayed(this.finishIntro, Math.max(0L, 4200 - (SystemClock.uptimeMillis() - this.start)));
     }
 
     @Override // android.app.Activity
@@ -88,7 +88,7 @@ public final class IntroActivity extends Activity {
         protected void onDraw(Canvas canvas) {
             int width = getWidth();
             int height = getHeight();
-            float fUptimeMillis = (SystemClock.uptimeMillis() - IntroActivity.this.start) / 2600.0f;
+            float fUptimeMillis = (SystemClock.uptimeMillis() - IntroActivity.this.start) / 4200.0f;
             canvas.drawColor(-16250872);
             float fPow = 1.0f - ((float) Math.pow(1.0f - Math.max(0.0f, Math.min(1.0f, (fUptimeMillis - 0.05f) / 0.65f)), 3.0d));
             float f = width;
@@ -106,6 +106,13 @@ public final class IntroActivity extends Activity {
                 fUptimeMillis = fUptimeMillis;
             }
             float f5 = fUptimeMillis;
+            for(int ray=0;ray<22;ray++){
+                float x=f2+(ray-11)*f*.038f;
+                float light=(float)Math.sin(Math.min(1f,fUptimeMillis)*Math.PI);
+                this.paint.setColor(Color.argb((int)(light*(60-ray%4*10)),229,9,20));
+                this.paint.setStrokeWidth(2f+(ray%3));
+                canvas.drawLine(x-f*.12f,0,x+f*.12f,f3,this.paint);
+            }
             canvas.save();
             canvas.translate(f2, 0.51f * f3);
             this.camera.save();
@@ -113,7 +120,7 @@ public final class IntroActivity extends Activity {
             this.camera.getMatrix(this.matrix);
             this.camera.restore();
             canvas.concat(this.matrix);
-            float fMin = Math.min(f * 0.16f, 0.3f * f3);
+            float fMin = Math.min(f * 0.20f, 0.3f * f3);
             this.paint.setTextSize(fMin);
             this.paint.setTypeface(Typeface.create("sans-serif-condensed", 1));
             this.paint.setTextAlign(Paint.Align.CENTER);

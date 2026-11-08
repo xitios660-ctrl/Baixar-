@@ -335,6 +335,15 @@ object Detalhes {
             if (id <= 0) return@withContext emptyList()
             Generos.carregar(context)
             val tipo = if (serie) "tv" else "movie"
+            val related=com.guhflix.shell.CloudRemote.related(id,serie)?.optJSONArray("items")
+            if(related!=null&&related.length()>0){
+                val catalogItems=(0 until related.length()).mapNotNull { index ->
+                    val item=related.optJSONObject(index)?:return@mapNotNull null
+                    val found=Vod.achar(context,item.optString("title"),item.optString("kind")=="series")?:return@mapNotNull null
+                    Trabalho(found,item.optString("poster").takeIf{it.startsWith("https://")},item.optString("reason"))
+                }
+                if(catalogItems.isNotEmpty())return@withContext catalogItems
+            }
             val vistos = HashSet<String>()
             val saida = mutableListOf<Trabalho>()
             for (rota in listOf("recommendations", "similar")) {

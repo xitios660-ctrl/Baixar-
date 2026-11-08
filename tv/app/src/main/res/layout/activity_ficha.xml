@@ -293,7 +293,7 @@
             android:clipChildren="false"
             android:orientation="vertical"
             android:visibility="gone">
-            <TextView
+            <TextView android:id="@+id/fichaParecidosTitulo"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:fontFamily="sans-serif-medium"

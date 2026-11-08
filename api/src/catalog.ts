@@ -1,10 +1,11 @@
+import {recommend,type Related} from './recommendations.js';
 import {createHash} from 'node:crypto';
 import {Fault} from './errors.js';
 import {Metadata} from './metadata.js';
 
 export type CatalogItem={id:string;title:string;kind:'movie'|'series';letter:string;year:string;poster?:string;backdrop?:string;synopsis?:string;genres:string[];tmdbId?:number;seasons?:number[];episodes?:{season:number;episode:number;title?:string}[]};
 export type Playable={item:CatalogItem;urls:string[];season?:number;episode?:number};
-export interface Catalog { list(q:string,kind:string,offset:number):Promise<{items:CatalogItem[];total:number;categories:string[]}>; detail(id:string):Promise<CatalogItem>; resolve(id:string,season?:number,episode?:number):Promise<Playable>; health():Promise<{available:boolean;reason?:string}>; fileText?(name:string):Promise<string> }
+export interface Catalog { list(q:string,kind:string,offset:number):Promise<{items:CatalogItem[];total:number;categories:string[]}>; detail(id:string):Promise<CatalogItem>; resolve(id:string,season?:number,episode?:number):Promise<Playable>; health():Promise<{available:boolean;reason?:string}>; home?():Promise<{featured:CatalogItem|null;rows:{title:string;items:CatalogItem[]}[]}>; fileText?(name:string):Promise<string>; related?(id:string):Promise<Related>; byTmdb?(kind:string,id:number):Promise<CatalogItem|undefined> }
 const idFor=(kind:string,title:string,letter:string,year:string)=>createHash('sha256').update([kind,title,letter,year].join('\0')).digest('hex').slice(0,32);
 const http=(s:string)=>s.length<=8192&&/^https?:\/\//i.test(s)&&!new URL(s).username&&!new URL(s).password;
 const fold=(s:string)=>s.normalize('NFD').replace(/\p{Diacritic}/gu,'').toLocaleLowerCase('pt-BR');
@@ -65,6 +66,22 @@ export class ProviderCatalog implements Catalog {
     for(const line of data.split(/\r?\n/)){if(line.startsWith('@')){const f=line.slice(1).split('\t');inside=f[0]===i.title&&(!i.year||f[1]===i.year);continue}if(!inside)continue;const [s,e,,links]=line.split('\t');if(!links)continue;const season=+s,episode=+e;if(!Number.isInteger(season)||!Number.isInteger(episode)||season<0||episode<1)continue;const urls=this.urls(links);const old=episodes.find(x=>x.season===season&&x.episode===episode);if(old)old.urls.push(...urls);else episodes.push({season,episode,urls})}return episodes;
   }
   async detail(id:string){let item={...await this.item(id)};if(item.tmdbId)try{const meta=await this.metadata.request((item.kind==='series'?'tv':'movie')+'/'+item.tmdbId,new URLSearchParams({language:'pt-BR'}));item={...item,synopsis:meta.overview||undefined,backdrop:meta.backdrop_path?'https://image.tmdb.org/t/p/w1280'+meta.backdrop_path:undefined}}catch{}if(item.kind==='movie')return {...item};const eps=await this.series(item);return {...item,seasons:[...new Set(eps.map(e=>e.season))],episodes:eps.map(({season,episode})=>({season,episode}))}}
+  private homeData:{until:number;data:{featured:CatalogItem|null;rows:{title:string;items:CatalogItem[]}[]}}|undefined;
+  async home(){
+    await this.load();if(this.homeData&&this.homeData.until>Date.now())return this.homeData.data;
+    const all=[...this.items.values()];const featuredIds:number[]=[];
+    try{const trending=await this.metadata.request('trending/movie/week',new URLSearchParams({language:'pt-BR'}));for(const i of trending.results??[])featuredIds.push(i.id)}catch{}
+    const popular=featuredIds.map(id=>all.find(i=>i.kind==='movie'&&i.tmdbId===id)).filter((i):i is CatalogItem=>!!i);
+    const selected=popular[0]??all.find(i=>!!i.poster&&i.kind==='movie')??all[0];
+    const featured=selected?await this.detail(selected.id):null;
+    const rows:{title:string;items:CatalogItem[]}[]=[];
+    if(popular.length>1)rows.push({title:'Em destaque no cinema',items:popular.slice(0,16)});
+    for(const genre of ['Ação','Aventura','Animação','Comédia','Drama','Suspense','Terror']){const items=all.filter(i=>i.poster&&i.genres.includes(genre)).slice(0,16);if(items.length)rows.push({title:genre,items})}
+    const series=all.filter(i=>i.kind==='series'&&i.poster).slice(0,16);if(series.length)rows.push({title:'Séries para maratonar',items:series});
+    const data={featured,rows:rows.slice(0,7)};this.homeData={until:Date.now()+60000,data};return data;
+  }
+  async related(id:string){const source=await this.item(id);return recommend(source,[...this.items.values()],this.metadata)}
+  async byTmdb(kind:string,id:number){await this.load();return [...this.items.values()].find(i=>i.kind===kind&&i.tmdbId===id)}
   async resolve(id:string,season?:number,episode?:number){
     const item=await this.item(id);let urls:string[]=[];
     if(item.kind==='series'){if(season===undefined||episode===undefined)throw new Fault(400,'EPISODE_REQUIRED','Escolha a temporada e o episódio');urls=(await this.series(item)).find(e=>e.season===season&&e.episode===episode)?.urls??[]}

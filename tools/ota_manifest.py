@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Generate a version manifest only after apksigner verifies the installed app's signer."""
 import argparse,hashlib,json,pathlib,re,subprocess,urllib.parse
-p=argparse.ArgumentParser();p.add_argument('apk',type=pathlib.Path);p.add_argument('--apksigner',default='apksigner');p.add_argument('--aapt',default='aapt');p.add_argument('--url',required=True);p.add_argument('--notes',required=True);p.add_argument('--mandatory',action='store_true');p.add_argument('--package-name',choices=['com.guhflix.tv','com.guhflix.tv.connect'],default='com.guhflix.tv');p.add_argument('--expected-signer');p.add_argument('--output',type=pathlib.Path,required=True);args=p.parse_args()
+p=argparse.ArgumentParser();p.add_argument('apk',type=pathlib.Path);p.add_argument('--apksigner',default='apksigner');p.add_argument('--aapt',default='aapt');p.add_argument('--url',required=True);p.add_argument('--notes',required=True);p.add_argument('--mandatory',action='store_true');p.add_argument('--package-name',choices=['com.guhflix.tv','com.guhflix.tv.connect','com.guhflix.android'],default='com.guhflix.tv');p.add_argument('--expected-signer');p.add_argument('--output',type=pathlib.Path,required=True);args=p.parse_args()
 url=urllib.parse.urlparse(args.url)
 assert url.scheme=='https' and url.hostname and not url.username and not url.fragment,'APK URL must be HTTPS'
 verification=subprocess.check_output([args.apksigner,'verify','--verbose','--print-certs',str(args.apk)],text=True)

@@ -294,6 +294,7 @@ class FichaActivity : TelaComMenu() {
             val lista = Detalhes.parecidos(this@FichaActivity, r.tmdbId, r.serie)
             if (lista.isEmpty() || isFinishing) return@launch
             findViewById<View>(R.id.fichaParecidosBloco).visibility = View.VISIBLE
+            findViewById<TextView>(R.id.fichaParecidosTitulo).text=if(lista.any{it.papel.contains("Marvel")})"Mais do universo Marvel" else if(lista.any{it.papel=="Da mesma coleção"})"Continue nesta coleção" else "Você também pode gostar"
             parecidos.trocar(lista)
         }
     }

@@ -154,6 +154,10 @@ class PlayerActivity : AppCompatActivity(), Connect.Listener {
     private var fonte = 0
     /// Fontes já tentadas neste episódio (a automática pula as tentadas).
     private val tentadas = mutableSetOf<Int>()
+    private val reconnectPolicy=com.guhflix.shell.RetryPolicy()
+    private var reconnectTask:Runnable?=null
+    private fun cancelReconnect(reset:Boolean=false){reconnectTask?.let{handler.removeCallbacks(it)};reconnectTask=null;if(reset)reconnectPolicy.reset()}
+
     private val tentadas404 = mutableSetOf<String>()
     /// Fonte em que a série toca (servidor e posição na lista): o episódio
     /// seguinte começa por uma parecida. Vive só nesta sessão de player.
@@ -305,6 +309,7 @@ class PlayerActivity : AppCompatActivity(), Connect.Listener {
     }
 
     private suspend fun preparar() {
+        cancelReconnect(true)
         val remote = intent.getStringExtra("guhflix.remote")
         if (!remote.isNullOrBlank()) {
             try {
@@ -618,6 +623,7 @@ class PlayerActivity : AppCompatActivity(), Connect.Listener {
         }
 
     private fun tocarFonte(inicio: Long, pausado: Boolean = false) {
+        cancelReconnect()
         val opcao = opcoes.getOrNull(fonte) ?: run { desistir(); return }
         if (ep != null) {
             preferidaServidor = Titulos.servidor(opcao.url)
@@ -711,17 +717,31 @@ class PlayerActivity : AppCompatActivity(), Connect.Listener {
                     tocarFonte(posicao, pausado = aviso.visibility == View.VISIBLE)
                     return@launch
                 }
-                desistir()
+                desistir(posicao)
             }
             return
         }
-        desistir()
+        desistir(posicao)
     }
 
-    private fun desistir() {
+    private fun desistir(posicao:Long=player?.currentPosition?.coerceAtLeast(0)?:0) {
         handler.removeCallbacks(prazo)
         Telemetria.caiu("vod", nomeTelemetria(), opcoes.size)
         player?.stop()
+        if(opcoes.isNotEmpty()&&!isFinishing&&!isDestroyed){
+            val delay=reconnectPolicy.nextDelayMs()
+            val key=resolvido?.chave(ep)
+            val position=posicao
+            val retry={cancelReconnect();esconderAviso();tentadas.clear();fonte=0;tocarFonte(position)}
+            mostrarAviso("Continuar tentando · "+alvo.titulo,"As fontes não responderam. Nova tentativa em ${delay/1000} segundos. O título e seu progresso continuam aqui.",listOf(
+                "Tentar agora" to {retry()},
+                "Pausar tentativas" to {cancelReconnect();mostrarErro("Reprodução pausada","Quando quiser, tente novamente ou volte ao catálogo.")},
+                "Voltar ao catálogo" to {cancelReconnect(true);finish()}
+            ))
+            reconnectTask=Runnable{if(!isFinishing&&!isDestroyed&&resolvido?.chave(ep)==key)retry()}
+            handler.postDelayed(reconnectTask!!,delay)
+            return
+        }
         val texto = if (resolvido?.serie == true) getString(R.string.player_erro_texto_serie)
                     else getString(R.string.player_erro_texto)
         mostrarErro(getString(R.string.player_erro_titulo), texto)
@@ -739,6 +759,7 @@ class PlayerActivity : AppCompatActivity(), Connect.Listener {
             val p = player ?: return
             when (state) {
                 Player.STATE_READY -> {
+                    cancelReconnect(true)
                     handler.removeCallbacks(prazo)
                     esconderCarregando()
                     if (travouDesde > 0 && SystemClock.elapsedRealtime() - travouDesde > 5_000) travadas++
@@ -780,6 +801,7 @@ class PlayerActivity : AppCompatActivity(), Connect.Listener {
         }
 
         override fun onPlayerError(error: PlaybackException) {
+            if(error.errorCode in 6000..6999){cancelReconnect(true);mostrarErro("Não foi possível autorizar a fonte","Confira a disponibilidade e as permissões deste conteúdo.");return}
             val p = player ?: return
             handler.removeCallbacks(prazo)
             // Legenda com defeito não é fonte morta: sai a legenda, o filme
@@ -1109,7 +1131,7 @@ class PlayerActivity : AppCompatActivity(), Connect.Listener {
         esconderCarregando()
         val acoes = mutableListOf<Pair<String, () -> Unit>>(
             getString(R.string.player_tentar_de_novo) to {
-                esconderAviso(); fonte = 0; tentadas.clear()
+                cancelReconnect(true);esconderAviso(); fonte = 0; tentadas.clear()
                 if (resolvido == null) lifecycleScope.launch(semDerrubar) { preparar() }
                 else tocarFonte(Progresso.posicao(this, resolvido!!.chave(ep)))
             })
@@ -1461,6 +1483,7 @@ class PlayerActivity : AppCompatActivity(), Connect.Listener {
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         if (!com.guhflix.shell.Gate.initialized(this)) return super.onKeyDown(keyCode, event)
+        if ((keyCode == KeyEvent.KEYCODE_BACK || keyCode == KeyEvent.KEYCODE_ESCAPE)&&reconnectTask!=null){cancelReconnect(true);finish();return true}
         if (keyCode == KeyEvent.KEYCODE_BACK || keyCode == KeyEvent.KEYCODE_ESCAPE) {
             when {
                 proximo.visibility == View.VISIBLE -> { dispensarProximo(); return true }

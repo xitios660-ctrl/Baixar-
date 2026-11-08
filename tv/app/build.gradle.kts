@@ -12,7 +12,8 @@ plugins {
  * chave é a identidade do aplicativo: perdê-la obriga todo mundo a desinstalar
  * e instalar de novo.
  */
-val connectEdition = providers.gradleProperty("guhflixConnect").orNull == "true"
+val mobileEdition = providers.gradleProperty("guhflixAndroidMobile").orNull == "true"
+val connectEdition = mobileEdition || providers.gradleProperty("guhflixConnect").orNull == "true"
 val chave = Properties().apply {
     val arquivo = rootProject.file(if (connectEdition) "keystore-connect.properties" else "keystore.properties")
     if (arquivo.exists()) arquivo.inputStream().use { load(it) }
@@ -23,20 +24,21 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = if (connectEdition) "com.guhflix.tv.connect" else "com.guhflix.tv"
+        applicationId = if (mobileEdition) "com.guhflix.android" else if (connectEdition) "com.guhflix.tv.connect" else "com.guhflix.tv"
         // Android 6: o mínimo do Media3 e das bibliotecas androidx atuais.
         // Até a 2.0.2 era o 5 (21); quem ainda tem Android 5 fica na 2.0.2.
         minSdk = 23
         targetSdk = 35
-        versionCode = if (connectEdition) 2050001 else 2050000
-        versionName = if (connectEdition) "2.5.1" else "2.5.0"
+        versionCode = if (connectEdition) 2060000 else 2050000
+        versionName = if (connectEdition) "2.6.0" else "2.5.0"
         buildConfigField("String", "GUHFLIX_API", "\"https://guhflix-marley-api.onrender.com\"")
-        val updateFile = if (connectEdition) "release-connect.json" else "release.json"
+        val updateFile = if (mobileEdition) "release-android.json" else if (connectEdition) "release-connect.json" else "release.json"
         buildConfigField("String", "GUHFLIX_UPDATE_MANIFEST", "\"https://guhflix-tv-download.onrender.com/$updateFile\"")
-        buildConfigField("String", "GUHFLIX_URI_SCHEME", if (connectEdition) "\"guhflix-connect\"" else "\"saimo\"")
-        resValue("string", "guhflix_search_authority", if (connectEdition) "com.guhflix.tv.connect.busca" else "com.guhflix.tv.busca")
-        manifestPlaceholders["guhflixAppLabel"] = if (connectEdition) "GUHFLIX Connect" else "GUHFLIX"
-        manifestPlaceholders["guhflixUriScheme"] = if (connectEdition) "guhflix-connect" else "saimo"
+        buildConfigField("String", "GUHFLIX_URI_SCHEME", if (mobileEdition) "\"guhflix-android\"" else if (connectEdition) "\"guhflix-connect\"" else "\"saimo\"")
+        resValue("string", "guhflix_search_authority", if (mobileEdition) "com.guhflix.android.busca" else if (connectEdition) "com.guhflix.tv.connect.busca" else "com.guhflix.tv.busca")
+        manifestPlaceholders["guhflixLeanbackRequired"] = if (mobileEdition) "false" else "true"
+        manifestPlaceholders["guhflixAppLabel"] = if (mobileEdition) "GUHFLIX Android" else if (connectEdition) "GUHFLIX Connect" else "GUHFLIX"
+        manifestPlaceholders["guhflixUriScheme"] = if (mobileEdition) "guhflix-android" else if (connectEdition) "guhflix-connect" else "saimo"
 
     }
 

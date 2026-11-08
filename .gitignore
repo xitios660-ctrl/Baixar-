@@ -19,3 +19,5 @@ pwa/playwright-report/
 tv/keystore-connect.properties
 
 __pycache__/
+
+pwa/admin-test-results/
