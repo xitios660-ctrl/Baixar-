@@ -15,6 +15,7 @@ test('GUHFLIX full subscription, authentication and concurrency flow',async()=>{
  assert.equal((await request('POST','/api/auth/login',{username:{$ne:null},password:pass,installationId:randomUUID()})).statusCode,400);
  assert.equal((await request('POST','/api/auth/login',{username:'admin',password:'wrong',installationId:randomUUID()})).statusCode,401);
  const ar=await login('admin','admin');assert.equal(ar.statusCode,200,ar.body);const at=ar.json().accessToken;
+ const adminPlaybackAccess=await request('GET','/api/app/access',undefined,at);assert.equal(adminPlaybackAccess.statusCode,403);assert.equal(adminPlaybackAccess.json().error,'CUSTOMER_REQUIRED');assert.match(adminPlaybackAccess.json().message,/conta administradora/);
  const created=await request('POST','/api/admin/users',{username:'customer',password:pass},at);assert.equal(created.statusCode,200,created.body);const uid=created.json().id;
  const first=await login('customer');assert.equal(first.statusCode,200);const one=first.json();
  const restarted=await createApp({client,db,secret:'x'.repeat(64),adminOrigin:'https://admin.example.com',production:false,now});
