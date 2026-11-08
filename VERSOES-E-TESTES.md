@@ -23,6 +23,8 @@ Se as fontes falham, o player permanece no filme e tenta novamente após 5, 10, 
 - Windows: 96 testes aprovados, 9 ignorados; 1 teste adicional HLS sintético aprovado com a DLL original. Compilação nativa CI 42448332395.
 - Portal: navegação e instruções nas três apresentações desktop/iPhone/Android, downloads e ausência de erro de script verificados.
 
+Downloads públicos: os dois APKs e o ZIP Windows foram baixados por completo e tiveram tamanho e SHA-256 conferidos; os APKs responderam HTTP 206 ao download parcial. Consulte [verificação dos arquivos](DOWNLOADS-verificados.json).
+
 ## Limitações
 
 Não houve teste de instalação ou reprodução em TCL/celular físico nesta atualização. Nos testes de navegador, a API e o MongoDB são reais e locais, mas catálogo e TV são fixtures. A CI Windows não tem OpenGL 2.0 para apresentar toda a interface. Filmes comerciais, GPU, áudio físico e legendas precisam ser confirmados nos aparelhos. A disponibilidade de cada vídeo depende do provedor autorizado e da conexão.

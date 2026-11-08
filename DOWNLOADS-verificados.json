@@ -1,0 +1,25 @@
+[
+  {
+    "file": "GUHFLIX-Windows-3.1.0.zip",
+    "bytes": 53340073,
+    "sha256": "107c4f31ccae04703a4a9374962460bd767cd2081fdb5e53415f40e63b82741d",
+    "http": 200,
+    "hashVerified": true
+  },
+  {
+    "file": "GUHFLIX-Connect-TV-2.6.0.apk",
+    "bytes": 5019623,
+    "sha256": "29dc355190bd793acd0cda3929396995c763714eeab9e6ffdaca458dcbb0c769",
+    "http": 200,
+    "hashVerified": true,
+    "httpRange": 206
+  },
+  {
+    "file": "GUHFLIX-Android-2.6.0.apk",
+    "bytes": 5019630,
+    "sha256": "821a1d1313e2514a711df5414d8db2b1655a32efbfdf882d0e4c9525923a8495",
+    "http": 200,
+    "hashVerified": true,
+    "httpRange": 206
+  }
+]
