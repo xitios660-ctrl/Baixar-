@@ -50,7 +50,7 @@ export async function registerConnect(app:FastifyInstance,c:Config){
    const {s,u}=await owner(req);if(s.client!=='pwa')throw new Fault(403,'PHONE_REQUIRED','Vincule usando o site do iPhone');
    const input=z.object({code:z.string().max(30)}).parse(req.body);const code=input.code.replace(/[\s-]/g,'').toUpperCase();if(!/^[A-F0-9]{10}$/.test(code))throw new Fault(400,'INVALID_CODE','Código de vínculo inválido');
    const pair=await db.collection('connect_pairings').findOneAndUpdate({codeHash:sha(code),userId:u._id.toString(),claimed:false,expiresAt:{$gt:now()}},{$set:{claimed:true,phoneSessionId:s._id.toString()}},{returnDocument:'after'});
-   if(!pair)throw new Fault(404,'PAIRING_EXPIRED','Código incorreto, já utilizado ou expirado');
+   if(!pair)throw new Fault(404,'PAIRING_EXPIRED','Código incorreto, já utilizado ou expirado. Confira se a mesma conta GUHFLIX está conectada no site e na TV.');
    const live=await db.collection('sessions').findOne({_id:id(pair.tvSessionId),userId:u._id.toString(),revoked:false,expiresAt:{$gt:now()}});if(!live)throw new Fault(409,'TV_OFFLINE','A sessão da TV precisa ser renovada');
    const link=await db.collection('connect_links').findOneAndUpdate({tvSessionId:pair.tvSessionId,phoneSessionId:s._id.toString()},{$set:{userId:u._id.toString(),label:pair.label,revoked:false,updatedAt:now()},$setOnInsert:{createdAt:now()}},{upsert:true,returnDocument:'after'});
    return {id:link!._id.toString(),label:link!.label};

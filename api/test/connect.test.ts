@@ -40,6 +40,7 @@ test('PWA cookie, persistent pairing, isolated commands, acknowledgement, reconn
   assert.equal((await req('GET',`/api/connect/catalog/${movie.id}/play`,undefined,phone.accessToken)).statusCode,403);
   const requestId=randomUUID(),body={requestId,command:{type:'play',contentId:movie.id}};
   const sent=await req('POST',`/api/connect/devices/${link}/commands`,body,phone.accessToken,{origin});assert.equal(sent.statusCode,200,sent.body);const cid=sent.json().id;
+  const strangerTv=(await login('stranger')).json();assert.equal((await req('POST','/api/connect/tv/poll',{},strangerTv.accessToken)).json().command,null,'Another account television cannot receive the owner command');assert.equal((await req('GET',`/api/connect/commands/${cid}`,undefined,stranger.accessToken)).statusCode,404);assert.equal((await req('GET','/api/connect/devices',undefined,stranger.accessToken)).json().devices.length,0);
   assert.equal((await req('POST',`/api/connect/devices/${link}/commands`,body,phone.accessToken,{origin})).json().id,cid);
   assert.equal(await db.collection('connect_commands').countDocuments({requestId}),1);
   assert.equal((await req('POST',`/api/connect/devices/${link}/commands`,{requestId,command:{type:'pause'}},phone.accessToken,{origin})).statusCode,409);
