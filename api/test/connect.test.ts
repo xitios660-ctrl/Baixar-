@@ -66,6 +66,17 @@ test('PWA cookie, persistent pairing, isolated commands, acknowledgement, reconn
   const remaining=(await req('GET','/api/connect/devices',undefined,renewed)).json().devices;
   assert(remaining.some((d:any)=>d.id===link3),'TV revocation does not affect another television');assert(!remaining.some((d:any)=>d.id===link2));
   const oldPair=(await req('POST','/api/connect/pairing',{},tv.accessToken)).json();clock=new Date(clock.getTime()+301000);assert.equal((await req('POST','/api/connect/pairing/claim',{code:oldPair.code},renewed,{origin})).statusCode,404);
+  const browser=(await login('owner','pwa')).json();
+  assert.equal((await req('POST','/api/connect/browser-tv/enable',{})).statusCode,401);
+  assert.equal((await req('POST','/api/connect/browser-tv/enable',{},browser.accessToken,{origin:'https://evil.example'})).statusCode,403);
+  assert.equal((await req('POST','/api/connect/browser-tv/enable',{},browser.accessToken,{origin})).statusCode,200);
+  const browserPair=(await req('POST','/api/connect/pairing',{},browser.accessToken,{origin})).json();assert.match(browserPair.code,/^[A-F0-9]{5}-[A-F0-9]{5}$/);
+  assert.equal((await req('POST','/api/connect/pairing/claim',{code:browserPair.code},stranger.accessToken,{origin})).statusCode,404);
+  const browserLink=(await req('POST','/api/connect/pairing/claim',{code:browserPair.code,label:'Philco navegador'},renewed,{origin})).json().id;assert(browserLink);
+  const browserCommand=(await req('POST','/api/connect/devices/'+browserLink+'/commands',{requestId:randomUUID(),command:{type:'pause'}},renewed,{origin})).json();
+  const browserPoll=await req('POST','/api/connect/tv/poll',{state:{mode:'idle',title:'',positionMs:0,durationMs:0}},browser.accessToken,{origin});assert.equal(browserPoll.statusCode,200);assert.equal(browserPoll.json().command.id,browserCommand.id);
+  assert.equal((await req('POST','/api/connect/tv/commands/'+browserCommand.id+'/ack',{success:true},browser.accessToken,{origin})).statusCode,200);
+  assert.equal((await req('POST','/api/auth/logout',{},browser.accessToken,{origin})).statusCode,200);assert.equal((await req('POST','/api/connect/tv/poll',{},browser.accessToken,{origin})).statusCode,401);
   await db.collection('users').updateOne({username:'owner'},{$set:{status:'blocked'}});assert.equal((await req('POST',`/api/connect/devices/${link2}/commands`,{requestId:randomUUID(),command:{type:'resume'}},renewed,{origin})).statusCode,403);
   assert.equal((await req('POST','/api/auth/refresh',{client:'pwa'},undefined,{origin:'https://evil.example',cookie})).statusCode,403);
   assert.equal((await req('GET','/pwa/../../api/src/server.ts')).statusCode,404);

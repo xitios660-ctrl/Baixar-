@@ -19,3 +19,11 @@ Qualidade Leve tenta escolher uma variante HLS até 720p e 2,5 Mbps; Mais leve a
 Erros e ausência de avanço por 25s durante reprodução acionam tentativa de fonte com posição preservada no VOD; um player pausado não é reiniciado pelo detector. A retomada depende de a fonte aceitar seek. Reaparecimento de reprodução cancela a tentativa pendente. Não elimina limitações de conexão, fonte ou hardware.
 
 Verificações executadas: 12 testes API aprovados; 10 testes Chromium aprovados (incluem fixtures de TV ao vivo, viewport do player, retomada sintética aos 55s, login com APIs modernas desativadas e regressões do catálogo moderno). Teste integrado de acesso/revogação repetido após acrescentar verificação de rotas live não autenticadas. Fontes de produção só foram analisadas por catálogo; isso não comprova abertura de todos os canais nem ausência de travadas na TV física.
+
+## Vínculo pelo catálogo do celular
+
+A versão web de TV agora tem Conectar celular, código de cinco minutos, estado de vínculo e receptor de comandos. Uma sessão de cliente PWA pode ser explicitamente ativada como receptora por POST /api/connect/browser-tv/enable, autenticado e limitado à própria sessão/conta ativa; a sessão mantém o cookie HttpOnly, os demais mecanismos de acesso e o vencimento existentes. Não é concedida administração. PWA normal continua sem permissão de polling de TV até ativação explícita. Nome da TV é escolhido no catálogo do celular ao vincular.
+
+O receptor usa os mesmos pares de conta/sessão, fila, ACK, expiração e revogação do aplicativo nativo. Confirmações significam recebimento/aceitação do comando; não garantem imagem ou compatibilidade de codec. Comandos incluem seleção de filme/episódio, pausa, retomada, busca e parada. O seletor de canais ao vivo permanece na versão TV; o catálogo moderno do celular não passou a listar canais nesta alteração. Duplicatas recentes de comando são confirmadas sem reexecutar; logout limpa o estado local do receptor. O navegador pode exigir um gesto local para permitir autoplay/fullscreen.
+
+Testes adicionais verificam ativação autenticada, recusa de outra origem/conta, vínculo entre duas sessões reais do navegador com backend isolado, envio de MP4 sintético do catálogo, reprodução no navegador, pausa/parada e logout. Isso não substitui o teste físico na Philco com o celular do usuário.
