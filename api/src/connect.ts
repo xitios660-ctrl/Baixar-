@@ -1,3 +1,4 @@
+import type {LiveSource} from './live.js';
 import type {FastifyInstance,FastifyRequest} from 'fastify';
 import {ObjectId,type Db} from 'mongodb';
 import {randomBytes,createHash} from 'node:crypto';
@@ -6,7 +7,7 @@ import {Fault} from './errors.js';
 import type {Catalog} from './catalog.js';
 import {Metadata} from './metadata.js';
 
-type Config={db:Db;now:()=>Date;identity:(req:FastifyRequest)=>Promise<{s:any;u:any}>;requireAccess:(u:any)=>void;catalog:Catalog};
+type Config={db:Db;now:()=>Date;identity:(req:FastifyRequest)=>Promise<{s:any;u:any}>;requireAccess:(u:any)=>void;catalog:Catalog;live:LiveSource};
 const sha=(v:string)=>createHash('sha256').update(v).digest('hex');
 const id=(v:unknown)=>{if(typeof v!=='string'||!ObjectId.isValid(v))throw new Fault(400,'INVALID_ID','Identificador inválido');return new ObjectId(v)};
 const command=z.discriminatedUnion('type',[
@@ -37,6 +38,8 @@ export async function registerConnect(app:FastifyInstance,c:Config){
  app.get('/api/connect/health',{config:{rateLimit:{max:12,timeWindow:'1 minute'}}},async()=>({service:'guhflix-connect',version:'1.0.0',catalog:await c.catalog.health()}));
  app.get('/api/connect/metadata/*',async req=>{await owner(req);const path=(req.params as any)['*'];return metadata.request(path,new URL(req.url,'https://guhflix.invalid').searchParams)});
  app.get('/api/connect/catalog-files/*',async(req,reply)=>{await owner(req);if(!c.catalog.fileText)throw new Fault(503,'CATALOG_FORMAT','Catálogo não fornece arquivos nativos');const text=await c.catalog.fileText((req.params as any)['*']);return reply.header('Content-Type','text/plain; charset=utf-8').header('Cache-Control','private, no-store').send(text)});
+ app.get('/api/connect/live',async req=>{await owner(req);const q=z.object({q:z.string().max(120).default(''),offset:z.coerce.number().int().min(0).max(100000).default(0)}).parse(req.query);return c.live.list(q.q,q.offset)});
+ app.get('/api/connect/live/:id',async req=>{await owner(req);return c.live.detail(z.string().regex(/^[a-f0-9]{32}$/).parse((req.params as any).id))});
  app.get('/api/connect/home',async req=>{await owner(req);if(!c.catalog.home)throw new Fault(503,'HOME_UNAVAILABLE','Destaques temporariamente indisponíveis');return c.catalog.home()});
  app.get('/api/connect/catalog',async req=>{await owner(req);const q=z.object({q:z.string().max(120).default(''),kind:z.enum(['','movie','series']).default(''),offset:z.coerce.number().int().min(0).max(100000).default(0)}).parse(req.query);return c.catalog.list(q.q,q.kind,q.offset)});
  app.get('/api/connect/catalog/:id',async req=>{await owner(req);return c.catalog.detail((req.params as any).id)});

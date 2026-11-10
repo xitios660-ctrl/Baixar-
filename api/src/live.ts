@@ -1,0 +1,19 @@
+import {createHash} from 'node:crypto';import {Fault} from './errors.js';
+export type LiveItem={id:string;title:string;kind:'live';genres:string[];poster?:string};
+export interface LiveSource{list(q:string,offset:number):Promise<{items:LiveItem[];total:number;categories:string[]}>;detail(id:string):Promise<LiveItem>;resolve(id:string):Promise<{item:LiveItem;urls:string[]}>}
+const valid=(value:string)=>{try{const u=new URL(value);return u.protocol==='https:'&&!u.username&&!u.password&&value.length<=4096}catch{return false}};
+/** Only catalog-declared clear web sources; do not emulate special headers, DRM or licenses. */
+export class ProviderLive implements LiveSource{
+ private rows=new Map<string,{item:LiveItem;urls:string[]}>();private until=0;private pending:Promise<void>|undefined;
+ constructor(private base=process.env.LIVE_CATALOG_BASE_URL??'https://canais-saimo.pages.dev/',private get:typeof fetch=fetch){const u=new URL(base);if(u.protocol!=='https:'||u.username||u.password)throw Error('Live catalog requires HTTPS without credentials');this.base=base.endsWith('/')?base:base+'/'}
+ private async load(){if(this.until>Date.now())return;if(this.pending)return this.pending;this.pending=this.fetchRows();try{await this.pending}finally{this.pending=undefined}}
+ private async fetchRows(){let r:Response;try{r=await this.get(this.base+'catalogo.txt',{signal:AbortSignal.timeout(15000),redirect:'error'})}catch{throw new Fault(503,'LIVE_NETWORK','Os canais estão temporariamente indisponíveis')}
+ if(!r.ok||!r.body)throw new Fault(503,'LIVE_NETWORK','Os canais estão temporariamente indisponíveis');const reader=r.body.getReader(),parts:Uint8Array[]=[];let bytes=0;try{for(;;){const {value,done}=await reader.read();if(done)break;bytes+=value.length;if(bytes>2*1024*1024){await reader.cancel();throw new Fault(503,'LIVE_SIZE','Lista de canais excedeu o limite')}parts.push(value)}}finally{reader.releaseLock()}
+ const rows=new Map<string,{item:LiveItem;urls:string[]}>();let title='',poster='',category='',sources:{url:string;blocked:boolean}[]=[];
+ const flush=()=>{const urls=[...new Set(sources.filter(s=>!s.blocked&&valid(s.url)&&!new URL(s.url).pathname.toLowerCase().endsWith('.mpd')).map(s=>s.url))].slice(0,16);if(title&&urls.length){const id=createHash('sha256').update('live\0'+title).digest('hex').slice(0,32);rows.set(id,{item:{id,title,kind:'live',genres:category?[category]:[],...(valid(poster)?{poster}:{})},urls})}};
+ for(const raw of Buffer.concat(parts).toString().split(/\r?\n/)){const line=raw.trim();if(!line||line.startsWith('#'))continue;const at=line.indexOf(':');if(at<1)continue;const key=line.slice(0,at).trim().toLowerCase(),v=line.slice(at+1).trim();if(key==='canal'){flush();title=v.slice(0,240);poster='';category='';sources=[]}else if(key==='logo')poster=v;else if(key==='categoria')category=v.slice(0,120);else if(key==='fonte')sources.push({url:v,blocked:false});else if(['referer','agente','chave','drm','licenca','license'].includes(key)&&sources.length)sources[sources.length-1].blocked=true;if(rows.size>2000)break}flush();if(!rows.size)throw new Fault(503,'LIVE_EMPTY','Nenhum canal compatível com o player web está disponível');this.rows=rows;this.until=Date.now()+300000;
+ }
+ async list(q:string,offset:number){await this.load();const fold=(s:string)=>s.normalize('NFD').replace(/\p{Diacritic}/gu,'').toLowerCase();const needle=fold(q),rows=[...this.rows.values()].map(v=>v.item).filter(v=>!needle||fold(v.title+' '+v.genres.join(' ')).includes(needle));return {items:rows.slice(offset,offset+60),total:rows.length,categories:[...new Set(rows.flatMap(v=>v.genres))]}}
+ async detail(id:string){return (await this.resolve(id)).item}
+ async resolve(id:string){await this.load();const row=this.rows.get(id);if(!row)throw new Fault(404,'LIVE_NOT_FOUND','Canal indisponível nesta lista');return row}
+}

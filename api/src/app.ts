@@ -1,3 +1,4 @@
+import {ProviderLive,type LiveSource} from './live.js';
 import {registerSamsung} from './samsung.js';
 import {registerWatch} from './watch.js';
 import {Fault} from './errors.js';
@@ -12,11 +13,11 @@ const DAY=86400000,LEASE=120000,REFRESH_DAYS=30;
 const hash=(s:string)=>createHash('sha256').update(s).digest('hex');
 const token=()=>randomBytes(40).toString('base64url');const oid=(s:string)=>{if(!ObjectId.isValid(s))throw new Fault(400,'INVALID_ID','Identificador inválido');return new ObjectId(s)};
 const username=z.string().trim().toLowerCase().regex(/^[a-z0-9._-]{3,64}$/);const password=z.string().min(8).max(128);
-type Config={db:Db;client:MongoClient;secret:string;adminOrigin:string;production?:boolean;now?:()=>Date;logger?:boolean;bootstrapToken?:string;pwaOrigin?:string;catalog?:Catalog;mediaOpen?:import('./media-relay.js').MediaOpen};
+type Config={db:Db;client:MongoClient;secret:string;adminOrigin:string;production?:boolean;now?:()=>Date;logger?:boolean;bootstrapToken?:string;pwaOrigin?:string;catalog?:Catalog;liveCatalog?:LiveSource;mediaOpen?:import('./media-relay.js').MediaOpen};
 export async function createApp(c:Config){
  if(c.secret.length<48)throw new Error('JWT_SECRET must have 48+ characters');
  const app=Fastify({logger:c.logger?{redact:['req.headers.authorization','req.headers.cookie','password','refreshToken','otp','token']}:false,bodyLimit:16384,trustProxy:(_address:string,hop:number)=>hop<1});
- const now=c.now??(()=>new Date()),key=new TextEncoder().encode(c.secret),db=c.db,catalog=c.catalog??new ProviderCatalog();
+ const now=c.now??(()=>new Date()),key=new TextEncoder().encode(c.secret),db=c.db,catalog=c.catalog??new ProviderCatalog(),live=c.liveCatalog??new ProviderLive();
  const pwaOrigin=c.pwaOrigin??'https://guhflix-marley-api.onrender.com';
  app.addHook('onRequest',async(req,reply)=>{if(req.method!=='OPTIONS'||!req.url.startsWith('/api/samsung/'))return;const origin=req.headers.origin;if(req.headers.cookie||origin&&!['null','file://'].includes(origin))return reply.code(403).send({error:'ORIGIN',message:'Origem não autorizada'});return reply.header('Access-Control-Allow-Origin',origin??'null').header('Access-Control-Allow-Headers','Content-Type, Authorization').header('Access-Control-Allow-Methods','GET, POST, OPTIONS').header('Vary','Origin').code(204).send()});
  await app.register(helmet);await app.register(cookie);await app.register(cors,{origin:[c.adminOrigin,pwaOrigin],credentials:true,allowedHeaders:['Content-Type','Authorization','Idempotency-Key']});
@@ -77,8 +78,8 @@ export async function createApp(c:Config){
  app.get('/api/admin/dashboard',async req=>{await identity(req,true);const time=now(),soon=new Date(time.getTime()+7*DAY);const [active,expired,blocked,near,payments,sessions,totals]=await Promise.all([db.collection('users').countDocuments({role:'customer',status:'enabled',expiresAt:{$gt:time}}),db.collection('users').countDocuments({role:'customer',status:'enabled',expiresAt:{$lte:time}}),db.collection('users').countDocuments({role:'customer',status:'blocked'}),db.collection('users').countDocuments({role:'customer',expiresAt:{$gt:time,$lte:soon}}),db.collection('payments').aggregate([{$match:{status:'confirmed'}},{$group:{_id:{$dateToString:{date:'$confirmedAt',format:'%Y-%m-%d',timezone:'UTC'}},revenueCents:{$sum:'$amountCents'},renewals:{$sum:1}}},{$sort:{_id:-1}},{$limit:90}]).toArray(),db.collection('users').aggregate([{$match:{role:'customer'}},{$unwind:'$slots'},{$match:{'slots.expiresAt':{$gt:time}}},{$count:'count'}]).toArray(),db.collection('payments').aggregate([{$match:{status:'confirmed'}},{$group:{_id:null,revenueCents:{$sum:'$amountCents'},renewals:{$sum:1}}}]).toArray()]);return {active,expired,blocked,expiringSoon:near,activeStreams:sessions[0]?.count??0,revenueCents:totals[0]?.revenueCents??0,renewals:totals[0]?.renewals??0,daily:payments,priceCents:3000,currency:'BRL',serverTime:time}});
  app.get('/api/admin/audit-logs',async req=>{await identity(req,true);const q=z.object({userId:z.string().optional(),page:z.coerce.number().int().min(1).default(1)}).parse(req.query);return db.collection('audit_logs').find(q.userId?{targetUserId:oid(q.userId).toString()}:{}).sort({createdAt:-1}).skip((q.page-1)*50).limit(50).toArray()});
  await registerSamsung(app);
- await registerWatch(app,{db,now,identity,requireAccess,catalog,secret:c.secret,lease:playbackLease,mediaOpen:c.mediaOpen});
- await registerConnect(app,{db,now,identity,requireAccess,catalog});
+ await registerWatch(app,{db,now,identity,requireAccess,catalog,live,secret:c.secret,lease:playbackLease,mediaOpen:c.mediaOpen});
+ await registerConnect(app,{db,now,identity,requireAccess,catalog,live});
  await registerPwa(app);
  return app;
 }

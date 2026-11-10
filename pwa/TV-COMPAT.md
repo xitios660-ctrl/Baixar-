@@ -7,3 +7,15 @@ O cliente usa JavaScript clássico, XMLHttpRequest e CSS sem variáveis, grid ou
 O suporte de mídia depende do navegador/firmware da TV. Não há conversão de codec, transcodificação, contorno de DRM ou garantia de HLS nativo. Falha de fonte produz mensagem e nova tentativa sem voltar ao início; fechar encerra a concessão. Nenhum aplicativo NetRange foi instalado ou submetido à loja.
 
 Verificação: build TypeScript e testes Chromium da autenticação, erro de senha, cookie após reload, filtros/busca/episódios, logout, redirecionamento sem APIs recentes, retenção da tela do player em erro e liberação da concessão. Os demais seis testes Chromium do catálogo moderno também são executados. Fixtures isoladas; playback incompatível é evento de erro simulado. TV Philco/NetReady física e reprodução real não foram testadas.
+
+## Atualização de navegação e player
+
+Abas Filmes, Séries e TV ao vivo limpam a busca anterior. Catálogo renderiza 18 capas por página; séries agrupam temporada e paginam episódios para limitar DOM/memória. Fontes de TV ao vivo vêm do catalogo.txt configurado no servidor em LIVE_CATALOG_BASE_URL (padrão da integração já usada no Android); somente HTTPS, sem DRM/DASH ou exigência declarada de cabeçalhos especiais. URLs de reprodução não são expostas em lista/detalhes: início passa pela mesma concessão/autorização e limite de telas do vídeo sob demanda.
+
+Player preenche o viewport e solicita fullscreen padrão/vendor no gesto de reprodução quando disponível. O navegador pode recusar fullscreen nativo; nesse caso permanece a área de reprodução preenchida via CSS. Controles se ocultam durante reprodução; Back fecha, teclas de mídia ou botões pausam e setas no vídeo permitem buscar. Sem corte/distorção intencional da proporção original.
+
+Qualidade Leve tenta escolher uma variante HLS até 720p e 2,5 Mbps; Mais leve até 480p. Quando não há variante elegível, seleciona a de menor banda declarada. Sem master multivariante o conteúdo permanece inalterado: não há transcodificação nem promessa de resolução diferente. A opção automática preserva o master original. Áudio/legendas e URLs seladas continuam preservados; verificação de concessão/revogação não foi removida.
+
+Erros e ausência de avanço por 25s durante reprodução acionam tentativa de fonte com posição preservada no VOD; um player pausado não é reiniciado pelo detector. A retomada depende de a fonte aceitar seek. Reaparecimento de reprodução cancela a tentativa pendente. Não elimina limitações de conexão, fonte ou hardware.
+
+Verificações executadas: 12 testes API aprovados; 10 testes Chromium aprovados (incluem fixtures de TV ao vivo, viewport do player, retomada sintética aos 55s, login com APIs modernas desativadas e regressões do catálogo moderno). Teste integrado de acesso/revogação repetido após acrescentar verificação de rotas live não autenticadas. Fontes de produção só foram analisadas por catálogo; isso não comprova abertura de todos os canais nem ausência de travadas na TV física.
