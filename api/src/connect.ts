@@ -11,12 +11,12 @@ type Config={db:Db;now:()=>Date;identity:(req:FastifyRequest)=>Promise<{s:any;u:
 const sha=(v:string)=>createHash('sha256').update(v).digest('hex');
 const id=(v:unknown)=>{if(typeof v!=='string'||!ObjectId.isValid(v))throw new Fault(400,'INVALID_ID','Identificador inválido');return new ObjectId(v)};
 const command=z.discriminatedUnion('type',[
- z.object({type:z.literal('play'),contentId:z.string().regex(/^[a-f0-9]{32}$/),season:z.number().int().min(0).max(1000).optional(),episode:z.number().int().min(1).max(100000).optional()}),
+ z.object({type:z.literal('play'),live:z.boolean().optional(),contentId:z.string().regex(/^[a-f0-9]{32}$/),season:z.number().int().min(0).max(1000).optional(),episode:z.number().int().min(1).max(100000).optional()}),
  z.object({type:z.enum(['pause','resume','stop'])}),
  z.object({type:z.literal('seek'),positionMs:z.number().int().min(0).max(172800000)}),
  z.object({type:z.literal('seekRelative'),deltaMs:z.number().int().min(-300000).max(300000)}),
 ]);
-const state=z.object({mode:z.enum(['idle','loading','playing','paused','error']),contentId:z.string().regex(/^[a-f0-9]{32}$/).nullable().optional(),title:z.string().max(240).default(''),positionMs:z.number().int().min(0).max(172800000).default(0),durationMs:z.number().int().min(0).max(172800000).default(0),season:z.number().int().min(0).max(1000).optional(),episode:z.number().int().min(1).max(100000).optional(),error:z.string().max(300).optional()}).strict();
+const state=z.object({live:z.boolean().optional(),mode:z.enum(['idle','loading','playing','paused','error']),contentId:z.string().regex(/^[a-f0-9]{32}$/).nullable().optional(),title:z.string().max(240).default(''),positionMs:z.number().int().min(0).max(172800000).default(0),durationMs:z.number().int().min(0).max(172800000).default(0),season:z.number().int().min(0).max(1000).optional(),episode:z.number().int().min(1).max(100000).optional(),error:z.string().max(300).optional()}).strict();
 
 export async function connectIndexes(db:Db){await Promise.all([
  db.collection('connect_pairings').createIndex({codeHash:1},{unique:true}),
@@ -46,6 +46,7 @@ export async function registerConnect(app:FastifyInstance,c:Config){
  app.get('/api/connect/catalog/:id',async req=>{await owner(req);return c.catalog.detail((req.params as any).id)});
  app.get('/api/connect/catalog/:id/related',async req=>{await owner(req);if(!c.catalog.related)throw new Fault(503,'RELATED_UNAVAILABLE','Recomendações temporariamente indisponíveis');return c.catalog.related((req.params as any).id)});
  app.get('/api/connect/catalog-related/:kind/:tmdb',async req=>{await owner(req);const p=z.object({kind:z.enum(['movie','series']),tmdb:z.coerce.number().int().positive()}).parse(req.params);const item=await c.catalog.byTmdb?.(p.kind,p.tmdb);if(!item||!c.catalog.related)throw new Fault(404,'TITLE_NOT_FOUND','Título não encontrado no catálogo');return c.catalog.related(item.id)});
+ app.get('/api/connect/live/:id/play',async req=>{await tv(req);return c.live.resolve(z.string().regex(/^[a-f0-9]{32}$/).parse((req.params as any).id))});
  app.get('/api/connect/catalog/:id/play',async req=>{await tv(req);const q=z.object({season:z.coerce.number().int().min(0).max(1000).optional(),episode:z.coerce.number().int().min(1).max(100000).optional()}).parse(req.query);return c.catalog.resolve((req.params as any).id,q.season,q.episode)});
  app.post('/api/connect/pairing',{config:{rateLimit:{max:10,timeWindow:'1 minute'}}},async req=>{
    const {s,u}=await tv(req);const code=randomBytes(5).toString('hex').toUpperCase(),expiresAt=new Date(now().getTime()+300000);
@@ -79,7 +80,7 @@ export async function registerConnect(app:FastifyInstance,c:Config){
    const prior=await db.collection('connect_commands').findOne({userId:u._id.toString(),phoneSessionId:s._id.toString(),requestId:b.requestId});
    if(prior){if(JSON.stringify(prior.command)!==JSON.stringify(b.command))throw new Fault(409,'IDEMPOTENCY_CONFLICT','O identificador já foi usado para outro comando');return {id:prior._id.toString(),state:prior.state}}
    const live=await db.collection('sessions').findOne({_id:id(link.tvSessionId),userId:u._id.toString(),revoked:false,expiresAt:{$gt:now()},version:u.sessionVersion});if(!live)throw new Fault(409,'TV_SESSION_EXPIRED','Entre novamente na TV');
-   if(b.command.type==='play')await c.catalog.resolve(b.command.contentId,b.command.season,b.command.episode);
+   if(b.command.type==='play'){if(b.command.live)await c.live.resolve(b.command.contentId);else await c.catalog.resolve(b.command.contentId,b.command.season,b.command.episode);}
    if(await db.collection('connect_commands').countDocuments({tvSessionId:link.tvSessionId,state:{$in:['queued','delivered']},expiresAt:{$gt:now()}})>=24)throw new Fault(429,'QUEUE_FULL','A TV precisa receber os comandos anteriores');
    const row={userId:u._id.toString(),phoneSessionId:s._id.toString(),tvSessionId:link.tvSessionId,linkId:link._id.toString(),requestId:b.requestId,command:b.command,state:'queued',createdAt:now(),expiresAt:new Date(now().getTime()+60000)};
    try{const result=await db.collection('connect_commands').insertOne(row);return {id:result.insertedId.toString(),state:'queued'}}catch(e:any){if(e.code===11000){const old=await db.collection('connect_commands').findOne({userId:row.userId,phoneSessionId:row.phoneSessionId,requestId:row.requestId});if(old&&JSON.stringify(old.command)===JSON.stringify(row.command))return {id:old._id.toString(),state:old.state}}throw e}

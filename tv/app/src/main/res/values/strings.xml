@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">GUHFLIX</string>
+    <string name="app_name">Gfilmes</string>
     <string name="update_titulo">Versão %1$s disponível</string>
     <string name="update_atual">Você está na %1$s.</string>
     <string name="update_agora">Atualizar</string>
@@ -370,12 +370,12 @@
 
     
     <string name="connect_titulo">Conectar Celular</string>
-    <string name="connect_conectado">GUHFLIX Connect: %1$s conectado</string>
-    <string name="ajustes_connect">GUHFLIX Connect</string>
+    <string name="connect_conectado">Gfilmes Connect: %1$s conectado</string>
+    <string name="ajustes_connect">Gfilmes Connect</string>
     <string name="ajustes_connect_n">%1$d celular(es) autorizado(s)</string>
     <string name="ajustes_connect_esquecer">Esquecer todos os celulares</string>
     <string name="ajustes_connect_esquecido">Celulares esquecidos. Na próxima conexão a TV vai perguntar de novo.</string>
-    <string name="connect_aprovar_titulo">GUHFLIX Connect</string>
+    <string name="connect_aprovar_titulo">Gfilmes Connect</string>
     <string name="connect_aprovar_msg">%1$s quer se conectar a esta TV.\nDeseja permitir?</string>
     <string name="connect_permitir">Permitir</string>
     <string name="connect_recusar">Recusar</string>
@@ -399,7 +399,7 @@
     <string name="listas_verificando">Verificando os endereços…</string>
     <string name="listas_salvo">Endereços salvos. Carregando as listas…</string>
     <string name="listas_apagado">Endereço apagado e dados da lista removidos.</string>
-    <string name="listas_celular_dica">Ou escreva o endereço pelo celular (GUHFLIX Connect).</string>
+    <string name="listas_celular_dica">Ou escreva o endereço pelo celular (Gfilmes Connect).</string>
     <string name="ajustes_listas">Listas</string>
     <string name="ajustes_listas_resumo">Canais: %1$s · Filmes e séries: %2$s</string>
     <string name="listas_informado">ativa</string>
@@ -420,5 +420,5 @@
     <string name="ml_nome">Nome (opcional)</string>
     <string name="ml_adicionar">Adicionar</string>
     <string name="ml_baixando">Baixando a lista…</string>
-    <string name="ml_celular_dica">Ou escreva o link pelo celular (GUHFLIX Connect).</string>
+    <string name="ml_celular_dica">Ou escreva o link pelo celular (Gfilmes Connect).</string>
 </resources>

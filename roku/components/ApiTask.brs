@@ -16,7 +16,7 @@ function transfer(path as String, method as String, body as Dynamic, access as S
  else
   started = request.AsyncGetToString()
  end if
- if not started then return {status: 503, data: {message: "Não foi possível conectar ao GUHFLIX."}}
+ if not started then return {status: 503, data: {message: "Não foi possível conectar ao Gfilmes."}}
  event = wait(28000, port)
  if event = invalid
   request.AsyncCancel()
@@ -28,7 +28,7 @@ function transfer(path as String, method as String, body as Dynamic, access as S
 end function
 sub runRequest()
  job = m.top.request
- registry = CreateObject("roRegistrySection", "GUHFLIX")
+ registry = CreateObject("roRegistrySection", "Gfilmes")
  if job.tag = "restore"
   saved = registry.Read("refresh")
   if saved = ""
@@ -45,7 +45,7 @@ sub runRequest()
    end if
    job.body.installationId = installation
    job.body.client = "tv"
-   job.body.label = "GUHFLIX Roku"
+   job.body.label = "Gfilmes Roku"
   end if
   result = transfer(job.path, job.method, job.body, job.access)
   if result.status = 401 and job.tag <> "login" and job.tag <> "logout"

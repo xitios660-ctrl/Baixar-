@@ -296,9 +296,9 @@ object Connect {
     fun nomeDaTv(): String {
         val modelo = Build.MODEL.trim()
         return if (modelo.contains("TV", ignoreCase = true) || modelo.contains("Box", ignoreCase = true)) {
-            "GUHFLIX ($modelo)"
+            "Gfilmes ($modelo)"
         } else {
-            "GUHFLIX - $modelo"
+            "Gfilmes - $modelo"
         }
     }
 
@@ -442,7 +442,7 @@ object Connect {
     private fun rodarServidor(context: Context) {
         try {
             serverSocket = ServerSocket(PORTA)
-            Log.i(TAG, "GUHFLIX Connect escutando em ${obterIpLocal()}:$PORTA")
+            Log.i(TAG, "Gfilmes Connect escutando em ${obterIpLocal()}:$PORTA")
             while (ativo) {
                 val socket = serverSocket?.accept() ?: break
                 Thread({
@@ -450,7 +450,7 @@ object Connect {
                 }, "connect-client-${socket.inetAddress.hostAddress}").start()
             }
         } catch (e: Exception) {
-            if (ativo) Log.w(TAG, "Servidor GUHFLIX Connect encerrado com erro", e)
+            if (ativo) Log.w(TAG, "Servidor Gfilmes Connect encerrado com erro", e)
         }
     }
 

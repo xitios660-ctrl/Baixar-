@@ -125,7 +125,7 @@ public final class GuhflixUi {
             if (linearLayout.getChildAt(0) instanceof ImageView) {
                 ImageView imageView = (ImageView) linearLayout.getChildAt(0);
                 imageView.setImageDrawable(new Wordmark());
-                imageView.setContentDescription("GUHFLIX");
+                imageView.setContentDescription("Gfilmes");
                 LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(dp(activity, 102.0f), dp(activity, 26.0f));
                 layoutParams.setMarginEnd(dp(activity, 14.0f));
                 imageView.setLayoutParams(layoutParams);
@@ -239,16 +239,16 @@ public final class GuhflixUi {
             canvas.translate(bounds.left, bounds.top);
             float fHeight = bounds.height();
             float fWidth = bounds.width();
-            this.p.setTypeface(Typeface.create("sans-serif", 3));
+            this.p.setTypeface(Typeface.create("sans-serif", 1));
             this.p.setTextSize(0.72f * fHeight);
-            float fMeasureText = this.p.measureText("GUHFLIX");
+            float fMeasureText = this.p.measureText("Gfilmes");
             canvas.scale(Math.min(1.0f, fWidth / (1.06f * fMeasureText)), 1.0f);
             this.p.setShader(new LinearGradient(0.0f, 0.0f, 0.0f, fHeight, new int[]{-1, -3750200}, (float[]) null, Shader.TileMode.CLAMP));
             float f = 0.8f * fHeight;
-            canvas.drawText("GUH", 0.0f, f, this.p);
-            float fMeasureText2 = this.p.measureText("GUH");
+            canvas.drawText("G", 0.0f, f, this.p);
+            float fMeasureText2 = this.p.measureText("G");
             this.p.setShader(new LinearGradient(0.0f, 0.0f, 0.0f, fHeight, new int[]{-46512, -1767148, -6946809}, (float[]) null, Shader.TileMode.CLAMP));
-            canvas.drawText("FLIX", fMeasureText2, f, this.p);
+            canvas.drawText("filmes", fMeasureText2, f, this.p);
             this.p.setShader(null);
             this.p.setColor(-1239776);
             this.p.setStyle(Paint.Style.STROKE);

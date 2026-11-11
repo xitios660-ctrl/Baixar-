@@ -40,11 +40,11 @@ object OtaManager {
     val c=connection(MANIFEST+(if(MANIFEST.contains("?"))"&" else "?")+"check="+System.currentTimeMillis());val text=try{check(c.responseCode==200);c.inputStream.use{val bytes=it.readBytesLimited(32768);String(bytes,Charsets.UTF_8)}}finally{c.disconnect()}
     val manifest=JSONObject(text)
     require(manifest.getString("package")==a.packageName)
-    if(manifest.getLong("versionCode")<=BuildConfig.VERSION_CODE){if(manual)notify(a,"Seu GUHFLIX está atualizado.");return@execute}
+    if(manifest.getLong("versionCode")<=BuildConfig.VERSION_CODE){if(manual)notify(a,"Seu Gfilmes está atualizado.");return@execute}
     val release=OtaPolicy.parse(manifest,a.packageName)
     main.post {if(valid(a)&&(manual||offered!=release.code)){
      offered=release.code
-     val builder=AlertDialog.Builder(a).setTitle("GUHFLIX ${release.version}").setMessage((if(release.mandatory)"Atualização necessária.\n\n" else "")+release.notes+"\n\nO Android pedirá sua confirmação para instalar.").setPositiveButton("Atualizar"){_,_->download(a,release)}
+     val builder=AlertDialog.Builder(a).setTitle("Gfilmes ${release.version}").setMessage((if(release.mandatory)"Atualização necessária.\n\n" else "")+release.notes+"\n\nO Android pedirá sua confirmação para instalar.").setPositiveButton("Atualizar"){_,_->download(a,release)}
      if(!release.mandatory)builder.setNegativeButton("Depois",null)
      builder.setCancelable(!release.mandatory).show()
     }}
@@ -56,7 +56,7 @@ object OtaManager {
  private fun java.io.InputStream.readBytesLimited(max:Int):ByteArray {val out=java.io.ByteArrayOutputStream();val b=ByteArray(8192);while(true){val n=read(b);if(n<0)break;require(out.size()+n<=max);out.write(b,0,n)};return out.toByteArray()}
  private fun download(a:Activity,r:OtaPolicy.Release){
   if(downloading)return;downloading=true;cancel=false
-  val progress=ProgressDialog(a).apply{setTitle("Atualizando GUHFLIX");setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);max=100;setCancelable(false);setButton(AlertDialog.BUTTON_NEGATIVE,"Cancelar"){_,_->cancel=true};show()}
+  val progress=ProgressDialog(a).apply{setTitle("Atualizando Gfilmes");setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);max=100;setCancelable(false);setButton(AlertDialog.BUTTON_NEGATIVE,"Cancelar"){_,_->cancel=true};show()}
   worker.execute {
    val folder=File(a.filesDir,"updates").apply{mkdirs()};val part=File(folder,"${r.hash}.part");val apk=File(folder,"${r.hash}.apk")
    try {
@@ -105,7 +105,7 @@ object OtaManager {
  }
  private fun install(a:Activity,apk:File){
   if(Build.VERSION.SDK_INT>=26&&!a.packageManager.canRequestPackageInstalls()){
-   AlertDialog.Builder(a).setTitle("Permitir atualização do GUHFLIX").setMessage("Autorize este aplicativo a instalar a atualização. Depois volte para concluir.").setPositiveButton("Abrir permissão"){_,_->try{a.startActivity(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,android.net.Uri.parse("package:${a.packageName}")))}catch(_:Exception){notify(a,"Abra Configurações → Instalar apps desconhecidos → GUHFLIX.")}}.setNegativeButton("Depois",null).show();return
+   AlertDialog.Builder(a).setTitle("Permitir atualização do Gfilmes").setMessage("Autorize este aplicativo a instalar a atualização. Depois volte para concluir.").setPositiveButton("Abrir permissão"){_,_->try{a.startActivity(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,android.net.Uri.parse("package:${a.packageName}")))}catch(_:Exception){notify(a,"Abra Configurações → Instalar apps desconhecidos → Gfilmes.")}}.setNegativeButton("Depois",null).show();return
   }
   try {
    val uri=FileProvider.getUriForFile(a,a.packageName+".guhflix.updates",apk)

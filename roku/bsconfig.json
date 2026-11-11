@@ -1,1 +1,1 @@
-{"rootDir":".","files":["manifest","source/**/*","components/**/*","images/**/*"],"outFile":"dist/GUHFLIX-Roku-1.0.1-desenvolvedor.zip","createPackage":true,"copyToStaging":true,"retainStagingDir":false,"sourceMap":false,"diagnosticFilters":[]}
+{"rootDir":".","files":["manifest","source/**/*","components/**/*","images/**/*"],"outFile":"dist/Gfilmes-Roku-1.1.0-desenvolvedor.zip","createPackage":true,"copyToStaging":true,"retainStagingDir":false,"sourceMap":false,"diagnosticFilters":[]}

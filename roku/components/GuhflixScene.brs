@@ -2,7 +2,7 @@ sub init()
  m.top.backgroundColor = "#080808"
  m.top.backgroundUri = ""
  m.nav = m.top.findNode("nav")
- m.nav.buttons = ["Para você", "Filmes", "Séries", "Buscar", "Mais", "Conta"]
+ m.nav.buttons = ["Início", "Filmes", "Séries", "Ao vivo", "Buscar", "Mais", "Conta"]
  m.nav.observeField("buttonSelected", "navigation")
  m.catalog = m.top.findNode("catalog")
  m.catalog.observeField("rowItemSelected", "titleSelected")
@@ -108,7 +108,7 @@ sub handleResult(result as Object)
  if tag = "login" or tag = "restore"
   m.access = data.accessToken
   m.username = data.user.username
-  m.nav.buttons = ["Para você", "Filmes", "Séries", "Buscar", "Mais", "Conta"]
+  m.nav.buttons = ["Início", "Filmes", "Séries", "Ao vivo", "Buscar", "Mais", "Conta"]
   status("Sua conta: " + m.username + " · Preparando o catálogo…")
   send("home", "/api/connect/home", "GET", {})
   m.top.findNode("poll").control = "start"
@@ -119,7 +119,7 @@ sub handleResult(result as Object)
  else if tag = "catalog"
   m.total = data.total
   m.offset += data.items.Count()
-  showRows([{title: "Seu catálogo GUHFLIX", items: data.items}])
+  showRows([{title: "Seu catálogo Gfilmes", items: data.items}])
   status(data.total.ToStr() + " títulos · Use as setas para escolher")
  else if tag = "detail"
   m.activeItem = data
@@ -160,7 +160,7 @@ sub handleResult(result as Object)
   playSource()
  else if tag = "pair"
   dialog = CreateObject("roSGNode", "Dialog")
-  dialog.title = "Conecte seu celular ao GUHFLIX"
+  dialog.title = "Conecte seu celular ao Gfilmes"
   dialog.message = "Código: " + data.code + chr(10) + "Abra guhflix-marley-api.onrender.com/pwa/ no celular, entre na mesma conta e escolha Conectar TV."
   dialog.buttons = ["Entendi"]
   dialog.observeField("buttonSelected", "closeDialog")
@@ -171,7 +171,7 @@ sub handleResult(result as Object)
    m.lastCommand = received.id
    performCommand(received.command)
   end if
-  send("ack", "/api/connect/tv/commands/" + received.id + "/ack", "POST", {success: true, message: "Comando recebido pelo GUHFLIX Roku"})
+  send("ack", "/api/connect/tv/commands/" + received.id + "/ack", "POST", {success: true, message: "Comando recebido pelo Gfilmes Roku"})
  else if tag = "logout"
   m.access = ""
   m.queue = []
@@ -193,7 +193,7 @@ sub showLogin()
  m.catalog.visible = false
  m.top.findNode("detail").visible = false
  m.nav.buttons = ["Entrar na conta"]
- status("Use seu acesso de cliente ativo do GUHFLIX.")
+ status("Use seu acesso de cliente ativo do Gfilmes.")
  m.nav.setFocus(true)
 end sub
 sub keyboard(kind as String, title as String)
@@ -215,7 +215,7 @@ sub keyboardDone(event as Object)
  dialog.close = true
  if m.keyboardKind = "username"
   m.loginUsername = value.Trim()
-  keyboard("password", "Senha do seu acesso GUHFLIX")
+  keyboard("password", "Senha do seu acesso Gfilmes")
  else if m.keyboardKind = "password"
   status("Conectando sua conta…")
   send("login", "/api/auth/login", "POST", {username: m.loginUsername, password: value})
@@ -227,7 +227,7 @@ end sub
 sub navigation(event as Object)
  index = event.GetData()
  if m.access = ""
-  keyboard("username", "Usuário do seu acesso GUHFLIX")
+  keyboard("username", "Usuário do seu acesso Gfilmes")
   return
  end if
  m.top.findNode("detail").visible = false
@@ -240,8 +240,10 @@ sub navigation(event as Object)
  else if index = 2
   catalogPage("/api/connect/catalog?kind=series&")
  else if index = 3
-  keyboard("search", "Buscar filmes e séries")
+  catalogPage("/api/connect/live?")
  else if index = 4
+  keyboard("search", "Buscar filmes e séries")
+ else if index = 5
   if m.offset < m.total
    send("catalog", m.catalogPath + "offset=" + m.offset.ToStr(), "GET", {})
   else
@@ -249,7 +251,7 @@ sub navigation(event as Object)
   end if
  else
   dialog = CreateObject("roSGNode", "Dialog")
-  dialog.title = "Sua conta GUHFLIX · " + m.username
+  dialog.title = "Sua conta Gfilmes · " + m.username
   dialog.message = "Use a mesma conta no celular para escolher o que assistir nesta Roku."
   dialog.buttons = ["Gerar código para celular", "Sair da conta", "Voltar"]
   dialog.observeField("buttonSelected", "accountAction")
@@ -294,7 +296,9 @@ end sub
 sub titleSelected(event as Object)
  selected = event.GetData()
  node = m.catalog.content.GetChild(selected[0]).GetChild(selected[1])
- send("detail", "/api/connect/catalog/" + node.guhItem.id, "GET", {})
+ path = "/api/connect/catalog/"
+ if node.guhItem.kind = "live" then path = "/api/connect/live/"
+ send("detail", path + node.guhItem.id, "GET", {})
 end sub
 sub detailAction(event as Object)
  index = event.GetData()
@@ -355,6 +359,9 @@ sub watchItem(id as String, season = invalid as Dynamic, episode = invalid as Dy
  m.playingSeason = season
  m.playingEpisode = episode
  body = {contentId: id, playbackId: CreateObject("roDeviceInfo").GetRandomUUID()}
+ if m.activeItem <> invalid
+  if m.activeItem.kind = "live" then body.live = true
+ end if
  m.expectedPlaybackId = body.playbackId
  m.progressKey = "p_" + m.username + "_" + id
  if season <> invalid
@@ -373,7 +380,7 @@ sub playSource()
  source = m.sources[m.sourceIndex]
  content.url = "https://guhflix-marley-api.onrender.com" + source.url
  if source.format = "hls" then content.streamFormat = "hls" else content.streamFormat = "mp4"
- if m.activeItem <> invalid then content.title = m.activeItem.title else content.title = "GUHFLIX"
+ if m.activeItem <> invalid then content.title = m.activeItem.title else content.title = "Gfilmes"
  m.video.content = content
  m.video.visible = true
  m.video.setFocus(true)
@@ -453,7 +460,9 @@ end sub
 sub performCommand(command as Object)
  if command.type = "play"
   m.remotePlay = command
-  send("detail", "/api/connect/catalog/" + command.contentId, "GET", {})
+  path = "/api/connect/catalog/"
+  if command.live = true then path = "/api/connect/live/"
+  send("detail", path + command.contentId, "GET", {})
  else if command.type = "pause"
   m.video.control = "pause"
  else if command.type = "resume"

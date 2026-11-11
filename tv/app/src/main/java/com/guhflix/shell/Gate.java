@@ -165,7 +165,7 @@ public final class Gate {
             JSONObject result=text.trim().startsWith("[")?new JSONObject().put("items",new JSONArray(text)):new JSONObject(text);
             if(code>=400)throw new ApiError(code,result.optString("error"),result.optString("message","Serviço temporariamente indisponível"));
             return result;
-        }catch(ApiError e){throw e;}catch(Exception e){throw new ApiError(0,"NETWORK","Não foi possível conectar ao GUHFLIX. Confira a internet e tente novamente.");}
+        }catch(ApiError e){throw e;}catch(Exception e){throw new ApiError(0,"NETWORK","Não foi possível conectar ao Gfilmes. Confira a internet e tente novamente.");}
         finally {if(connection!=null)connection.disconnect();}
     }
 
@@ -340,7 +340,7 @@ public final class Gate {
         linearLayout2.setPadding(dp(activity, 24.0f), dp(activity, 18.0f), dp(activity, 24.0f), dp(activity, 18.0f));
         linearLayout.addView(linearLayout2, new LinearLayout.LayoutParams(dp(activity, 570.0f), -2));
         TextView textView = new TextView(activity);
-        textView.setText("GUHFLIX");
+        textView.setText("Gfilmes");
         textView.setTypeface(Typeface.create("sans-serif-condensed", 1));
         textView.setTextColor(-1767148);
         textView.setTextSize(48.0f);

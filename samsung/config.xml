@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<widget xmlns="http://www.w3.org/ns/widgets" xmlns:tizen="http://tizen.org/ns/widgets" id="https://guhflix.tv/samsung" version="1.0.0" viewmodes="maximized">
+<widget xmlns="http://www.w3.org/ns/widgets" xmlns:tizen="http://tizen.org/ns/widgets" id="https://guhflix.tv/samsung" version="1.1.0" viewmodes="maximized">
  <tizen:application id="GuhflixTV1.Guhflix" package="GuhflixTV1" required_version="4.0"/>
- <content src="index.html"/><name>GUHFLIX</name><icon src="icon.png"/>
+ <content src="index.html"/><name>Gfilmes</name><icon src="icon.png"/>
  <tizen:profile name="tv-samsung"/>
  <tizen:privilege name="http://tizen.org/privilege/internet"/>
  <tizen:privilege name="http://tizen.org/privilege/tv.inputdevice"/>

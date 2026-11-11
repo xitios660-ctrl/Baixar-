@@ -29,15 +29,15 @@ android {
         // Até a 2.0.2 era o 5 (21); quem ainda tem Android 5 fica na 2.0.2.
         minSdk = 23
         targetSdk = 35
-        versionCode = if (connectEdition) 2060002 else 2050000
-        versionName = if (connectEdition) "2.6.2" else "2.5.0"
+        versionCode = if (connectEdition) 2070000 else 2050000
+        versionName = if (connectEdition) "2.7.0" else "2.5.0"
         buildConfigField("String", "GUHFLIX_API", "\"https://guhflix-marley-api.onrender.com\"")
         val updateFile = if (mobileEdition) "release-android.json" else if (connectEdition) "release-connect.json" else "release.json"
         buildConfigField("String", "GUHFLIX_UPDATE_MANIFEST", "\"https://guhflix-tv-download.onrender.com/$updateFile\"")
         buildConfigField("String", "GUHFLIX_URI_SCHEME", if (mobileEdition) "\"guhflix-android\"" else if (connectEdition) "\"guhflix-connect\"" else "\"saimo\"")
         resValue("string", "guhflix_search_authority", if (mobileEdition) "com.guhflix.android.busca" else if (connectEdition) "com.guhflix.tv.connect.busca" else "com.guhflix.tv.busca")
         manifestPlaceholders["guhflixLeanbackRequired"] = if (mobileEdition) "false" else "true"
-        manifestPlaceholders["guhflixAppLabel"] = if (mobileEdition) "GUHFLIX Android" else if (connectEdition) "GUHFLIX Connect" else "GUHFLIX"
+        manifestPlaceholders["guhflixAppLabel"] = if (mobileEdition) "Gfilmes Android" else if (connectEdition) "Gfilmes Connect" else "Gfilmes"
         manifestPlaceholders["guhflixUriScheme"] = if (mobileEdition) "guhflix-android" else if (connectEdition) "guhflix-connect" else "saimo"
 
     }

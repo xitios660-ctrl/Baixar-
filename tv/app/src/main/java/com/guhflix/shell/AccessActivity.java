@@ -93,11 +93,11 @@ public final class AccessActivity extends Activity {
         linearLayout.addView(this.panel, new LinearLayout.LayoutParams(dp(570.0f), -2));
         ImageView imageView = new ImageView(this);
         imageView.setImageDrawable(new GuhflixUi.Wordmark());
-        imageView.setContentDescription("GUHFLIX");
+        imageView.setContentDescription("Gfilmes");
         imageView.setScaleType(ImageView.ScaleType.FIT_START);
         this.panel.addView(imageView, new LinearLayout.LayoutParams(dp(300.0f), dp(76.0f)));
         TextView textView = new TextView(this);
-        textView.setText(z ? "SUA PRÓXIMA HISTÓRIA COMEÇA AQUI" : "SUA CONTA • GUHFLIX");
+        textView.setText(z ? "SUA PRÓXIMA HISTÓRIA COMEÇA AQUI" : "SUA CONTA • Gfilmes");
         textView.setTextColor(-4342339);
         textView.setTextSize(11.0f);
         textView.setLetterSpacing(0.16f);
@@ -409,7 +409,7 @@ public final class AccessActivity extends Activity {
             return;
         }
         if (i <= i2) {
-            this.message.setText("Seu GUHFLIX está atualizado. Versão " + str + ".");
+            this.message.setText("Seu Gfilmes está atualizado. Versão " + str + ".");
         } else {
             this.message.setText("Nova versão disponível: " + str);
             button("ABRIR DOWNLOAD OFICIAL", new Runnable() { // from class: com.guhflix.shell.AccessActivity$$ExternalSyntheticLambda16
@@ -438,7 +438,7 @@ public final class AccessActivity extends Activity {
     /* JADX INFO: renamed from: lambda$logout$22$com-guhflix-shell-AccessActivity, reason: not valid java name */
     /* synthetic */ void m10lambda$logout$22$comguhflixshellAccessActivity() {
         this.busy = false;
-        render("Entre com sua conta GUHFLIX.", true);
+        render("Entre com sua conta Gfilmes.", true);
     }
 
     /* JADX INFO: renamed from: lambda$logout$23$com-guhflix-shell-AccessActivity, reason: not valid java name */

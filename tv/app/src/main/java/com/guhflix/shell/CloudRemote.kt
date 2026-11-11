@@ -82,7 +82,9 @@ object CloudRemote {
                 "play"->{
                     val contentId=command.getString("contentId")
                     val suffix=if(command.has("season"))"?season=${command.getInt("season")}&episode=${command.getInt("episode")}" else ""
-                    val playable=Gate.request(app,"GET","/api/connect/catalog/$contentId/play$suffix",null,true)
+                    val isLive=command.optBoolean("live")
+                    val path=if(isLive)"/api/connect/live/$contentId/play" else "/api/connect/catalog/$contentId/play$suffix"
+                    val playable=Gate.request(app,"GET",path,null,true)
                     val item=playable.getJSONObject("item")
                     if(item.getString("id")!=contentId)throw IllegalArgumentException("Título não corresponde ao pedido")
                     val full=if(item.optString("kind")=="series")Gate.request(app,"GET","/api/connect/catalog/$contentId",null,true) else item
@@ -91,7 +93,7 @@ object CloudRemote {
                     app.getSharedPreferences("guhflix-connect",0).edit().putString("contentId",lastId).putString("contentTitle",lastTitle).commit()
                     main.post {
                         if(activity.isDestroyed||activity.isFinishing)return@post
-                        val target=Alvo(item.getString("title"),item.getString("kind")=="series",item.getString("letter"),item.optString("year"),tmdbId=item.optInt("tmdbId"))
+                        val target=Alvo(item.getString("title"),item.getString("kind")=="series",item.optString("letter", "L"),item.optString("year"),tmdbId=item.optInt("tmdbId"))
                         val intent=target.em(Intent(activity,PlayerActivity::class.java))
                             .putExtra("player.temporada",command.optInt("season"))
                             .putExtra("player.episodio",command.optInt("episode"))
