@@ -130,7 +130,7 @@ pub fn atualizacao(app: &mut App, ctx: &egui::Context) {
                     });
                 }
                 ui.add_space(10.0);
-                ui.label(egui::RichText::new("O download abre no navegador. Depois é só fechar o GUHFLIX e instalar por cima.").font(normal(13.0)).color(super::APAGADO));
+                ui.label(egui::RichText::new("O download abre no navegador. Depois é só fechar o Gfilmes e instalar por cima.").font(normal(13.0)).color(super::APAGADO));
                 ui.add_space(16.0);
                 ui.horizontal(|ui| {
                     if botao(ui, Some(super::Icone::Baixar), "Baixar", true).clicked() {
@@ -168,7 +168,7 @@ pub fn aprovacao(app: &mut App, ctx: &egui::Context) {
                 ui.horizontal(|ui| {
                     let (lugar, _) = ui.allocate_exact_size(Vec2::splat(28.0), egui::Sense::hover());
                     super::icones::pintar(ui.painter(), super::Icone::Cast, lugar.center(), 26.0, ACENTO);
-                    super::rotulo_de_secao(ui, "GUHFLIX Connect");
+                    super::rotulo_de_secao(ui, "Gfilmes Connect");
                 });
                 ui.add_space(6.0);
                 ui.label(egui::RichText::new(format!("{nome} quer se conectar a este computador")).font(forte(24.0)).color(TEXTO));

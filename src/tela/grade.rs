@@ -242,7 +242,7 @@ pub fn ajustes(app: &mut App, ui: &mut egui::Ui) {
         ui.add_space(40.0);
         ui.label(egui::RichText::new("Ajustes").font(forte(48.0)).color(TEXTO));
         ui.add_space(14.0);
-        ui.label(egui::RichText::new(format!("GUHFLIX {}", crate::VERSAO)).font(normal(18.0)).color(SECUNDARIO));
+        ui.label(egui::RichText::new(format!("Gfilmes {}", crate::VERSAO)).font(normal(18.0)).color(SECUNDARIO));
         ui.label(egui::RichText::new("para Windows").font(normal(18.0)).color(SECUNDARIO));
         ui.add_space(26.0);
         ui.label(
@@ -318,10 +318,10 @@ pub fn ajustes(app: &mut App, ui: &mut egui::Ui) {
                 acao = Some(3);
             }
             ui.add_space(18.0);
-            rotulo_de_secao(ui, "GUHFLIX Connect");
+            rotulo_de_secao(ui, "Gfilmes Connect");
             ui.add_space(4.0);
             let onde = match (crate::connect::ativo(), crate::connect::ip_local()) {
-                (true, Some(ip)) => format!("No ar em {ip}:{}: o app GUHFLIX do celular acha este computador na mesma rede", crate::connect::porta()),
+                (true, Some(ip)) => format!("No ar em {ip}:{}: o app Gfilmes do celular acha este computador na mesma rede", crate::connect::porta()),
                 (true, None) => "No ar, mas sem rede local: ligue o computador ao Wi-Fi ou ao cabo".to_string(),
                 (false, _) => format!("Fora do ar: a porta {} está ocupada por outro programa", crate::connect::porta()),
             };

@@ -61,8 +61,8 @@ fn aba(ui: &mut egui::Ui, rotulo: &str, icone: Icone, atual: bool) -> egui::Resp
 /// O ícone do app: o "S" do Saimo num ladrilho ciano arredondado.
 fn marca(pintor: &egui::Painter, centro: Pos2) {
     let left=centro.x-50.0;
-    pintor.text(Pos2::new(left,centro.y),Align2::LEFT_CENTER,"GUH",forte(21.0),Color32::WHITE);
-    pintor.text(Pos2::new(left+43.0,centro.y),Align2::LEFT_CENTER,"FLIX",forte(21.0),ACENTO);
+    pintor.text(Pos2::new(left,centro.y),Align2::LEFT_CENTER,"G",forte(24.0),ACENTO);
+    pintor.text(Pos2::new(left+18.0,centro.y),Align2::LEFT_CENTER,"filmes",forte(24.0),ACENTO);
 
 }
 

@@ -1,8 +1,8 @@
 [package]
 name = "guhflix-windows"
-version = "3.1.1"
+version = "3.2.0"
 edition = "2021"
-description = "GUHFLIX nativo para Windows"
+description = "Gfilmes nativo para Windows"
 
 [dependencies]
 eframe = { version = "0.36", default-features = false, features = ["glow", "default_fonts", "wayland", "x11"] }

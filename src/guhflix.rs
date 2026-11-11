@@ -206,7 +206,7 @@ impl Client {
         };
         let response = response.map_err(|_| Error {
             status: 0,
-            message: "Sem conexão com o servidor GUHFLIX. Tente novamente.".into(),
+            message: "Sem conexão com o servidor Gfilmes. Tente novamente.".into(),
         })?;
         let status = response.status().as_u16();
         let data: Value = response
@@ -265,7 +265,7 @@ impl Client {
         if self.refresh.is_empty() {
             return Err(Error {
                 status: 401,
-                message: "Entre com sua conta GUHFLIX.".into(),
+                message: "Entre com sua conta Gfilmes.".into(),
             });
         }
         let data = self.raw(
@@ -459,7 +459,7 @@ impl Service {
                         "Servidor iniciando. Aguarde; seus dados ainda não foram enviados.".into();
                     std::thread::sleep(Duration::from_secs(2));
                 }
-                let result=client.raw("POST","/api/auth/login",Some(json!({"username":username.trim().to_lowercase(),"password":password,"installationId":client.installation,"client":"tv","label":"GUHFLIX Windows"})),"");
+                let result=client.raw("POST","/api/auth/login",Some(json!({"username":username.trim().to_lowercase(),"password":password,"installationId":client.installation,"client":"tv","label":"Gfilmes Windows"})),"");
                 result.and_then(|data| client.save(&data))
             };
             match result {
@@ -514,7 +514,7 @@ impl Service {
             client.clear();
             let mut status = svc.status.lock().unwrap();
             *status = Status {
-                message: "Entre com sua conta GUHFLIX.".into(),
+                message: "Entre com sua conta Gfilmes.".into(),
                 ..Status::default()
             };
         });
@@ -805,7 +805,7 @@ impl Gui {
     pub fn account_window(&mut self, ctx: &egui::Context) {
         let svc = service();
         let status = svc.snapshot();
-        egui::Window::new("Conta GUHFLIX")
+        egui::Window::new("Conta Gfilmes")
             .open(&mut self.account)
             .resizable(false)
             .show(ctx, |ui| {
@@ -1122,7 +1122,7 @@ pub fn single_instance() -> Option<Instance> {
             if !handle.is_null() {
                 CloseHandle(handle);
             }
-            let text:Vec<u16>="O GUHFLIX já está aberto ou não foi possível reservar a sessão. Use a janela existente.".encode_utf16().chain(Some(0)).collect();
+            let text:Vec<u16>="O Gfilmes já está aberto ou não foi possível reservar a sessão. Use a janela existente.".encode_utf16().chain(Some(0)).collect();
             let title: Vec<u16> = "GUHFLIX".encode_utf16().chain(Some(0)).collect();
             MessageBoxW(std::ptr::null_mut(), text.as_ptr(), title.as_ptr(), 0x40);
             None

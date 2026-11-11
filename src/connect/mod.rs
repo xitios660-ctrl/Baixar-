@@ -150,8 +150,8 @@ fn ler_ou_criar_id() -> String {
 pub fn nome() -> String {
     let maquina = std::env::var("COMPUTERNAME").ok().map(|n| n.trim().to_string()).filter(|n| !n.is_empty());
     match maquina {
-        Some(m) => format!("GUHFLIX - {m}"),
-        None => "GUHFLIX - Windows".to_string(),
+        Some(m) => format!("Gfilmes - {m}"),
+        None => "Gfilmes - Windows".to_string(),
     }
 }
 
@@ -208,7 +208,7 @@ pub fn iniciar(ctx: egui::Context) -> Receiver<Pedido> {
     let ouvinte = match TcpListener::bind(SocketAddr::from(([0, 0, 0, 0], porta()))) {
         Ok(o) => o,
         Err(e) => {
-            crate::telemetria::erro(format!("GUHFLIX Connect sem a porta {}: {e}", porta()));
+            crate::telemetria::erro(format!("Gfilmes Connect sem a porta {}: {e}", porta()));
             return recebe;
         }
     };

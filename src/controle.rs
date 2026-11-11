@@ -61,7 +61,7 @@ impl App {
                 }
                 Pedido::Desistiu { cliente } => self.aprovacoes.retain(|(c, _, _)| *c != cliente),
                 Pedido::Conectou(nome) => {
-                    self.aviso = Some((format!("GUHFLIX Connect: {nome} conectado"), Instant::now()));
+                    self.aviso = Some((format!("Gfilmes Connect: {nome} conectado"), Instant::now()));
                     mudou = true;
                 }
                 Pedido::Comando(tipo, msg) => {

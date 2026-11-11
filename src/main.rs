@@ -113,7 +113,7 @@ fn main() -> eframe::Result<()> {
         padrao(info);
     }));
     let mut janela = egui::ViewportBuilder::default()
-        .with_title("GUHFLIX")
+        .with_title("Gfilmes")
         .with_inner_size([1280.0, 720.0])
         .with_min_inner_size([800.0, 480.0]);
     if let Ok(icon)=image::load_from_memory(include_bytes!("../assets/guhflix.png")){let rgba=icon.to_rgba8();let(w,h)=rgba.dimensions();janela=janela.with_icon(egui::IconData{rgba:rgba.into_raw(),width:w,height:h});}
@@ -126,7 +126,7 @@ fn main() -> eframe::Result<()> {
         ..Default::default()
     };
     diagnostico::etapa("criando a janela e o contexto OpenGL");
-    let resultado = eframe::run_native("GUHFLIX", opcoes, Box::new(|cc| Ok(Box::new(App::novo(cc)))));
+    let resultado = eframe::run_native("Gfilmes", opcoes, Box::new(|cc| Ok(Box::new(App::novo(cc)))));
     if let Err(e) = &resultado {
         diagnostico::erro_fatal(&e.to_string());
     }

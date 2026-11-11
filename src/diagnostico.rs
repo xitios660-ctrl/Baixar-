@@ -122,7 +122,7 @@ pub fn erro_fatal(mensagem: &str) {
     );
     #[cfg(windows)]
     janela_de_erro(&format!(
-        "O GUHFLIX não conseguiu abrir a janela.\n\n{mensagem}\n\nO detalhe ficou em:\n{}\n\nSe o problema continuar, envie esse arquivo (falhas.txt e inicio.txt) e informe a placa de vídeo e a versão do driver.",
+        "O Gfilmes não conseguiu abrir a janela.\n\n{mensagem}\n\nO detalhe ficou em:\n{}\n\nSe o problema continuar, envie esse arquivo (falhas.txt e inicio.txt) e informe a placa de vídeo e a versão do driver.",
         arquivo("falhas.txt").display()
     ));
 }

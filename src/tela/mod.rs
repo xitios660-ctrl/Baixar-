@@ -33,9 +33,9 @@ pub use video::{abertura, telas_da_multi_tela, veu_da_abertura};
 // MARK: - Cores da TV Box (res/values/colors.xml)
 
 /// `surface`: o fundo de tudo.
-pub const FUNDO: Color32 = Color32::from_rgb(8, 8, 8);
+pub const FUNDO: Color32 = Color32::from_rgb(9, 9, 9);
 /// `accent`: o único destaque — foco, andamento, a aba escolhida.
-pub const ACENTO: Color32 = Color32::from_rgb(229, 9, 20);
+pub const ACENTO: Color32 = Color32::from_rgb(240, 20, 39);
 pub const TEXTO: Color32 = Color32::WHITE;
 /// `text_secondary`.
 pub const SECUNDARIO: Color32 = Color32::from_rgb(185, 185, 190);
