@@ -1,14 +1,13 @@
 {
   "package": "com.guhflix.android",
-  "versionCode": 2060002,
-  "version": "2.6.2",
-  "file": "GUHFLIX-Android-2.6.2.apk",
-  "apkUrl": "https://guhflix-tv-download.onrender.com/GUHFLIX-Android-2.6.2.apk",
-  "sha256": "47a883edd1016fcbe7d0f66afc9fd7ef57fb14431796fdb499d58d329d111d51",
-  "bytes": 5105776,
+  "versionCode": 2070000,
+  "version": "2.7.0",
+  "file": "Gfilmes-Android-2.7.0.apk",
+  "apkUrl": "https://guhflix-tv-download.onrender.com/Gfilmes-Android-2.7.0.apk",
+  "sha256": "f13deef897a80b631423647c591ad0c0a45690d72135dfa3b5b8208b32f7a40c",
+  "bytes": 3244304,
   "signerSha256": "fe13bf8634b76a4450b70833a7a6eb6aa01429729371a33dccc75c8eaa72b76b",
-  "notes": "Corrige a validação de assinatura no atualizador otimizado e retoma a instalação ao voltar da permissão do Android. Se estiver na versão antiga, instale esta correção manualmente por cima, sem desinstalar.\n",
+  "notes": "Nova identidade Gfilmes e recebimento de canais ao vivo pelo catálogo do celular.",
   "mandatory": false,
-  "api": "https://guhflix-marley-api.onrender.com",
-  "admin": "https://guhflix-marley-admin.onrender.com"
+  "api": "https://guhflix-marley-api.onrender.com"
 }

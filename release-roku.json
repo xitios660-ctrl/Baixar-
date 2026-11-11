@@ -1,8 +1,8 @@
 {
-  "version": "1.0.1",
-  "file": "GUHFLIX-Roku-1.0.1-desenvolvedor.zip",
-  "sha256": "c0560f40afbba7f6f182f36f6c08440de3cb2136a99f82ce6b30d81abdf02a4c",
-  "bytes": 348553,
+  "version": "1.1.0",
+  "file": "Gfilmes-Roku-1.1.0-desenvolvedor.zip",
+  "sha256": "0fc4dbcd9b172e73ee03ddc7dfb62ddae0a88583167207ccd654dc7165c6483a",
+  "bytes": 36224,
   "status": "developer-testing",
   "rokuStorePublished": false,
   "physicalDeviceTested": false,
