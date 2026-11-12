@@ -1,22 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Aba do menu do topo: focada fica branca; a aba da tela atual, sublinhada. -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:state_focused="true">
-        <shape android:shape="rectangle">
-            <solid android:color="#FFFFFFFF" />
-            <corners android:radius="100dp" />
-        </shape>
-    </item>
-    <item android:state_selected="true">
-        <shape android:shape="rectangle">
-            <solid android:color="#1FFFFFFF" />
-            <corners android:radius="100dp" />
-        </shape>
-    </item>
-    <item>
-        <shape android:shape="rectangle">
-            <solid android:color="#00000000" />
-            <corners android:radius="100dp" />
-        </shape>
-    </item>
+ <item android:state_selected="true"><layer-list><item><shape><solid android:color="#12FFFFFF"/></shape></item><item android:gravity="bottom" android:height="3dp"><shape><solid android:color="@color/accent"/></shape></item></layer-list></item>
+ <item android:state_focused="true"><layer-list><item><shape><solid android:color="#26FFFFFF"/></shape></item><item android:gravity="bottom" android:height="3dp"><shape><solid android:color="#FFFFFFFF"/></shape></item></layer-list></item>
+ <item><shape><solid android:color="#00000000"/></shape></item>
 </selector>

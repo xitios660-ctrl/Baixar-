@@ -38,9 +38,9 @@
         <!-- O destaque: o que está focado agora. -->
         <LinearLayout
             android:id="@+id/inicioDestaque"
-            android:layout_width="620dp"
-            android:layout_height="150dp"
-            android:layout_marginStart="56dp"
+            android:layout_width="680dp"
+            android:layout_height="200dp"
+            android:layout_marginStart="40dp"
             android:layout_marginTop="4dp"
             android:orientation="vertical">
             <TextView
@@ -51,7 +51,7 @@
                 android:fontFamily="sans-serif-medium"
                 android:maxLines="1"
                 android:textColor="@color/text_primary"
-                android:textSize="32sp" />
+                android:textSize="40sp" />
             <TextView
                 android:id="@+id/inicioMeta"
                 android:layout_width="match_parent"
@@ -81,7 +81,7 @@
             android:clipChildren="true"
             android:clipToPadding="false"
             android:paddingStart="30dp"
-            android:paddingBottom="120dp" />
+            android:paddingBottom="44dp" />
     </LinearLayout>
 
     <TextView

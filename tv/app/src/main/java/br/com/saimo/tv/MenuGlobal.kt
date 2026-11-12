@@ -44,8 +44,8 @@ object MenuGlobal {
             layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
         }
         barra.addView(ImageView(tela).apply {
-            setImageResource(R.mipmap.ic_launcher)
-            layoutParams = LinearLayout.LayoutParams((28 * d).toInt(), (28 * d).toInt()).apply { marginEnd = (8 * d).toInt() }
+            setImageDrawable(com.guhflix.shell.GuhflixUi.Wordmark())
+            layoutParams = LinearLayout.LayoutParams((110 * d).toInt(), (32 * d).toInt()).apply { marginEnd = (8 * d).toInt() }
         })
         val rolagem = HorizontalScrollView(tela).apply {
             isHorizontalScrollBarEnabled = false
@@ -63,11 +63,9 @@ object MenuGlobal {
             Triple(Aba.BUSCAR, R.string.menu_buscar, R.drawable.ic_search),
             Triple(Aba.INICIO, R.string.menu_inicio, R.drawable.ic_home),
             Triple(Aba.AO_VIVO, R.string.menu_ao_vivo, R.drawable.ic_live_tv),
-            Triple(Aba.EVENTOS, R.string.menu_eventos, R.drawable.ic_football),
-            Triple(Aba.ON_DEMAND, R.string.menu_on_demand, R.drawable.ic_movie),
+                        Triple(Aba.ON_DEMAND, R.string.menu_on_demand, R.drawable.ic_movie),
             Triple(Aba.FAVORITOS, R.string.vod_favoritos, R.drawable.ic_star),
-            Triple(Aba.RADIOS, R.string.menu_radios, R.drawable.ic_radio),
-            Triple(Aba.EXTRAS, R.string.vod_extras, R.drawable.ic_more),
+                        Triple(Aba.EXTRAS, R.string.vod_extras, R.drawable.ic_more),
             Triple(Aba.AJUSTES, R.string.menu_ajustes, R.drawable.ic_settings)
         )
 
@@ -154,7 +152,7 @@ object MenuGlobal {
             .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
         val destino: Intent? = when (aba) {
             Aba.INICIO, Aba.NENHUMA -> null
-            Aba.AO_VIVO -> Intent(tela, MainActivity::class.java)
+            Aba.AO_VIVO -> Intent(tela, LiveHomeActivity::class.java)
             Aba.EVENTOS -> Intent(tela, EventosActivity::class.java)
             Aba.ON_DEMAND -> Intent(tela, OnDemandActivity::class.java)
             Aba.FAVORITOS -> GradeActivity.intent(tela, GradeActivity.FAVORITOS)

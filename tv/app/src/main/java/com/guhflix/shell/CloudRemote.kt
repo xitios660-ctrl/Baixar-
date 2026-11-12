@@ -127,6 +127,8 @@ object CloudRemote {
             JSONObject().put("success",true).put("message","Comando recebido pela TV")
         }catch(e:Exception){JSONObject().put("success",false).put("message",if(e is Gate.ApiError)e.message?.take(240)?:"Falha no serviço" else "Não foi possível executar. Abra o player na televisão e tente novamente.")}
     }
+    @JvmStatic fun liveCatalog(offset:Int):JSONObject=Gate.request(app,"GET","/api/connect/live?offset=${offset.coerceAtLeast(0)}",null,true)
+    @JvmStatic fun playLive(activity:Activity,contentId:String){worker.execute{execute(activity,JSONObject().put("type","play").put("contentId",contentId).put("live",true))}}
     @JvmStatic fun playEpisode(activity:Activity,contentId:String,season:Int,episode:Int){worker.execute{execute(activity,JSONObject().put("type","play").put("contentId",contentId).put("season",season).put("episode",episode))}}
     @JvmStatic fun related(id:Int,series:Boolean):JSONObject?=try{Gate.request(app,"GET","/api/connect/catalog-related/"+(if(series)"series" else "movie")+"/$id",null,true)}catch(_:Exception){null}
     @JvmStatic fun metadata(path:String):JSONObject?=try{Gate.request(app,"GET","/api/connect/metadata/"+path,null,true)}catch(_:Exception){null}

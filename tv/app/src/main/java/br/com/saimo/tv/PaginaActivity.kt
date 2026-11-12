@@ -83,6 +83,10 @@ open class PaginaActivity : TelaComMenu() {
         super.onCreate(savedInstanceState)
         tipo = tipoDaPagina()
         setContentView(R.layout.activity_pagina)
+        val filters=findViewById<android.widget.LinearLayout>(R.id.catalogFilters)
+        listOf("Todos" to TODOS,"Filmes" to GradeActivity.FILMES,"Séries" to GradeActivity.SERIES,"Animes" to GradeActivity.ANIMES).forEach{(name,value)->
+            filters.addView(android.widget.Button(this).apply{text=name;textSize=14f;isSelected=tipo==value;setTextColor(android.graphics.Color.WHITE);setBackgroundResource(R.drawable.aba_menu);setOnClickListener{if(tipo!=value)abrir(this@PaginaActivity,value)}})
+        }
         filas = findViewById(R.id.inicioFilas)
         filas.layoutManager = Inicio.Filas(this)
         filas.adapter = adaptador

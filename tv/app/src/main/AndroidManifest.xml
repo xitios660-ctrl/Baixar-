@@ -103,6 +103,7 @@
             android:name=".BuscaDoSistema"
             android:authorities="${applicationId}.busca"
             android:exported="true" />
+        <activity android:name=".LiveHomeActivity" android:exported="false" android:screenOrientation="landscape" />
         <activity
             android:name=".MainActivity"
             android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|smallestScreenSize|uiMode"

@@ -136,7 +136,7 @@ public final class GuhflixUi {
             if (linearLayout2.findViewWithTag("guhflix-account") == null) {
                 Button button = new Button(activity);
                 button.setTag("guhflix-account");
-                button.setText("Conta / iPhone");
+                button.setText("Conta");
                 button.setTextColor(-1);
                 button.setBackgroundTintList(ColorStateList.valueOf(-1767148));
                 button.setOnClickListener(new View.OnClickListener() { // from class: com.guhflix.shell.GuhflixUi$$ExternalSyntheticLambda0
@@ -155,32 +155,16 @@ public final class GuhflixUi {
                 View childAt = linearLayout3.getChildAt(i2);
                 if (childAt instanceof TextView) {
                     TextView textView = (TextView) childAt;
-                    textView.setTextSize(12.0f);
+                    textView.setTextSize(16.0f);
                     textView.setGravity(17);
                     textView.setPadding(dp(activity, 12.0f), dp(activity, 8.0f), dp(activity, 12.0f), dp(activity, 8.0f));
                     textView.setCompoundDrawablePadding(dp(activity, 6.0f));
                     Drawable drawable = textView.getCompoundDrawablesRelative()[0];
                     if (drawable != null) {
                         drawable.setBounds(0, 0, dp(activity, 22.0f), dp(activity, 22.0f));
-                        textView.setCompoundDrawablesRelative(null, drawable, null, null);
+                        textView.setCompoundDrawablesRelative(drawable, null, null, null);
                     }
-                    StateListDrawable stateListDrawable = new StateListDrawable();
-                    int i3 = 0;
-                    while (i3 < 3) {
-                        GradientDrawable gradientDrawable = new GradientDrawable();
-                        gradientDrawable.setColor(i3 == 0 ? -1767148 : -15658733);
-                        gradientDrawable.setCornerRadius(dp(activity, 7.0f));
-                        int iDp = dp(activity, 1.0f);
-                        if (i3 == 0) {
-                            i = -1;
-                        } else {
-                            i = i3 == 1 ? -1767148 : -13291467;
-                        }
-                        gradientDrawable.setStroke(iDp, i);
-                        stateListDrawable.addState(i3 == 0 ? new int[]{R.attr.state_focused} : i3 == 1 ? new int[]{R.attr.state_selected} : new int[0], gradientDrawable);
-                        i3++;
-                    }
-                    textView.setBackground(stateListDrawable);
+                    textView.setBackgroundResource(br.com.saimo.tv.R.drawable.aba_menu);
                     textView.setTextColor(-1);
                 }
             }
