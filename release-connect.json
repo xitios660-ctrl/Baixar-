@@ -1,13 +1,13 @@
 {
   "package": "com.guhflix.tv.connect",
-  "versionCode": 2070000,
-  "version": "2.7.0",
-  "file": "Gfilmes-Connect-TV-2.7.0.apk",
-  "apkUrl": "https://guhflix-tv-download.onrender.com/Gfilmes-Connect-TV-2.7.0.apk",
-  "sha256": "6ae7813beaf4b3d026950be4bdb628625d4db592d1f2c398eca9ede561b8aea0",
-  "bytes": 3244370,
+  "versionCode": 2070001,
+  "version": "2.7.1",
+  "file": "Gfilmes-Connect-TV-2.7.1.apk",
+  "apkUrl": "https://guhflix-tv-download.onrender.com/Gfilmes-Connect-TV-2.7.1.apk",
+  "sha256": "ad2ea3d0fbcaf2bd0af4825635801e654d66a75ec27e96dfaa26b1aac233ca30",
+  "bytes": 5076050,
   "signerSha256": "fe13bf8634b76a4450b70833a7a6eb6aa01429729371a33dccc75c8eaa72b76b",
-  "notes": "Nova identidade Gfilmes e recebimento de canais ao vivo pelo catálogo do celular.",
+  "notes": "Nova navegação horizontal com sublinhado, destaque maior, filtros de filmes/séries/animes, página de canais ao vivo e novo banner Gfilmes. Programação depende dos dados disponíveis; reprodução depende da fonte e da TV.",
   "mandatory": false,
   "api": "https://guhflix-marley-api.onrender.com"
 }
