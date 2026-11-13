@@ -26,7 +26,7 @@ class HubActivity:Activity(){
   val account=TextView(this).apply{text="Verificando a conta desta TV…";textSize=18f;setTextColor(Color.WHITE);setPadding(0,dp(8),0,dp(8))};root.addView(account)
   Gate.work.execute {try{val user=Gate.request(this,"GET","/api/auth/me",null,true);runOnUiThread{if(!isFinishing&&!isDestroyed)account.text="Conta desta TV: "+user.getString("username")+" · Use esta mesma conta no iPhone."}}catch(_:Exception){runOnUiThread{if(!isFinishing&&!isDestroyed)account.text="Abra Minha conta para verificar seu acesso."}}}
   code=TextView(this).apply{text="Conectar iPhone";textSize=42f;typeface=Typeface.MONOSPACE;setTextColor(Color.WHITE)};root.addView(code)
-  message=TextView(this).apply{text="Site do iPhone: https://guhflix-infraestrutura-bifg95.v2.appdeploy.ai/pwa/tv.html";textSize=17f;setTextColor(Color.LTGRAY);setPadding(0,dp(5),0,dp(20))};root.addView(message)
+  message=TextView(this).apply{text="Site do iPhone: https://guhflix-tv-nova-conta-pau5pe.v2.appdeploy.ai/pwa/tv.html";textSize=17f;setTextColor(Color.LTGRAY);setPadding(0,dp(5),0,dp(20))};root.addView(message)
   add(root,"GERAR CÓDIGO DE VÍNCULO"){
    message.text="Gerando código seguro…"
    Gate.work.execute{try{val result=Gate.request(this,"POST","/api/connect/pairing",JSONObject(),true);runOnUiThread{code.text=result.getString("code");message.text="Válido por cinco minutos e de uso único. No iPhone, abra Gfilmes → Conectar TV. Use a mesma conta."}}catch(e:Exception){runOnUiThread{message.text=e.message?:"Não foi possível conectar."}}}
