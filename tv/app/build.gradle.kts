@@ -29,9 +29,9 @@ android {
         // Até a 2.0.2 era o 5 (21); quem ainda tem Android 5 fica na 2.0.2.
         minSdk = 23
         targetSdk = 35
-        versionCode = if (connectEdition) 2070001 else 2050000
-        versionName = if (connectEdition) "2.7.1" else "2.5.0"
-        buildConfigField("String", "GUHFLIX_API", "\"https://guhflix-marley-api.onrender.com\"")
+        versionCode = if (connectEdition) 2070002 else 2050000
+        versionName = if (connectEdition) "2.7.2" else "2.5.0"
+        buildConfigField("String", "GUHFLIX_API", "\"https://guhflix-administracao-migracao-0i2qht.v2.appdeploy.ai\"")
         val updateFile = if (mobileEdition) "release-android.json" else if (connectEdition) "release-connect.json" else "release.json"
         buildConfigField("String", "GUHFLIX_UPDATE_MANIFEST", "\"https://guhflix-tv-download.onrender.com/$updateFile\"")
         buildConfigField("String", "GUHFLIX_URI_SCHEME", if (mobileEdition) "\"guhflix-android\"" else if (connectEdition) "\"guhflix-connect\"" else "\"saimo\"")
