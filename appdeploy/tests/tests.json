@@ -1,0 +1,77 @@
+[
+  {
+    "name": "Visão geral carrega diagnóstico independente do Render",
+    "sanity": true,
+    "viewport": "desktop",
+    "covers": [
+      "painel de homologação",
+      "GET /api/migration/status",
+      "backend online"
+    ],
+    "description": "Garante que o ambiente novo mostra seu próprio diagnóstico e não depende da API suspensa do Render para renderizar.",
+    "steps": [
+      "Abrir a página Guhflix em desktop",
+      "Ver o banner 'O futuro do GUHFLIX está sendo preparado.'",
+      "Aguardar o bloco Infraestrutura terminar de carregar"
+    ],
+    "expected": "A página mostra o diagnóstico do ambiente AppDeploy e a condição do MongoDB, sem exigir acesso ao Render."
+  },
+  {
+    "name": "Atualizar diagnóstico sem falsificar conexão",
+    "viewport": "desktop",
+    "covers": [
+      "atualização de status real",
+      "GET /api/migration/status",
+      "sem dados fictícios"
+    ],
+    "description": "A atualização refaz a consulta e não apresenta clientes nem assinaturas inventados.",
+    "steps": [
+      "Clicar em 'Atualizar diagnóstico'",
+      "Esperar a consulta ser concluída",
+      "Conferir o status do Atlas e a lista de etapas",
+      "Atualizar a página do navegador"
+    ],
+    "expected": "O diagnóstico é reapresentado a partir da API e nenhuma lista fictícia de clientes ou pagamentos é exibida."
+  },
+  {
+    "name": "Falha de diagnóstico é visível",
+    "viewport": "desktop",
+    "covers": [
+      "falha do backend",
+      "GET /api/migration/status",
+      "não indicar conectado em erro"
+    ],
+    "description": "Uma falha na consulta não pode ser escondida por um status positivo incorreto.",
+    "qa_faults": [
+      {
+        "method": "GET",
+        "path": "/api/migration/status",
+        "status": 503,
+        "body_json": {
+          "error": "temporarily_unavailable"
+        }
+      }
+    ],
+    "steps": [
+      "Abrir o painel de homologação",
+      "Aguardar a tentativa de obter o diagnóstico"
+    ],
+    "expected": "A página exibe uma mensagem de indisponibilidade e não afirma que o MongoDB está conectado."
+  },
+  {
+    "name": "Consulta em celular mantém alertas de segurança",
+    "viewport": "mobile",
+    "covers": [
+      "responsividade mobile",
+      "alerta de Render suspenso",
+      "não liberar operações reais"
+    ],
+    "description": "As informações críticas de segurança permanecem legíveis na tela de celular.",
+    "steps": [
+      "Abrir a página em celular",
+      "Visualizar o resumo do ambiente e rolar até Infraestrutura",
+      "Ler o aviso sobre os serviços Render e as etapas"
+    ],
+    "expected": "Os cartões cabem na tela, o aviso de suspensão é legível e a página não oferece ações que alterem clientes."
+  }
+]
