@@ -30,9 +30,10 @@ export class ProviderCatalog implements Catalog {
     const work=(async()=>{
       let r:Response;try{r=await this.get(this.base+name.split('/').map(encodeURIComponent).join('/'),{redirect:'error',signal:AbortSignal.timeout(20000),headers:{'User-Agent':'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15','Accept':'*/*',...(process.env.CATALOG_AUTH_TOKEN?{Authorization:`Bearer ${process.env.CATALOG_AUTH_TOKEN}`}:{})}})}catch{throw new Fault(503,'CATALOG_NETWORK','Não foi possível conectar ao catálogo autorizado. Tente novamente.')}
       if(!r.ok)throw new Fault(503,'CATALOG_PROVIDER',`O catálogo autorizado respondeu HTTP ${r.status}. O provedor precisa permitir esse acesso.`);
+      const limit=name.startsWith('redeflix/links-')?32*1024*1024:12*1024*1024;
       let bytes=0;const chunks:Uint8Array[]=[];
       if(!r.body)throw new Fault(503,'CATALOG_EMPTY','O provedor não enviou o catálogo');
-      const reader=r.body.getReader();try{for(;;){const {done,value}=await reader.read();if(done)break;bytes+=value.length;if(bytes>12*1024*1024){await reader.cancel();throw new Fault(503,'CATALOG_SIZE','Catálogo excedeu o limite de leitura')}chunks.push(value)}}finally{reader.releaseLock()}
+      const reader=r.body.getReader();try{for(;;){const {done,value}=await reader.read();if(done)break;bytes+=value.length;if(bytes>limit){await reader.cancel();throw new Fault(503,'CATALOG_SIZE','Catálogo excedeu o limite de leitura')}chunks.push(value)}}finally{reader.releaseLock()}
       const text=Buffer.concat(chunks).toString('utf8');
       if(/<!doctype html|<html/i.test(text.slice(0,300)))throw new Fault(503,'CATALOG_FORMAT','O provedor retornou uma página em vez do catálogo');
       let size=Buffer.byteLength(text);for(const value of this.files.values())size+=Buffer.byteLength(value.text);

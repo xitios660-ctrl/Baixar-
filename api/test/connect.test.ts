@@ -26,6 +26,12 @@ test('anime collection provides actual episodes and keeps provider URLs out of l
  const c=catalog();const rows=await c.list('','anime',0);assert.equal(rows.total,1);const item=rows.items[0];assert.equal(item.collection,true);assert.equal((await c.list('teste','anime',0)).total,1);assert.equal((await c.detail(item.id)).episodes?.length,2);assert.equal((await c.resolve(item.id,1,2)).urls[0],'https://media.example.invalid/anime2.m3u8');assert(!JSON.stringify(rows).includes('media.example'));assert(!JSON.stringify(await c.detail(item.id)).includes('anime2.m3u8'));assert.equal((await c.list('','series',0)).total,1);
 });
 
+test('anime collection accepts observed files above 12 MiB without relaxing normal catalog limits',async()=>{
+ const large=pages['redeflix/links-animes.txt']+'\n'+' '.repeat(13*1024*1024);
+ const c=new ProviderCatalog('https://catalog.example.invalid/',async(input:any)=>{const name=new URL(String(input)).pathname.slice(1);const text=name==='redeflix/links-animes.txt'?large:pages[name];return new Response(text??'',{status:text===undefined?404:200})});assert.equal((await c.list('','anime',0)).total,1);
+ const oversized=new ProviderCatalog('https://catalog.example.invalid/',async()=>new Response(' '.repeat(13*1024*1024)));assert.equal((await oversized.health()).reason,'CATALOG_SIZE');
+});
+
 test('PWA cookie, persistent pairing, isolated commands, acknowledgement, reconnect, expiry and revocation',async()=>{
  const repl=await MongoMemoryReplSet.create({replSet:{count:1}});const {db,client}=await connect(repl.getUri(),'guhflix_test');let clock=new Date('2030-01-01T00:00:00Z');
  const origin='https://phone.example',pass='fixture-password-only';const hash=await argon2.hash(pass);

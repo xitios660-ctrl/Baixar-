@@ -19,8 +19,9 @@ object CloudHttp {
      if(connection.responseCode==401&&retry){Gate.renew(CloudRemote.application());return fetch(false)}
      check(connection.responseCode==200){"Catálogo indisponível"}
      return connection.inputStream.use { input->
+      val limit=if(safeName.startsWith("redeflix/links-"))32*1024*1024 else 12*1024*1024
       val out=java.io.ByteArrayOutputStream();val buf=ByteArray(16384)
-      while(true){val n=input.read(buf);if(n<0)break;check(out.size()+n<=12*1024*1024);out.write(buf,0,n)}
+      while(true){val n=input.read(buf);if(n<0)break;check(out.size()+n<=limit);out.write(buf,0,n)}
       out.toString("UTF-8")
      }
     } finally {connection.disconnect()}
