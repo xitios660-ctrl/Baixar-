@@ -5,6 +5,7 @@ import {Fault} from './errors.js';
 import {registerConnect} from './connect.js';
 import {ProviderCatalog,type Catalog} from './catalog.js';
 import {registerPwa} from './pwa.js';
+import {registerAdmin} from './admin.js';
 import Fastify,{type FastifyRequest} from 'fastify';
 import cors from '@fastify/cors';import cookie from '@fastify/cookie';import helmet from '@fastify/helmet';import rateLimit from '@fastify/rate-limit';
 import {ObjectId,type Db,type MongoClient,type ClientSession} from 'mongodb';
@@ -18,7 +19,7 @@ export async function createApp(c:Config){
  if(c.secret.length<48)throw new Error('JWT_SECRET must have 48+ characters');
  const app=Fastify({logger:c.logger?{redact:['req.headers.authorization','req.headers.cookie','password','refreshToken','otp','token']}:false,bodyLimit:16384,trustProxy:(_address:string,hop:number)=>hop<1});
  const now=c.now??(()=>new Date()),key=new TextEncoder().encode(c.secret),db=c.db,catalog=c.catalog??new ProviderCatalog(),live=c.liveCatalog??new ProviderLive();
- const pwaOrigin=c.pwaOrigin??'https://guhflix-marley-api.onrender.com';
+ const pwaOrigin=c.pwaOrigin??'https://gfilmes-mary-api.onrender.com';
  app.addHook('onRequest',async(req,reply)=>{if(req.method!=='OPTIONS'||!req.url.startsWith('/api/samsung/'))return;const origin=req.headers.origin;if(req.headers.cookie||origin&&!['null','file://'].includes(origin))return reply.code(403).send({error:'ORIGIN',message:'Origem não autorizada'});return reply.header('Access-Control-Allow-Origin',origin??'null').header('Access-Control-Allow-Headers','Content-Type, Authorization').header('Access-Control-Allow-Methods','GET, POST, OPTIONS').header('Vary','Origin').code(204).send()});
  await app.register(helmet);await app.register(cookie);await app.register(cors,{origin:[c.adminOrigin,pwaOrigin],credentials:true,allowedHeaders:['Content-Type','Authorization','Idempotency-Key']});
  await app.register(rateLimit,{max:180,timeWindow:'1 minute'});
@@ -79,7 +80,9 @@ export async function createApp(c:Config){
  app.get('/api/admin/audit-logs',async req=>{await identity(req,true);const q=z.object({userId:z.string().optional(),page:z.coerce.number().int().min(1).default(1)}).parse(req.query);return db.collection('audit_logs').find(q.userId?{targetUserId:oid(q.userId).toString()}:{}).sort({createdAt:-1}).skip((q.page-1)*50).limit(50).toArray()});
  await registerSamsung(app);
  await registerWatch(app,{db,now,identity,requireAccess,catalog,live,secret:c.secret,lease:playbackLease,mediaOpen:c.mediaOpen});
- await registerConnect(app,{db,now,identity,requireAccess,catalog,live});
+ await registerConnect(app,{db,now,identity,requireAccess,catalog,live,pwaOrigin});
+ await registerAdmin(app);
+ app.get('/api/health',async()=>({ok:true,service:'guhflix-api',version:'2.0.0'}));
  await registerPwa(app);
  return app;
 }

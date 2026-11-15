@@ -7,7 +7,7 @@ import {Fault} from './errors.js';
 import type {Catalog} from './catalog.js';
 import {Metadata} from './metadata.js';
 
-type Config={db:Db;now:()=>Date;identity:(req:FastifyRequest)=>Promise<{s:any;u:any}>;requireAccess:(u:any)=>void;catalog:Catalog;live:LiveSource};
+type Config={db:Db;now:()=>Date;identity:(req:FastifyRequest)=>Promise<{s:any;u:any}>;requireAccess:(u:any)=>void;catalog:Catalog;live:LiveSource;pwaOrigin:string};
 const sha=(v:string)=>createHash('sha256').update(v).digest('hex');
 const id=(v:unknown)=>{if(typeof v!=='string'||!ObjectId.isValid(v))throw new Fault(400,'INVALID_ID','Identificador inválido');return new ObjectId(v)};
 const command=z.discriminatedUnion('type',[
@@ -52,7 +52,7 @@ export async function registerConnect(app:FastifyInstance,c:Config){
    const {s,u}=await tv(req);const code=randomBytes(5).toString('hex').toUpperCase(),expiresAt=new Date(now().getTime()+300000);
    await db.collection('connect_pairings').deleteMany({tvSessionId:s._id.toString()});
    await db.collection('connect_pairings').insertOne({userId:u._id.toString(),tvSessionId:s._id.toString(),label:s.label,codeHash:sha(code),createdAt:now(),expiresAt,claimed:false});
-   return {code:code.slice(0,5)+'-'+code.slice(5),expiresAt,website:'https://guhflix-marley-api.onrender.com/pwa/'};
+   return {code:code.slice(0,5)+'-'+code.slice(5),expiresAt,website:new URL('/pwa/',c.pwaOrigin).href};
  });
  app.post('/api/connect/pairing/claim',{config:{rateLimit:{max:8,timeWindow:'1 minute'}}},async req=>{
    const {s,u}=await owner(req);if(s.client!=='pwa')throw new Fault(403,'PHONE_REQUIRED','Vincule usando o site do iPhone');

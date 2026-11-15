@@ -1,6 +1,6 @@
 import http from 'node:http';import https from 'node:https';import {readFile} from 'node:fs/promises';import {fileURLToPath} from 'node:url';
-const api=new URL(process.env.API_URL||'https://guhflix-marley-api.onrender.com');if(api.protocol!=='https:'&&process.env.LOCAL_TEST!=='1')throw Error('HTTPS API required');
-const files={'/':'index.html','/app.js':'app.js','/style.css':'style.css','/icon.png':'icon.png'};
+const api=new URL(process.env.API_URL||'https://gfilmes-mary-api.onrender.com');if(api.protocol!=='https:'&&process.env.LOCAL_TEST!=='1')throw Error('HTTPS API required');
+const files={'/admin/':'index.html','/admin/app.js':'app.js','/admin/style.css':'style.css','/admin/icon.png':'icon.png','/':'index.html','/app.js':'app.js','/style.css':'style.css','/icon.png':'icon.png'};
 const unavailable={error:'SERVICE_UNAVAILABLE',message:'Servidor temporariamente indisponível. Aguarde alguns segundos e tente novamente.'};
 function json(res,status,data){if(res.destroyed||res.writableEnded)return;res.writeHead(status,{'Content-Type':'application/json; charset=utf-8'});res.end(JSON.stringify(data))}
 async function proxyApi(req,res,path){

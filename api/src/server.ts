@@ -7,7 +7,7 @@ async function initialize(){
  const uri=process.env.MONGODB_URI;
  if(!uri||uri.includes('<db_password>')){runtime.setPhase('configuration_required');console.log(JSON.stringify({service:'guhflix-api',state:'configuration_required',missing:'MONGODB_URI'}));return;}
  runtime.setPhase('connecting');
- try{connection=await connect(uri);app=await createApp({...connection,secret:secret!,adminOrigin:adminOrigin!,bootstrapToken:process.env.BOOTSTRAP_TOKEN,logger:true});await app.ready();
+ try{connection=await connect(uri);app=await createApp({...connection,secret:secret!,adminOrigin:adminOrigin!,pwaOrigin:process.env.PWA_ORIGIN,bootstrapToken:process.env.BOOTSTRAP_TOKEN,logger:true});await app.ready();
  if(stopping){await app.close();await connection.client.close();return;}
  runtime.activate((req,res)=>app!.server.emit('request',req,res));console.log(JSON.stringify({service:'guhflix-api',state:'ready'}));
  }catch{if(connection)await connection.client.close().catch(()=>{});connection=undefined;runtime.setPhase('database_unavailable');console.error(JSON.stringify({service:'guhflix-api',state:'database_unavailable'}));if(!stopping)retry=setTimeout(initialize,15000);}

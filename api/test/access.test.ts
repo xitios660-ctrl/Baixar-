@@ -7,6 +7,10 @@ test('GUHFLIX full subscription, authentication and concurrency flow',async()=>{
  const request=async(method:string,url:string,body?:any,access?:string,extra:any={})=>app.inject({method:method as any,url,headers:{...(access?{authorization:'Bearer '+access}:{}),...extra},...(body?{payload:body}:{})});
  const login=async(user:string,clientType='tv')=>request('POST','/api/auth/login',{username:user,password:pass,installationId:randomUUID(),client:clientType,...(clientType==='admin'?{otp:new TOTP({secret:Secret.fromBase32(secret)}).generate({timestamp:clock.getTime()})}:{})});
  try{
+ const consolePage=await request('GET','/admin/');assert.equal(consolePage.statusCode,200);assert.match(consolePage.body,/\/admin\/app\.js/);assert.match(String(consolePage.headers['content-security-policy']),/frame-ancestors 'none'/);
+ assert.equal((await request('GET','/admin/app.js')).statusCode,200);
+ assert.equal((await request('GET','/admin/private.env')).statusCode,404);
+ assert.equal((await request('GET','/api/health')).json().ok,true);
  const setup={token:'b'.repeat(64),username:'admin',password:pass,totpSecret:secret,otp:new TOTP({secret:Secret.fromBase32(secret)}).generate({timestamp:clock.getTime()})};
  assert.equal((await request('POST','/api/setup/create',{...setup,token:'z'.repeat(64)})).statusCode,403);
  assert.equal((await request('POST','/api/setup/create',setup)).statusCode,200);
