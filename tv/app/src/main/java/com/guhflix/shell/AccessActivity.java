@@ -252,7 +252,7 @@ public final class AccessActivity extends Activity {
         }
         Gate.catalogChecked();
         if (!getIntent().getBooleanExtra("manage", false)) {
-            startActivity(new Intent().setClassName(getPackageName(), "br.com.saimo.tv.EscolhaActivity"));
+            startActivity(new Intent().setClassName(getPackageName(), "com.guhflix.shell.CinemaActivity"));
             finish();
         } else {
             render("Sua assinatura está ativa.\nAté 3 reproduções simultâneas por conta.\nPlano: R$ 30,00 / 30 dias.", false);

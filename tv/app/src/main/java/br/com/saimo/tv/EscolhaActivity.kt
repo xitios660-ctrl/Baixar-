@@ -349,7 +349,7 @@ class EscolhaActivity : TelaComMenu(), Connect.Listener {
                     BuscaActivity.abrir(this, Generos.semAno(a.titulo))
                 }
             }
-        })
+        }, Inicio.Tipo.LARGO)
     }
 
     /** Os canais favoritos — ou os abertos — com o que passa agora. */

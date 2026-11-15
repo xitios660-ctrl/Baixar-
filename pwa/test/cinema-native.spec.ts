@@ -1,0 +1,30 @@
+import {test,expect} from '@playwright/test';
+import {readFile} from 'node:fs/promises';
+const html=require('node:fs').readFileSync(require('node:path').resolve(__dirname,'../../tv/app/src/main/assets/gfilmes/cinema.html'),'utf8');
+test('packaged TV interface uses reference geometry, native playback, live filters and account pairing',async({page})=>{
+ await page.route('https://gfilmes.invalid/*.png',route=>route.fulfill({path:require('node:path').resolve(__dirname,'../../tv/app/src/main/assets/gfilmes/',new URL(route.request().url()).pathname.slice(1))}));
+ await page.route('https://gfilmes.invalid/*.ttf',route=>route.fulfill({path:require('node:path').resolve(__dirname,'../../tv/app/src/main/assets/gfilmes/',new URL(route.request().url()).pathname.slice(1))}));
+ await page.setViewportSize({width:1280,height:720});
+ await page.evaluate(()=>{
+  const movie={id:'a'.repeat(32),title:'História de teste',kind:'movie',year:'2026',genres:['Ação'],synopsis:'Conteúdo sintético exclusivo para verificar a interface.'};
+  const series={...movie,id:'b'.repeat(32),title:'Série de teste',kind:'series',seasons:[1],episodes:[{season:1,episode:1,title:'Primeiro episódio'}]};
+  const live={id:'c'.repeat(32),title:'Canal de teste',kind:'live',genres:['Notícias']};
+  (window as any).nativeCalls=[];(window as any).nativePlay=[];
+  (window as any).GfilmesNative={request:(id:string,raw:string)=>{const q=JSON.parse(raw);(window as any).nativeCalls.push(q);let data:any={};switch(q.op){case 'home':data={featured:movie,rows:[{title:'Em destaque no Gfilmes',items:Array.from({length:8},(_,i)=>({...movie,id:i.toString(16).padStart(32,'0'),title:'História '+(i+1)}))}]};break;case 'catalog':data={items:q.kind==='series'?[series]:q.q==='nãoexiste'?[]:[movie,series],total:2};break;case 'anime':data={items:[series],total:1};break;case 'live':data={items:[(window as any).fixtureGuide?{...live,now:{title:'Programa de teste',start:Date.now()-600000,stop:Date.now()+600000},next:{title:'Próximo programa de teste',start:Date.now()+600000,stop:Date.now()+1200000}}:live],total:1};break;case 'detail':data=q.live?live:q.id===series.id?series:movie;break;case 'me':data={username:'fixture',version:'2.7.2'};break;case 'history':data={items:[{...movie,progress:.35}]};break;case 'favorites':data={items:[movie]};break;case 'favorite':data={saved:true};break;case 'pair':data={code:'ABCDE-12345'};break;}setTimeout(()=>(window as any).gfilmesResult(id,{data}),5)},play:(s:string)=>(window as any).nativePlay.push(JSON.parse(s)),account:()=>{},settings:()=>{},update:()=>{},exit:()=>{}};
+ });
+ const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));await page.setContent(html);
+ await expect(page.locator('#page h1')).toHaveText('História de teste');await expect(page.locator('header .logo')).toHaveText('Gfilmes');
+ const header=await page.locator('header').boundingBox();expect(header?.height).toBe(57);
+ const hero=await page.locator('.hero').boundingBox();expect(hero?.y).toBe(57);expect(hero?.height).toBe(218);
+ const poster=await page.locator('.poster').first().boundingBox();expect(poster?.height).toBe(238);expect(poster?.width).toBe(190);
+ await expect(page.getByRole('heading',{name:'Continue assistindo'})).toBeVisible();await page.screenshot({scale:'css',path:'test-results/Gfilmes-native-home-fixture-1280.png'});
+ await page.getByRole('button',{name:'＋ Minha lista',exact:true}).click();await expect(page.locator('#toast')).toContainText('Adicionado');
+ await page.getByRole('button',{name:'Assistir',exact:true}).click();await expect.poll(()=>page.evaluate(()=>(window as any).nativePlay.length)).toBe(1);
+ await page.getByRole('button',{name:'Filme/Série',exact:true}).click();await expect(page.locator('.universe')).toHaveCount(3);expect((await page.locator('header').boundingBox())?.y).toBe(0);await page.locator('.universe').filter({hasText:'Séries'}).click();await expect(page.locator('#page h1')).toHaveText('Série de teste');await page.getByRole('button',{name:'Assistir',exact:true}).click();await expect(page.locator('#detail')).toBeVisible();await page.getByRole('button',{name:'Primeiro episódio'}).click();expect(await page.evaluate(()=>(window as any).nativePlay.at(-1).episode)).toBe(1);
+ await page.getByRole('button',{name:'← Voltar'}).click();await page.getByRole('button',{name:'TV ao vivo',exact:true}).click();await expect(page.locator('#page h1')).toHaveText('Canal de teste');await expect(page.locator('.guide')).toContainText('Programação não informada');expect((await page.locator('header').boundingBox())?.y).toBe(0);await page.screenshot({scale:'css',path:'test-results/Gfilmes-native-live-fixture-1280.png'});await page.getByRole('button',{name:'Assistir agora',exact:true}).click();expect(await page.evaluate(()=>(window as any).nativePlay.at(-1).live)).toBe(true);await page.evaluate(()=>{(window as any).fixtureGuide=true;(window as any).gfilmesNavigate('live')});await expect(page.locator('#page h1')).toHaveText('Programa de teste');await expect(page.locator('.guide')).toContainText('Próximo programa de teste');await expect(page.locator('.program-track')).toBeVisible();
+ await page.getByRole('button',{name:'Buscar',exact:true}).click();await page.getByLabel('Buscar no catálogo').fill('nãoexiste');await expect(page.locator('.search-results')).toContainText('Nenhum título');
+ await page.getByRole('button',{name:'Conta',exact:true}).click();await page.getByRole('button',{name:'Gerar código de vínculo'}).click();await expect(page.locator('#pair-code')).toHaveText('ABCDE-12345');
+ await page.getByRole('button',{name:'Início',exact:true}).click();await page.getByRole('button',{name:'Buscar',exact:true}).focus();await page.keyboard.press('ArrowRight');await expect(page.getByRole('button',{name:'Início',exact:true})).toBeFocused();
+ await page.getByRole('button',{name:'Configurações',exact:true}).click();await expect(page.locator('#page h1')).toHaveText('Configurações');await page.getByRole('button',{name:'Verificar atualização',exact:true}).click();
+ expect(errors).toEqual([]);
+});

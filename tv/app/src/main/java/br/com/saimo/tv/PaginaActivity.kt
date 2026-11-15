@@ -334,7 +334,7 @@ open class PaginaActivity : TelaComMenu() {
                 val (t, e) = if (a.terminado) a.temporada to a.episodio + 1 else a.temporada to a.episodio
                 PlayerActivity.abrir(this, alvo, t, e)
             }
-        })
+        }, Inicio.Tipo.LARGO)
     }
 
     private fun cartao(alvo: Alvo, capa: String, trailer: String = "") = Inicio.Cartao(

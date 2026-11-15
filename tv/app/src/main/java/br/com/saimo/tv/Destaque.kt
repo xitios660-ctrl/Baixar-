@@ -93,6 +93,17 @@ class Destaque(
             }
         }
         val alvo = cartao.alvo
+        val watch=tela.findViewById<android.widget.Button>(R.id.heroWatch)
+        val list=tela.findViewById<android.widget.Button>(R.id.heroList)
+        val info=tela.findViewById<android.widget.Button>(R.id.heroInfo)
+        watch?.isEnabled=alvo!=null
+        list?.isEnabled=alvo!=null && alvo.colecao.isEmpty()
+        info?.isEnabled=alvo!=null
+        watch?.setOnClickListener{alvo?.let{if(it.serie)FichaActivity.abrir(tela,it) else PlayerActivity.abrir(tela,it)}}
+        info?.setOnClickListener{alvo?.let{FichaActivity.abrir(tela,it)}}
+        fun listLabel(){if(alvo!=null)list?.text=if(VodFavoritos.contem(tela,alvo.titulo,alvo.serie,alvo.ano))"✓ Minha lista" else "＋ Minha lista"}
+        listLabel()
+        list?.setOnClickListener{alvo?.let{VodFavoritos.alternar(tela,VodFavoritos.Item(it.titulo,it.serie,it.letra,it.ano));listLabel()}}
         titulo.text = if (alvo != null) Generos.semAno(alvo.titulo) else cartao.titulo
         meta.text = cartao.meta
             ?: cartao.subtitulo?.let { tela.getString(R.string.inicio_canal_agora, it) }

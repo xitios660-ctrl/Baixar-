@@ -148,6 +148,8 @@ object MenuGlobal {
 
     private fun ir(tela: Activity, aba: Aba, atual: Aba) {
         if (aba == atual) return
+        val page=when(aba){Aba.INICIO->"home";Aba.ON_DEMAND->"catalog";Aba.AO_VIVO->"live";Aba.BUSCAR->"search";Aba.AJUSTES->"settings";else->null}
+        if(page!=null){tela.startActivity(Intent(tela,com.guhflix.shell.CinemaActivity::class.java).putExtra("cinema.page",page).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP));return}
         val inicio = Intent(tela, EscolhaActivity::class.java)
             .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
         val destino: Intent? = when (aba) {
