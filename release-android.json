@@ -1,13 +1,16 @@
 {
   "package": "com.guhflix.android",
-  "versionCode": 2070000,
-  "version": "2.7.0",
-  "file": "Gfilmes-Android-2.7.0.apk",
-  "apkUrl": "https://guhflix-tv-download.onrender.com/Gfilmes-Android-2.7.0.apk",
-  "sha256": "f13deef897a80b631423647c591ad0c0a45690d72135dfa3b5b8208b32f7a40c",
-  "bytes": 3244304,
+  "versionCode": 2070002,
+  "version": "2.7.2",
+  "file": "Gfilmes-Android-2.7.2.apk",
+  "apkUrl": "https://guhflix-tv-download.onrender.com/Gfilmes-Android-2.7.2.apk",
+  "sha256": "8f21f2286975f4222cd8c3b0637a731c5e2f68e137219791d3d242d148cb3731",
+  "bytes": 11755077,
   "signerSha256": "fe13bf8634b76a4450b70833a7a6eb6aa01429729371a33dccc75c8eaa72b76b",
-  "notes": "Nova identidade Gfilmes e recebimento de canais ao vivo pelo catálogo do celular.",
+  "notes": "Interface reconstruída conforme as referências Gfilmes: entrada de categorias, destaque, filtros, busca, episódios, lista e canais ao vivo. Dados e programação são exibidos quando disponíveis. Instale por cima sem desinstalar.",
   "mandatory": false,
-  "api": "https://guhflix-marley-api.onrender.com"
+  "api": "https://guhflix-marley-api.onrender.com",
+  "packagedUiMatchesSource": true,
+  "apkIntegrityVerified": true,
+  "physicalTvTested": false
 }

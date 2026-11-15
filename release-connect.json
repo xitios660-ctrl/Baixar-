@@ -1,13 +1,16 @@
 {
   "package": "com.guhflix.tv.connect",
-  "versionCode": 2070001,
-  "version": "2.7.1",
-  "file": "Gfilmes-Connect-TV-2.7.1.apk",
-  "apkUrl": "https://guhflix-tv-download.onrender.com/Gfilmes-Connect-TV-2.7.1.apk",
-  "sha256": "ad2ea3d0fbcaf2bd0af4825635801e654d66a75ec27e96dfaa26b1aac233ca30",
-  "bytes": 5076050,
+  "versionCode": 2070002,
+  "version": "2.7.2",
+  "file": "Gfilmes-Connect-TV-2.7.2.apk",
+  "apkUrl": "https://guhflix-tv-download.onrender.com/Gfilmes-Connect-TV-2.7.2.apk",
+  "sha256": "35e588d0629330c1176a60722c79bc80c90395a04d7769525bb5344b570b2444",
+  "bytes": 11755178,
   "signerSha256": "fe13bf8634b76a4450b70833a7a6eb6aa01429729371a33dccc75c8eaa72b76b",
-  "notes": "Nova navegação horizontal com sublinhado, destaque maior, filtros de filmes/séries/animes, página de canais ao vivo e novo banner Gfilmes. Programação depende dos dados disponíveis; reprodução depende da fonte e da TV.",
+  "notes": "Interface reconstruída conforme as referências Gfilmes: entrada de categorias, destaque, filtros, busca, episódios, lista e canais ao vivo. Dados e programação são exibidos quando disponíveis. Instale por cima sem desinstalar.",
   "mandatory": false,
-  "api": "https://guhflix-marley-api.onrender.com"
+  "api": "https://guhflix-marley-api.onrender.com",
+  "packagedUiMatchesSource": true,
+  "apkIntegrityVerified": true,
+  "physicalTvTested": false
 }
