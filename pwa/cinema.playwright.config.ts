@@ -1,0 +1,2 @@
+import {defineConfig} from '@playwright/test';
+export default defineConfig({testDir:'cinema-browser-test',timeout:60000,workers:1,use:{baseURL:'http://127.0.0.1:4280',viewport:{width:1280,height:720},trace:'retain-on-failure'},webServer:{command:'../api/node_modules/.bin/tsx ../api/test/pwa-server.ts',url:'http://127.0.0.1:4280/health',timeout:90000,reuseExistingServer:false},projects:[{name:'Cinema-Web-Chromium',use:{browserName:'chromium'}},{name:'Cinema-Web-WebKit',use:{browserName:'webkit'}}]});

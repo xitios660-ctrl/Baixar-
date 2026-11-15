@@ -4,6 +4,7 @@ const pages:Record<string,string>={
  'indice.txt':'base:0 https://media.example.invalid/\nA\t1\t1',
  'busca.txt':'A Jornada (2026)\tf\tA\t2026\nA Série\ts\tA\t2025',
  'fichas.txt':'capa:https://image.tmdb.org/t/p/w500\nf\tA Jornada (2026)\t42\t/poster.jpg\tAventura,Drama\ns\tA Série\t43\t/serie.jpg\tDrama',
+ 'redeflix/links-animes.txt':'@Anime de teste\t2026\n1\t1\tdub\t0:anime.m3u8\n1\t2\tdub\t0:anime2.m3u8\n@Sem fontes\t2026\n1\t1\tdub\tinválido',
  'filmes-A.txt':'A Jornada (2026)\tdub=0:movie.m3u8,0:backup.mp4',
  'series-A.txt':'A Série\t2025\t0\t2',
  'series-A-0.txt':'@A Série\t2025\n4\t6\tdub\t0:episode.m3u8\n4\t7\tdub\t0:episode7.m3u8',
@@ -19,6 +20,10 @@ test('authorized catalog parses movie, genres, artwork and season/episode withou
  await assert.rejects(c.resolve(series.id),/temporada/);await assert.rejects(c.resolve(series.id,99,6),/fonte/);
  const denied=new ProviderCatalog('https://catalog.example.invalid/',async()=>new Response('',{status:403}));
  assert.deepEqual(await denied.health(),{available:false,reason:'CATALOG_PROVIDER'});await assert.rejects(denied.list('','',0),/HTTP 403/);
+});
+
+test('anime collection provides actual episodes and keeps provider URLs out of list/detail',async()=>{
+ const c=catalog();const rows=await c.list('','anime',0);assert.equal(rows.total,1);const item=rows.items[0];assert.equal(item.collection,true);assert.equal((await c.list('teste','anime',0)).total,1);assert.equal((await c.detail(item.id)).episodes?.length,2);assert.equal((await c.resolve(item.id,1,2)).urls[0],'https://media.example.invalid/anime2.m3u8');assert(!JSON.stringify(rows).includes('media.example'));assert(!JSON.stringify(await c.detail(item.id)).includes('anime2.m3u8'));assert.equal((await c.list('','series',0)).total,1);
 });
 
 test('PWA cookie, persistent pairing, isolated commands, acknowledgement, reconnect, expiry and revocation',async()=>{
