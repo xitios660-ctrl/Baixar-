@@ -1,18 +1,18 @@
 {
   "package": "com.guhflix.android",
-  "version": "2.7.5",
-  "versionCode": 2070005,
-  "file": "Gfilmes-Android-2.7.5.apk",
-  "bytes": 11756007,
-  "sha256": "261f0095d4e595486fc23ccba9f583cabbddab4d13aa356093e0ea37085c4d65",
+  "version": "2.7.6",
+  "versionCode": 2070006,
+  "file": "Gfilmes-Android-2.7.6.apk",
+  "bytes": 11756667,
+  "sha256": "a99b181021db781b51a601ed8b1af611ae0af9cf41a021b3184e2d3bda121803",
   "signerSha256": "fe13bf8634b76a4450b70833a7a6eb6aa01429729371a33dccc75c8eaa72b76b",
   "packagedUiMatchesSource": true,
   "apkIntegrityVerified": true,
   "physicalTvTested": false,
-  "publicRelease": true,
-  "installationTested": false,
-  "status": "Download manual; teste físico pendente",
-  "apkUrl": "https://guhflix-tv-download.onrender.com/Gfilmes-Android-2.7.5.apk",
+  "apkUrl": "https://guhflix-tv-download.onrender.com/Gfilmes-Android-2.7.6.apk",
   "api": "https://gfilmes-mary-api.onrender.com",
-  "otaPublished": false
+  "status": "Download manual; teste físico 2.7.6 pendente",
+  "publicRelease": true,
+  "otaPublished": false,
+  "notes": "Fundo e destaque acompanham a capa selecionada. Busca restrita à área escolhida: filmes, séries, animes ou canais. Instale por cima do Connect atual sem desinstalar."
 }
