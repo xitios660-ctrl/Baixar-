@@ -43,3 +43,10 @@ header{gap:0}header .logo{margin-right:42px}.separator{margin-right:42px}nav{gap
 .page-search .more[hidden]{display:none}
 @media(max-width:640px){.page-search .search-results{grid-template-columns:repeat(2,minmax(0,1fr))}.page-search .catalog-selects{flex-direction:row}}
 
+/* Voltar à escolha de Filmes, Séries e Animes, inclusive no controle remoto. */
+.page-library .library-topbar{position:sticky;top:0;z-index:8;display:flex;align-items:center;justify-content:space-between;min-height:53px;padding:7px 8px;margin:0 -7px 4px;border-bottom:1px solid #ffffff28;background:linear-gradient(90deg,#090b0ff7,#151019f0);backdrop-filter:blur(10px)}
+.page-library .library-back{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:7px 17px;border:1px solid #ff355a99;border-radius:8px;background:#3d101dcc;color:#fff;font-size:18px;font-weight:700;white-space:nowrap}
+.page-library .library-back:hover,.page-library .library-back:focus{background:#f3133d;border-color:#ff748d;outline:2px solid #ff5570}
+.page-library .library-location{font-size:13px;font-weight:800;letter-spacing:2px;color:#bbb6c2}
+@media(max-width:640px){.page-library .library-back{font-size:16px;padding:7px 12px}.page-library .library-location{font-size:11px;letter-spacing:1px}}
+
