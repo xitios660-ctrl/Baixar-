@@ -21,4 +21,5 @@ header{gap:0}header .logo{margin-right:42px}.separator{margin-right:42px}nav{gap
 .library-heading{padding-top:14px;padding-bottom:6px}.library-heading h1{font-size:30px;margin-top:5px}.library-feature .hero{height:180px}.library-field:nth-child(2){width:110px;min-width:100px}.library-field:nth-child(3){width:160px;min-width:140px}.library-field:nth-child(4){width:100px;min-width:100px}.library-field:nth-child(5){width:180px;min-width:160px}
 .library-toolbar{position:sticky;top:0;z-index:8;background:#0a0c12f5;padding:8px 4px 0;border-radius:8px}
 .library-status{position:sticky;top:110px;height:0;min-height:0;margin:0;padding:0;z-index:7}.library-status-panel{position:absolute;top:0;left:0;right:0;max-width:500px;padding:12px 16px;background:#161922f5;border:1px solid #5e3042;border-radius:8px;box-shadow:0 8px 20px #0008}.library-status[data-state=loading]{pointer-events:none}
+.library-back{float:right;min-height:40px;margin:0 0 8px 16px;border-color:#ff355a99}.library-back:focus{background:#f3133d;outline:2px solid #ff5570}
 

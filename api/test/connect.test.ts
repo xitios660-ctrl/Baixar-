@@ -22,6 +22,20 @@ test('authorized catalog parses movie, genres, artwork and season/episode withou
  assert.deepEqual(await denied.health(),{available:false,reason:'CATALOG_PROVIDER'});await assert.rejects(denied.list('','',0),/HTTP 403/);
 });
 
+test('catalog pagination metadata and combined filters never mix film and series',async()=>{
+ const c=catalog();
+ const movies=await c.list('','movie',0,{genre:'Aventura',year:2026,sort:'year_desc'});
+ assert.equal(movies.total,1);assert.equal(movies.items[0].kind,'movie');assert(movies.categories.includes('Aventura'));assert(movies.years?.includes(2026));
+ assert.equal((await c.list('','series',0,{genre:'Aventura'})).total,0);
+ assert.equal((await c.list('','movie',0,{genre:'Drama',year:2025})).total,0);
+ const series=await c.list('','series',0,{genre:'Drama',year:2025});
+ assert.equal(series.total,1);assert.equal(series.items[0].kind,'series');
+ const sorted=await c.list('','',0,{sort:'title_desc'});
+ assert.deepEqual(sorted.items.map(i=>i.title),['A Série','A Jornada (2026)']);
+ const byYear=await c.list('','',0,{sort:'year_desc'});
+ assert.deepEqual(byYear.items.map(i=>i.year),['2026','2025']);
+});
+
 test('anime collection provides actual episodes and keeps provider URLs out of list/detail',async()=>{
  const c=catalog();const rows=await c.list('','anime',0);assert.equal(rows.total,1);const item=rows.items[0];assert.equal(item.collection,true);assert.equal((await c.list('teste','anime',0)).total,1);assert.equal((await c.detail(item.id)).episodes?.length,2);assert.equal((await c.resolve(item.id,1,2)).urls[0],'https://media.example.invalid/anime2.m3u8');assert(!JSON.stringify(rows).includes('media.example'));assert(!JSON.stringify(await c.detail(item.id)).includes('anime2.m3u8'));assert.equal((await c.list('','series',0)).total,1);
 });
@@ -48,6 +62,11 @@ test('PWA cookie, persistent pairing, isolated commands, acknowledgement, reconn
   assert.equal((await req('POST','/api/connect/pairing/claim',{code:pairing.code},stranger.accessToken,{origin})).statusCode,404);
   const claim=await req('POST','/api/connect/pairing/claim',{code:pairing.code,label:'Sala personalizada'},phone.accessToken,{origin});assert.equal(claim.statusCode,200,claim.body);const link=claim.json().id;assert.equal(claim.json().label,'Sala personalizada');assert.equal((await req('PATCH',`/api/connect/devices/${link}`,{label:'Quarto'},stranger.accessToken,{origin})).statusCode,404);assert.equal((await req('PATCH',`/api/connect/devices/${link}`,{label:'Quarto'},phone.accessToken,{origin})).statusCode,200);assert.equal((await req('GET','/api/connect/devices',undefined,phone.accessToken)).json().devices[0].label,'Quarto');assert.equal((await req('PATCH',`/api/connect/devices/${link}`,{label:' '},phone.accessToken,{origin})).statusCode,400);
   assert.equal((await req('POST','/api/connect/pairing/claim',{code:pairing.code},phone.accessToken,{origin})).statusCode,404);
+  const legacyFiltered=await req('GET','/api/connect/catalog?kind=movie&genre=Aventura&year=2026&sort=title_asc',undefined,phone.accessToken);
+  assert.equal(legacyFiltered.statusCode,200,legacyFiltered.body);assert.equal(legacyFiltered.json().total,1);assert.equal(legacyFiltered.json().items[0].kind,'movie');
+  assert.equal((await req('GET','/api/connect/catalog?kind=series&genre=Aventura',undefined,phone.accessToken)).json().total,0);
+  assert.equal((await req('GET','/api/connect/catalog?sort=invalid',undefined,phone.accessToken)).statusCode,400);
+  assert.equal((await req('GET','/api/connect/catalog?year=20XX',undefined,phone.accessToken)).statusCode,400);
   const items=(await req('GET','/api/connect/catalog',undefined,phone.accessToken)).json().items;const movie=items.find((i:any)=>i.kind==='movie');
   assert.equal((await req('GET',`/api/connect/catalog/${movie.id}/play`,undefined,phone.accessToken)).statusCode,403);
   const requestId=randomUUID(),body={requestId,command:{type:'play',contentId:movie.id}};
