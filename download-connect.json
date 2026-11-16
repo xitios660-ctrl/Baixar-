@@ -1,18 +1,18 @@
 {
   "package": "com.guhflix.tv.connect",
-  "version": "2.7.6",
-  "versionCode": 2070006,
-  "file": "Gfilmes-Connect-TV-2.7.6.apk",
-  "bytes": 11756697,
-  "sha256": "d1920247c0894717051cdd4ad6cdcb6c607fbab551abfa656fd2c27135eb97df",
+  "version": "2.8.0",
+  "versionCode": 2080000,
+  "file": "Gfilmes-Connect-TV-2.8.0.apk",
+  "bytes": 11761489,
+  "sha256": "c101c08d19273dd9faa9f661e0b411df945a0a9a963f22aa593d3fd2d3faeaa5",
   "signerSha256": "fe13bf8634b76a4450b70833a7a6eb6aa01429729371a33dccc75c8eaa72b76b",
   "packagedUiMatchesSource": true,
   "apkIntegrityVerified": true,
   "physicalTvTested": false,
-  "apkUrl": "https://guhflix-tv-download.onrender.com/Gfilmes-Connect-TV-2.7.6.apk",
+  "apkUrl": "https://guhflix-tv-download.onrender.com/Gfilmes-Connect-TV-2.8.0.apk",
   "api": "https://gfilmes-mary-api.onrender.com",
-  "status": "Download manual; teste físico 2.7.6 pendente",
+  "status": "Download manual; teste físico 2.8.0 pendente",
   "publicRelease": true,
   "otaPublished": false,
-  "notes": "Fundo e destaque acompanham a capa selecionada. Busca restrita à área escolhida: filmes, séries, animes ou canais. Instale por cima do Connect atual sem desinstalar."
+  "notes": "Biblioteca completa de filmes e séries com rolagem contínua, capas sob demanda, categorias e busca combinada por tipo, título, gênero, ano e ordem. Instalação por cima do Connect com a mesma assinatura."
 }
