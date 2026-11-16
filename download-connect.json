@@ -1,0 +1,18 @@
+{
+  "package": "com.guhflix.tv.connect",
+  "version": "2.7.5",
+  "versionCode": 2070005,
+  "file": "Gfilmes-Connect-TV-2.7.5.apk",
+  "bytes": 11755892,
+  "sha256": "5b9e6ec102132f8bf531dc8e0158d5a24dc131f7496c6c644ccf53d01d23fd1a",
+  "signerSha256": "fe13bf8634b76a4450b70833a7a6eb6aa01429729371a33dccc75c8eaa72b76b",
+  "packagedUiMatchesSource": true,
+  "apkIntegrityVerified": true,
+  "physicalTvTested": false,
+  "publicRelease": true,
+  "installationTested": false,
+  "status": "Download manual; teste físico pendente",
+  "apkUrl": "https://guhflix-tv-download.onrender.com/Gfilmes-Connect-TV-2.7.5.apk",
+  "api": "https://gfilmes-mary-api.onrender.com",
+  "otaPublished": false
+}

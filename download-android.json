@@ -1,0 +1,18 @@
+{
+  "package": "com.guhflix.android",
+  "version": "2.7.5",
+  "versionCode": 2070005,
+  "file": "Gfilmes-Android-2.7.5.apk",
+  "bytes": 11756007,
+  "sha256": "261f0095d4e595486fc23ccba9f583cabbddab4d13aa356093e0ea37085c4d65",
+  "signerSha256": "fe13bf8634b76a4450b70833a7a6eb6aa01429729371a33dccc75c8eaa72b76b",
+  "packagedUiMatchesSource": true,
+  "apkIntegrityVerified": true,
+  "physicalTvTested": false,
+  "publicRelease": true,
+  "installationTested": false,
+  "status": "Download manual; teste físico pendente",
+  "apkUrl": "https://guhflix-tv-download.onrender.com/Gfilmes-Android-2.7.5.apk",
+  "api": "https://gfilmes-mary-api.onrender.com",
+  "otaPublished": false
+}
