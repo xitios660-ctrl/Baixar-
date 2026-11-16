@@ -26,7 +26,7 @@ async function request(q){switch(q.op){
  case 'home':return api('/api/connect/home');
  case 'catalog':return api('/api/connect/catalog?'+new URLSearchParams({kind:q.kind||'',q:q.q||'',offset:String(q.offset||0)}));
  case 'anime':return api('/api/connect/catalog?'+new URLSearchParams({kind:'anime',q:q.q||'',offset:String(q.offset||0)}));
- case 'live':return api('/api/connect/live?offset='+(q.offset||0));
+ case 'live':return api('/api/connect/live?'+new URLSearchParams({q:q.q||'',offset:String(q.offset||0)}));
  case 'detail':return api((q.live?'/api/connect/live/':'/api/connect/catalog/')+encodeURIComponent(q.id));
  case 'me':return {username:user.username,version:'Web · Cinema'};
  case 'history':return history();

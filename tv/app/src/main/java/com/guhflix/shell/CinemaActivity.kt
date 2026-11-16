@@ -44,8 +44,8 @@ class CinemaActivity:Activity(){
   for(i in 0 until stored.length()){val item=stored.getJSONObject(i);val current=records.firstOrNull{clean(it.titulo).equals(clean(item.optString("title")),true)};if(current!=null&&!current.terminado){item.put("progress",current.fracao);if(current.serie)item.put("season",current.temporada).put("episode",current.episodio);out.put(item)}}
   return JSONObject().put("items",out)
  }
- private fun livePage(offset:Int):JSONObject {
-  val data=CloudRemote.liveCatalog(offset)
+ private fun livePage(offset:Int,query:String=""):JSONObject {
+  val data=Gate.request(this,"GET","/api/connect/live?offset=${offset.coerceAtLeast(0)}&q=${android.net.Uri.encode(query.take(120))}",null,true)
   kotlinx.coroutines.runBlocking{br.com.saimo.tv.Epg.carregarCache(this@CinemaActivity)}
   fun program(p:br.com.saimo.tv.Programme)=JSONObject().put("title",p.title.take(240)).put("start",p.start).put("stop",p.stop).put("poster",p.poster?:"").put("description",p.description?.take(1000)?:"")
   val items=data.getJSONArray("items")
@@ -93,7 +93,7 @@ class CinemaActivity:Activity(){
       "anime"->animePage(p.optString("q").take(120),p.optInt("offset").coerceIn(0,100000))
       "home"->Gate.request(this@CinemaActivity,"GET","/api/connect/home",null,true)
       "catalog"->{val kind=p.optString("kind");require(kind in listOf("","movie","series"));val q=java.net.URLEncoder.encode(p.optString("q").take(120),"UTF-8");val offset=p.optInt("offset").coerceIn(0,100000);Gate.request(this@CinemaActivity,"GET","/api/connect/catalog?kind=$kind&q=$q&offset=$offset",null,true)}
-      "live"->livePage(p.optInt("offset").coerceIn(0,100000))
+      "live"->livePage(p.optInt("offset").coerceIn(0,100000),p.optString("q"))
       "detail"->{val content=p.getString("id");require(content.matches(Regex("[a-f0-9]{32}")));if(anime.containsKey(content))animeDetail(content) else Gate.request(this@CinemaActivity,"GET",(if(p.optBoolean("live"))"/api/connect/live/" else "/api/connect/catalog/")+content,null,true)}
       "me"->Gate.request(this@CinemaActivity,"GET","/api/auth/me",null,true).let{JSONObject().put("username",it.optString("username")).put("version",BuildConfig.VERSION_NAME)}
       "pair"->Gate.request(this@CinemaActivity,"POST","/api/connect/pairing",JSONObject(),true)
