@@ -15,5 +15,5 @@ assert signers==[expected],'Signing certificate differs from the selected releas
 badging=subprocess.check_output([args.aapt,'dump','badging',str(args.apk)],text=True)
 m=re.search(r"package: name='([^']+)' versionCode='(\d+)' versionName='([^']+)'",badging)
 assert m and m[1]==args.package_name and int(m[2])>(2050000 if args.package_name.endswith('.connect') else 2040002),'Package/version incompatible with installed app'
-value={'package':m[1],'versionCode':int(m[2]),'version':m[3],'file':args.apk.name,'apkUrl':args.url,'sha256':hashlib.file_digest(args.apk.open('rb'),'sha256').hexdigest(),'bytes':args.apk.stat().st_size,'signerSha256':expected,'notes':pathlib.Path(args.notes).read_text(),'mandatory':args.mandatory,'api':'https://guhflix-marley-api.onrender.com','admin':'https://guhflix-marley-admin.onrender.com'}
+value={'package':m[1],'versionCode':int(m[2]),'version':m[3],'file':args.apk.name,'apkUrl':args.url,'sha256':hashlib.file_digest(args.apk.open('rb'),'sha256').hexdigest(),'bytes':args.apk.stat().st_size,'signerSha256':expected,'notes':pathlib.Path(args.notes).read_text(),'mandatory':args.mandatory,'api':'https://gfilmes-mary-api.onrender.com','admin':'https://guhflix-marley-admin.onrender.com'}
 args.output.write_text(json.dumps(value,ensure_ascii=False,indent=2)+'\n');print('Verified signed APK; manifest written:',args.output)
