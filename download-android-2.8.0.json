@@ -1,0 +1,18 @@
+{
+  "package": "com.guhflix.android",
+  "version": "2.8.0",
+  "versionCode": 2080000,
+  "file": "Gfilmes-Android-2.8.0.apk",
+  "bytes": 11761552,
+  "sha256": "65ec065ae430d581c9d109ed0481c4dea8382387c0da0e2d3a0ae80213f471b6",
+  "signerSha256": "fe13bf8634b76a4450b70833a7a6eb6aa01429729371a33dccc75c8eaa72b76b",
+  "packagedUiMatchesSource": true,
+  "apkIntegrityVerified": true,
+  "physicalTvTested": false,
+  "apkUrl": "https://guhflix-tv-download.onrender.com/Gfilmes-Android-2.8.0.apk",
+  "api": "https://gfilmes-mary-api.onrender.com",
+  "status": "Download manual; teste físico 2.8.0 pendente",
+  "publicRelease": true,
+  "otaPublished": false,
+  "notes": "Biblioteca completa de filmes e séries com rolagem contínua, capas sob demanda e busca combinada por tipo, título, gênero, ano e ordem."
+}
