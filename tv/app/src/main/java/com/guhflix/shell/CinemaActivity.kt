@@ -60,7 +60,7 @@ class CinemaActivity:Activity(){
   br.com.saimo.tv.Generos.carregar(this@CinemaActivity)
   val all=br.com.saimo.tv.Vod.colecao(this@CinemaActivity,"animes").filter{it.titulo.contains(q,true)}
   val items=org.json.JSONArray()
-  for(c in all.drop(offset).take(30)){val id=java.security.MessageDigest.getInstance("MD5").digest(("animes|"+c.titulo+"|"+c.ano).toByteArray()).joinToString(""){"%02x".format(it)};val a=br.com.saimo.tv.Alvo(c.titulo,true,"",c.ano,"animes",c.tmdbId.toIntOrNull()?:0);anime[id]=a;items.put(JSONObject().put("id",id).put("title",c.titulo).put("year",c.ano).put("kind","series").put("collection",true).put("genres",org.json.JSONArray().put("Animes")).put("poster",br.com.saimo.tv.Generos.capa(c.titulo,true)?:""))}
+  for(c in all.drop(offset).take(60)){val id=java.security.MessageDigest.getInstance("MD5").digest(("animes|"+c.titulo+"|"+c.ano).toByteArray()).joinToString(""){"%02x".format(it)};val a=br.com.saimo.tv.Alvo(c.titulo,true,"",c.ano,"animes",c.tmdbId.toIntOrNull()?:0);anime[id]=a;items.put(JSONObject().put("id",id).put("title",c.titulo).put("year",c.ano).put("kind","series").put("collection",true).put("genres",org.json.JSONArray().put("Animes")).put("poster",br.com.saimo.tv.Generos.capa(c.titulo,true)?:""))}
   JSONObject().put("items",items).put("total",all.size)
  }
  private fun animeDetail(id:String):JSONObject=kotlinx.coroutines.runBlocking {
@@ -92,7 +92,14 @@ class CinemaActivity:Activity(){
      val data=when(op){
       "anime"->animePage(p.optString("q").take(120),p.optInt("offset").coerceIn(0,100000))
       "home"->Gate.request(this@CinemaActivity,"GET","/api/connect/home",null,true)
-      "catalog"->{val kind=p.optString("kind");require(kind in listOf("","movie","series"));val q=java.net.URLEncoder.encode(p.optString("q").take(120),"UTF-8");val offset=p.optInt("offset").coerceIn(0,100000);Gate.request(this@CinemaActivity,"GET","/api/connect/catalog?kind=$kind&q=$q&offset=$offset",null,true)}
+      "catalog"->{
+       val kind=p.optString("kind");require(kind in listOf("","movie","series"))
+       val sort=p.optString("sort");require(sort in listOf("","title_asc","title_desc","year_desc","year_asc"))
+       val year=p.optString("year");require(year.isEmpty()||year.matches(Regex("[12][0-9]{3}")))
+       val params=linkedMapOf("kind" to kind,"q" to p.optString("q").take(120),"offset" to p.optInt("offset").coerceIn(0,100000).toString(),"genre" to p.optString("genre").take(100),"year" to year,"sort" to sort,"titleOnly" to p.optBoolean("titleOnly").toString())
+       val query=params.filterValues{it.isNotEmpty()}.entries.joinToString("&"){android.net.Uri.encode(it.key)+"="+android.net.Uri.encode(it.value)}
+       Gate.request(this@CinemaActivity,"GET","/api/connect/catalog?$query",null,true)
+      }
       "live"->livePage(p.optInt("offset").coerceIn(0,100000),p.optString("q"))
       "detail"->{val content=p.getString("id");require(content.matches(Regex("[a-f0-9]{32}")));if(anime.containsKey(content))animeDetail(content) else Gate.request(this@CinemaActivity,"GET",(if(p.optBoolean("live"))"/api/connect/live/" else "/api/connect/catalog/")+content,null,true)}
       "me"->Gate.request(this@CinemaActivity,"GET","/api/auth/me",null,true).let{JSONObject().put("username",it.optString("username")).put("version",BuildConfig.VERSION_NAME)}

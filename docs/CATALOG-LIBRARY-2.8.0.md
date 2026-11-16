@@ -1,0 +1,15 @@
+# Biblioteca completa e filtros — 2.8.0
+
+A navegação principal do Connect e Android entra em CinemaActivity, que usa assets/gfilmes/cinema.html. MenuGlobal também encaminha a busca principal para essa Activity. GradeActivity e BuscaActivity foram inspecionadas e permanecem como telas legadas/avançadas; não são a fonte da interface principal deste pacote. O catálogo web é gerado da mesma apresentação por scripts/build-cinema-web.py.
+
+Filmes e Séries têm páginas exclusivas. O tipo não é substituído pelo gênero: título, tipo, gênero, ano e ordem são parâmetros separados. Os filtros preservam o tipo selecionado, inclusive ao limpar os outros campos. A seleção explícita de outro tipo na lupa muda o contexto. Títulos sem pôster continuam acessíveis com seu nome.
+
+API /api/connect/catalog mantém q/kind/offset antigos e aceita genre, year, sort (title_asc, title_desc, year_desc, year_asc) e titleOnly=true. Clientes antigos mantêm a busca legada por título/gênero; o novo cliente usa pesquisa por título e um filtro separado de gênero. Retorna até 60 itens, total, categorias e anos do tipo selecionado, pageSize, nextOffset e availableSorts. Ordenações têm desempate por título/ID; anos ausentes ficam por último. Tipos de entrada inválidos são rejeitados.
+
+CatalogQuery guarda até 12 consultas filtradas/ordenadas por snapshot do índice. Metadados e fontes vêm do catálogo já autorizado; não há novas fontes ou títulos artificiais em produção. O índice não tem ranking completo de popularidade nem datas completas de estreia. Por isso não há uma classificação de popularidade inventada; Lançamentos (ano) usa o ano fornecido. Os gêneros e anos oferecidos são derivados dos dados existentes.
+
+A grade possui rolagem contínua sem botão de mais títulos, janela de capas próxima da tela, até oito páginas de metadados e no máximo duas solicitações simultâneas por grade. Imagens usam carregamento preguiçoso quando suportado; mesmo sem IntersectionObserver/replaceChildren a quantidade de elementos de capas é limitada pela janela. As setas atravessam páginas e o botão Voltar dos detalhes retorna à capa/posição anterior. O teclado virtual e físico são preservados. Os filtros ficam acessíveis ao rolar. Falha de rede apresenta um aviso visível e repetição explícita, sem ciclo ilimitado.
+
+Autenticação, clientes, pagamentos, assinaturas, limite de telas e credenciais não foram alterados. Os únicos endereços extras em testes são IPs de documentação para isolar os simuladores de TV dos navegadores no rate limiter da fixture; a política de produção permanece intacta.
+
+Validação: testes combinados de filtros, ordenação e paginação da API; catálogo sintético de 30 mil registros explicitamente restrito a teste; interfaces em Chromium/WebKit e apresentação empacotada em ambos, com milhares de títulos de fixture e DOM/cache limitados. Métricas são de ambiente de teste, não da TCL. Compilação e assinatura do pacote não equivalem a instalação e reprodução da versão correspondente em TV física. Resultados finais constam no relatório da entrega.

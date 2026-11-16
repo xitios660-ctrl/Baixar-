@@ -22,10 +22,11 @@ async function history(){const rows=stored(historyKey(),[]);return {items:rows.m
 async function localPlay(p){const item=await api((p.live?'/api/connect/live/':'/api/connect/catalog/')+encodeURIComponent(p.id));active={...item,...p};remember(active);await player.play(p.id,p.season,p.episode,p.live);}
 async function command(command){if(!selected.length)throw Error('Selecione uma televisão em Conta e dispositivos.');await Promise.all(selected.map(id=>api('/api/connect/devices/'+encodeURIComponent(id)+'/commands',{method:'POST',body:{requestId:crypto.randomUUID(),command}})));message('Comando enviado. A TV precisa estar conectada para recebê-lo.')}
 async function play(raw){try{const p=JSON.parse(raw);if(selected.length)await command({type:'play',contentId:p.id,...(p.live?{live:true}:{}),...(p.episode!==undefined?{season:p.season,episode:p.episode}:{})});else await localPlay(p)}catch(e){message(e.message)}}
+function catalogParams(q,kind){const params=new URLSearchParams({kind:kind??q.kind??'',q:q.q||'',offset:String(q.offset||0)});for(const key of ['genre','year','sort'])if(q[key]!==undefined&&q[key]!=='')params.set(key,String(q[key]));if(q.titleOnly===true)params.set('titleOnly','true');return params}
 async function request(q){switch(q.op){
  case 'home':return api('/api/connect/home');
- case 'catalog':return api('/api/connect/catalog?'+new URLSearchParams({kind:q.kind||'',q:q.q||'',offset:String(q.offset||0)}));
- case 'anime':return api('/api/connect/catalog?'+new URLSearchParams({kind:'anime',q:q.q||'',offset:String(q.offset||0)}));
+ case 'catalog':return api('/api/connect/catalog?'+catalogParams(q));
+ case 'anime':return api('/api/connect/catalog?'+catalogParams(q,'anime'));
  case 'live':return api('/api/connect/live?'+new URLSearchParams({q:q.q||'',offset:String(q.offset||0)}));
  case 'detail':return api((q.live?'/api/connect/live/':'/api/connect/catalog/')+encodeURIComponent(q.id));
  case 'me':return {username:user.username,version:'Web · Cinema'};

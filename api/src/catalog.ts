@@ -1,3 +1,4 @@
+import {CatalogQuery,type CatalogFilters,type CatalogPage} from './catalog-query.js';
 import {recommend,type Related} from './recommendations.js';
 import {createHash} from 'node:crypto';
 import {Fault} from './errors.js';
@@ -5,7 +6,7 @@ import {Metadata} from './metadata.js';
 
 export type CatalogItem={id:string;title:string;kind:'movie'|'series';letter:string;year:string;collection?:boolean;poster?:string;backdrop?:string;synopsis?:string;genres:string[];tmdbId?:number;seasons?:number[];episodes?:{season:number;episode:number;title?:string}[]};
 export type Playable={item:CatalogItem;urls:string[];season?:number;episode?:number};
-export interface Catalog { list(q:string,kind:string,offset:number):Promise<{items:CatalogItem[];total:number;categories:string[]}>; detail(id:string):Promise<CatalogItem>; resolve(id:string,season?:number,episode?:number):Promise<Playable>; health():Promise<{available:boolean;reason?:string}>; home?():Promise<{featured:CatalogItem|null;rows:{title:string;items:CatalogItem[]}[]}>; fileText?(name:string):Promise<string>; related?(id:string):Promise<Related>; byTmdb?(kind:string,id:number):Promise<CatalogItem|undefined> }
+export interface Catalog { list(q:string,kind:string,offset:number,filters?:CatalogFilters):Promise<CatalogPage>; detail(id:string):Promise<CatalogItem>; resolve(id:string,season?:number,episode?:number):Promise<Playable>; health():Promise<{available:boolean;reason?:string}>; home?():Promise<{featured:CatalogItem|null;rows:{title:string;items:CatalogItem[]}[]}>; fileText?(name:string):Promise<string>; related?(id:string):Promise<Related>; byTmdb?(kind:string,id:number):Promise<CatalogItem|undefined> }
 const idFor=(kind:string,title:string,letter:string,year:string)=>createHash('sha256').update([kind,title,letter,year].join('\0')).digest('hex').slice(0,32);
 const http=(s:string)=>s.length<=8192&&/^https?:\/\//i.test(s)&&!new URL(s).username&&!new URL(s).password;
 const fold=(s:string)=>s.normalize('NFD').replace(/\p{Diacritic}/gu,'').toLocaleLowerCase('pt-BR');
@@ -13,6 +14,8 @@ export class ProviderCatalog implements Catalog {
   private files=new Map<string,{expires:number;text:string}>();
   private inFlight=new Map<string,Promise<string>>();
   private items=new Map<string,CatalogItem>();
+  private queryIndex:CatalogQuery|undefined;
+  private animeQueryIndex:CatalogQuery|undefined;
   private bases:string[]=[];
   private validUntil=0;
   private loading:Promise<void>|undefined;
@@ -54,7 +57,7 @@ export class ProviderCatalog implements Catalog {
     if(!items.size||!bases.some(Boolean))throw new Fault(503,'CATALOG_EMPTY','O catálogo autorizado não contém títulos ou bases de vídeo válidas');
     // Optional artwork/genres. A failure must not discard playable titles.
     try{const ficha=await this.file('fichas.txt');let artwork='';const byTitle=new Map([...items.values()].map(i=>[(i.kind==='series'?'s':'f')+'|'+i.title,i]));for(const line of ficha.split(/\r?\n/)){if(line.startsWith('capa:')){artwork=line.slice(5).trim();continue}const [type,title,tmdb,poster,genres]=line.split('\t');const item=byTitle.get(type+'|'+title);if(item){if(/^\d+$/.test(tmdb))item.tmdbId=Number(tmdb);item.genres=genres?.split(',').map(s=>s.trim()).filter(Boolean)??[];if(poster&&http(artwork+poster))item.poster=artwork+poster}}}catch{}
-    this.bases=bases;this.items=items;this.validUntil=Date.now()+5*60000;
+    this.bases=bases;this.items=items;this.queryIndex=new CatalogQuery([...items.values()]);this.validUntil=Date.now()+5*60000;
   }
   private animeItems=new Map<string,{item:CatalogItem;episodes:{season:number;episode:number;urls:string[]}[]}>();
   private animeUntil=0;
@@ -70,11 +73,14 @@ export class ProviderCatalog implements Catalog {
         if(!current)continue;const [s,e,,links]=line.split('\t'),season=Number(s),episode=Number(e);if(!links||!Number.isInteger(season)||season<0||!Number.isInteger(episode)||episode<1)continue;const urls=this.urls(links);if(!urls.length)continue;const old=current.episodes.find(v=>v.season===season&&v.episode===episode);if(old)old.urls.push(...urls);else current.episodes.push({season,episode,urls});
       }
       try{let base='';const byTitle=new Map([...entries.values()].map(v=>[v.item.title,v.item]));for(const line of (await this.file('fichas.txt')).split(/\r?\n/)){if(line.startsWith('capa:')){base=line.slice(5).trim();continue}const [,title,,poster]=line.split('\t');const item=byTitle.get(title);if(item&&poster&&http(base+poster))item.poster=base+poster}}catch{}
-      this.animeItems=new Map([...entries].filter(([,v])=>v.episodes.length));this.animeUntil=Date.now()+300000;
+      this.animeItems=new Map([...entries].filter(([,v])=>v.episodes.length));this.animeQueryIndex=new CatalogQuery([...this.animeItems.values()].map(v=>v.item));this.animeUntil=Date.now()+300000;
     })();try{await this.animeLoading}finally{this.animeLoading=undefined}
   }
   async health(){try{await this.load();return {available:true}}catch(e){return {available:false,reason:e instanceof Fault?e.code:'CATALOG_UNAVAILABLE'}}}
-  async list(q:string,kind:string,offset:number){if(kind==='anime'){await this.loadAnime();const items=[...this.animeItems.values()].map(v=>v.item).filter(i=>!q||fold(i.title).includes(fold(q)));return {items:items.slice(offset,offset+60),total:items.length,categories:['Animes']}}await this.load();const needle=fold(q);const all=[...this.items.values()];const filtered=all.filter(i=>(!kind||i.kind===kind)&&(!needle||fold(i.title).includes(needle)||i.genres.some(g=>fold(g).includes(needle))));return {items:filtered.slice(offset,offset+60),total:filtered.length,categories:[...new Set(all.flatMap(i=>i.genres))].slice(0,60)}}
+  async list(q:string,kind:string,offset:number,filters:CatalogFilters={}){
+    if(kind==='anime'){await this.loadAnime();return this.animeQueryIndex!.page(q,kind,offset,filters)}
+    await this.load();return this.queryIndex!.page(q,kind,offset,filters);
+  }
   private async item(id:string){await this.load();let item=this.items.get(id);if(!item){await this.loadAnime().catch(()=>{});item=this.animeItems.get(id)?.item}if(!item)throw new Fault(404,'TITLE_NOT_FOUND','Título não encontrado no catálogo autorizado');return item}
   private urls(value:string){return value.split(',').map(v=>{const m=/^(\d+):(.*)$/.exec(v);return m&&this.bases[+m[1]]?this.bases[+m[1]]+m[2]:v}).filter(v=>{try{return http(v)}catch{return false}}).slice(0,16)}
   private letter(i:CatalogItem){return i.letter.replace(/%23/gi,'#')}
