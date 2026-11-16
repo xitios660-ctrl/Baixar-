@@ -16,3 +16,30 @@ header{gap:0}header .logo{margin-right:42px}.separator{margin-right:42px}nav{gap
 .hero h1{text-transform:uppercase}.live-hero h1{text-transform:none}.primary{min-width:185px;justify-content:center}.secondary{padding-left:20px;padding-right:20px}.intro{padding-top:55px}.intro h1{margin-top:16px;line-height:1.04}.intro .eyebrow{line-height:1.2;margin-bottom:0}.universes{margin-left:-10px;margin-right:-22px}.universe{display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-end;padding:20px 35px;height:197px}.universe strong{line-height:1.05}.universe small{font-size:21px;line-height:1.25}.universe-icon{position:absolute;top:50px;left:35px;width:44px;height:44px;border-radius:50%;background:#f2f2f0;color:#0b1017;display:flex;align-items:center;justify-content:center}.universe-icon svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2}.universe:nth-child(3) .universe-icon{background:#ffe6a3}.universe:focus{border:2px solid #fa123e;outline:0;box-shadow:0 0 24px #f6073766}.catalog-count{position:absolute;right:14px;top:225px;margin:0;font-size:12px;max-width:280px;text-align:right;color:#b4b4bb}
 .search-scope{font-size:16px!important;color:#bbb!important;margin:12px 0 0!important}.search-content{padding-top:18px}
 
+/* Catálogo completo com filtros por gênero, ano e rolagem automática */
+.page-library .catalog-count{position:static;max-width:none;text-align:left;margin:9px 5px 15px}
+.library-tools{padding:5px 5px 15px;background:#101116d0}
+.genre-chips{min-height:55px;height:auto;padding:7px 0}
+.genre-chips .chip{font-size:15px;padding:8px 18px}
+.catalog-selects{display:flex;align-items:end;flex-wrap:wrap;gap:12px;margin:10px 0}
+.catalog-control{display:flex;flex-direction:column;gap:6px;font-size:13px;color:#c4c5d0;min-width:150px}
+.catalog-control select{font-size:15px;color:#fff;background:#191c25;border:1px solid #60616c;border-radius:8px;height:42px;padding:7px 11px}
+.catalog-control select option{color:#fff;background:#171921}
+.page-library .catalog-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:17px;padding:6px 3px 22px}
+.page-library .catalog-grid .poster{height:240px;min-width:0;width:100%;flex:none;content-visibility:auto;contain-intrinsic-size:165px 240px}
+.page-library .more{display:block;min-width:230px;margin:20px auto 45px;background:#161820;border:1px solid #595963}
+.page-library .more[hidden]{display:none}
+@media(max-width:640px){.page-library .catalog-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.page-library .catalog-grid .poster{height:220px}.catalog-control{min-width:128px;flex:1}.catalog-control select{max-width:100%;font-size:14px}}
+
+/* Busca na TV e no navegador: tipo, gênero, ano e ordenação combinados */
+.page-search .advanced-search{margin:0 0 18px;padding:7px 0}
+.page-search .catalog-selects{gap:9px}
+.page-search .reset-filters{font-size:14px;height:42px;padding:7px 15px}
+.page-search .search-results{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));align-items:start;width:100%}
+.page-search .search-results .poster{width:100%;flex-basis:auto;height:205px}
+.page-search .search-count{font-size:15px;color:#c7c7cb;margin:18px 5px}
+.page-search .catalog-control[hidden]{display:none}
+.page-search .more{display:block;min-width:230px;margin:20px auto 45px;background:#161820;border:1px solid #595963}
+.page-search .more[hidden]{display:none}
+@media(max-width:640px){.page-search .search-results{grid-template-columns:repeat(2,minmax(0,1fr))}.page-search .catalog-selects{flex-direction:row}}
+

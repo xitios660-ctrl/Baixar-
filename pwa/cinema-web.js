@@ -24,7 +24,7 @@ async function command(command){if(!selected.length)throw Error('Selecione uma t
 async function play(raw){try{const p=JSON.parse(raw);if(selected.length)await command({type:'play',contentId:p.id,...(p.live?{live:true}:{}),...(p.episode!==undefined?{season:p.season,episode:p.episode}:{})});else await localPlay(p)}catch(e){message(e.message)}}
 async function request(q){switch(q.op){
  case 'home':return api('/api/connect/home');
- case 'catalog':return api('/api/connect/catalog?'+new URLSearchParams({kind:q.kind||'',q:q.q||'',offset:String(q.offset||0)}));
+ case 'catalog':return api('/api/connect/catalog?'+new URLSearchParams({kind:q.kind||'',q:q.q||'',offset:String(q.offset||0),genre:q.genre||'',year:q.year||'',sort:q.sort||''}));
  case 'anime':return api('/api/connect/catalog?'+new URLSearchParams({kind:'anime',q:q.q||'',offset:String(q.offset||0)}));
  case 'live':return api('/api/connect/live?'+new URLSearchParams({q:q.q||'',offset:String(q.offset||0)}));
  case 'detail':return api((q.live?'/api/connect/live/':'/api/connect/catalog/')+encodeURIComponent(q.id));

@@ -92,7 +92,7 @@ class CinemaActivity:Activity(){
      val data=when(op){
       "anime"->animePage(p.optString("q").take(120),p.optInt("offset").coerceIn(0,100000))
       "home"->Gate.request(this@CinemaActivity,"GET","/api/connect/home",null,true)
-      "catalog"->{val kind=p.optString("kind");require(kind in listOf("","movie","series"));val q=java.net.URLEncoder.encode(p.optString("q").take(120),"UTF-8");val offset=p.optInt("offset").coerceIn(0,100000);Gate.request(this@CinemaActivity,"GET","/api/connect/catalog?kind=$kind&q=$q&offset=$offset",null,true)}
+      "catalog"->{val kind=p.optString("kind");require(kind in listOf("","movie","series"));val q=java.net.URLEncoder.encode(p.optString("q").take(120),"UTF-8");val offset=p.optInt("offset").coerceIn(0,100000);val genre=java.net.URLEncoder.encode(p.optString("genre").take(80),"UTF-8");val year=p.optString("year").takeIf{it.matches(Regex("\\d{4}"))}.orEmpty();val sort=p.optString("sort").takeIf{it in listOf("title_asc","title_desc","year_asc","year_desc")}.orEmpty();Gate.request(this@CinemaActivity,"GET","/api/connect/catalog?kind=$kind&q=$q&offset=$offset&genre=$genre&year=$year&sort=$sort",null,true)}
       "live"->livePage(p.optInt("offset").coerceIn(0,100000),p.optString("q"))
       "detail"->{val content=p.getString("id");require(content.matches(Regex("[a-f0-9]{32}")));if(anime.containsKey(content))animeDetail(content) else Gate.request(this@CinemaActivity,"GET",(if(p.optBoolean("live"))"/api/connect/live/" else "/api/connect/catalog/")+content,null,true)}
       "me"->Gate.request(this@CinemaActivity,"GET","/api/auth/me",null,true).let{JSONObject().put("username",it.optString("username")).put("version",BuildConfig.VERSION_NAME)}

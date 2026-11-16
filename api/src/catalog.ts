@@ -5,7 +5,8 @@ import {Metadata} from './metadata.js';
 
 export type CatalogItem={id:string;title:string;kind:'movie'|'series';letter:string;year:string;collection?:boolean;poster?:string;backdrop?:string;synopsis?:string;genres:string[];tmdbId?:number;seasons?:number[];episodes?:{season:number;episode:number;title?:string}[]};
 export type Playable={item:CatalogItem;urls:string[];season?:number;episode?:number};
-export interface Catalog { list(q:string,kind:string,offset:number):Promise<{items:CatalogItem[];total:number;categories:string[]}>; detail(id:string):Promise<CatalogItem>; resolve(id:string,season?:number,episode?:number):Promise<Playable>; health():Promise<{available:boolean;reason?:string}>; home?():Promise<{featured:CatalogItem|null;rows:{title:string;items:CatalogItem[]}[]}>; fileText?(name:string):Promise<string>; related?(id:string):Promise<Related>; byTmdb?(kind:string,id:number):Promise<CatalogItem|undefined> }
+export type CatalogFilters={genre?:string;year?:string;sort?:'title_asc'|'title_desc'|'year_asc'|'year_desc'};
+export interface Catalog { list(q:string,kind:string,offset:number,filters?:CatalogFilters):Promise<{items:CatalogItem[];total:number;categories:string[];years?:string[]}>; detail(id:string):Promise<CatalogItem>; resolve(id:string,season?:number,episode?:number):Promise<Playable>; health():Promise<{available:boolean;reason?:string}>; home?():Promise<{featured:CatalogItem|null;rows:{title:string;items:CatalogItem[]}[]}>; fileText?(name:string):Promise<string>; related?(id:string):Promise<Related>; byTmdb?(kind:string,id:number):Promise<CatalogItem|undefined> }
 const idFor=(kind:string,title:string,letter:string,year:string)=>createHash('sha256').update([kind,title,letter,year].join('\0')).digest('hex').slice(0,32);
 const http=(s:string)=>s.length<=8192&&/^https?:\/\//i.test(s)&&!new URL(s).username&&!new URL(s).password;
 const fold=(s:string)=>s.normalize('NFD').replace(/\p{Diacritic}/gu,'').toLocaleLowerCase('pt-BR');
@@ -74,7 +75,38 @@ export class ProviderCatalog implements Catalog {
     })();try{await this.animeLoading}finally{this.animeLoading=undefined}
   }
   async health(){try{await this.load();return {available:true}}catch(e){return {available:false,reason:e instanceof Fault?e.code:'CATALOG_UNAVAILABLE'}}}
-  async list(q:string,kind:string,offset:number){if(kind==='anime'){await this.loadAnime();const items=[...this.animeItems.values()].map(v=>v.item).filter(i=>!q||fold(i.title).includes(fold(q)));return {items:items.slice(offset,offset+60),total:items.length,categories:['Animes']}}await this.load();const needle=fold(q);const all=[...this.items.values()];const filtered=all.filter(i=>(!kind||i.kind===kind)&&(!needle||fold(i.title).includes(needle)||i.genres.some(g=>fold(g).includes(needle))));return {items:filtered.slice(offset,offset+60),total:filtered.length,categories:[...new Set(all.flatMap(i=>i.genres))].slice(0,60)}}
+  async list(q:string,kind:string,offset:number,filters:CatalogFilters={}){
+    if(kind==='anime'){
+      await this.loadAnime();
+      const all=[...this.animeItems.values()].map(v=>v.item);
+      const entries=all.filter(i=>(!q||fold(i.title).includes(fold(q)))&&(!filters.year||i.year===filters.year));
+      this.sortEntries(entries,filters.sort);
+      return {items:entries.slice(offset,offset+60),total:entries.length,categories:['Animes'],years:this.availableYears(all)};
+    }
+    await this.load();
+    const all=[...this.items.values()];
+    const byKind=kind?all.filter(i=>i.kind===kind):all;
+    const needle=fold(q);
+    const genre=fold(filters.genre||'');
+    const filtered=byKind.filter(i=>
+      (!needle||fold(i.title).includes(needle)||i.genres.some(g=>fold(g).includes(needle)))&&
+      (!genre||i.genres.some(g=>fold(g)===genre))&&
+      (!filters.year||i.year===filters.year)
+    );
+    this.sortEntries(filtered,filters.sort);
+    const categories=[...new Set(byKind.flatMap(i=>i.genres).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+    return {items:filtered.slice(offset,offset+60),total:filtered.length,categories,years:this.availableYears(byKind)};
+  }
+  private availableYears(items:CatalogItem[]):string[]{
+    return [...new Set(items.map(i=>i.year).filter(y=>/^\d{4}$/.test(y)))].sort((a,b)=>b.localeCompare(a));
+  }
+  private sortEntries(items:CatalogItem[],sort:CatalogFilters['sort']){
+    if(!sort)return;
+    const title=(a:CatalogItem,b:CatalogItem)=>a.title.localeCompare(b.title,'pt-BR',{numeric:true,sensitivity:'base'});
+    items.sort((a,b)=>sort==='title_asc'?title(a,b):sort==='title_desc'?title(b,a):
+      sort==='year_asc'?(Number(a.year)||9999)-(Number(b.year)||9999)||title(a,b):
+      (Number(b.year)||0)-(Number(a.year)||0)||title(a,b));
+  }
   private async item(id:string){await this.load();let item=this.items.get(id);if(!item){await this.loadAnime().catch(()=>{});item=this.animeItems.get(id)?.item}if(!item)throw new Fault(404,'TITLE_NOT_FOUND','Título não encontrado no catálogo autorizado');return item}
   private urls(value:string){return value.split(',').map(v=>{const m=/^(\d+):(.*)$/.exec(v);return m&&this.bases[+m[1]]?this.bases[+m[1]]+m[2]:v}).filter(v=>{try{return http(v)}catch{return false}}).slice(0,16)}
   private letter(i:CatalogItem){return i.letter.replace(/%23/gi,'#')}
