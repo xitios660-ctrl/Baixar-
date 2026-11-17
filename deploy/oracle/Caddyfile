@@ -1,0 +1,10 @@
+{
+ email {$ACME_EMAIL}
+}
+{$GUHFLIX_DOMAIN} {
+ # Caddy replaces client forwarding headers; only this proxy can reach the API.
+ # No access log: watch grant URLs and cookies must not enter proxy logs.
+ reverse_proxy api:10000 {
+  flush_interval -1
+ }
+}

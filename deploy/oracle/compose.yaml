@@ -1,0 +1,48 @@
+name: guhflix-oracle-staging
+services:
+  api:
+    build:
+      context: ../..
+      dockerfile: deploy/oracle/Dockerfile
+    image: guhflix-oracle:${RELEASE_TAG:-staging}
+    env_file:
+      - ${GUHFLIX_API_ENV_FILE:-/etc/guhflix/api.env}
+    environment:
+      NODE_ENV: production
+      PORT: '10000'
+    expose:
+      - '10000'
+    restart: unless-stopped
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 2g
+    cpus: 1.5
+    logging:
+      driver: json-file
+      options: {max-size: 10m, max-file: '3'}
+  caddy:
+    image: caddy:2-alpine
+    environment:
+      GUHFLIX_DOMAIN: ${GUHFLIX_DOMAIN:?Set the staging DNS hostname}
+      ACME_EMAIL: ${ACME_EMAIL:?Set the TLS contact email}
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on: [api]
+    restart: unless-stopped
+    security_opt: [no-new-privileges:true]
+    mem_limit: 256m
+    logging:
+      driver: json-file
+      options: {max-size: 10m, max-file: '3'}
+volumes:
+  caddy_data:
+  caddy_config:
