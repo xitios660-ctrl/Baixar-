@@ -6,3 +6,7 @@
 @media(max-width:899px){.web .library-toolbar{display:grid;grid-template-columns:1fr 1fr;gap:10px}.web .library-field{min-width:0;margin:0}.web .library-field:first-child{grid-column:1/-1;min-width:0}.web .library-field select{font-size:14px}.web .library-toolbar button{margin:0;height:auto;min-height:42px}.web .library-heading h1{font-size:30px}.web .library-feature .hero{height:225px}.web .library-search .keyboard{display:none}.web .library-content{display:block}.web .library-summary{font-size:14px}.web .library-note{font-size:11px}.web .catalog-window .catalog-tile .fallback{font-size:14px}}
 
 @media(max-width:899px){.web .library-field{width:auto!important;min-width:0!important}}
+
+.local-head h2{flex:1;min-width:0}.local-head #local-fullscreen{margin-left:12px;margin-right:10px;font-size:28px}.local-player:fullscreen,.local-player:-webkit-full-screen{width:100%;height:100%;max-width:none;max-height:none}
+
+body.local-playing #screen{visibility:hidden!important;pointer-events:none}.local-player{z-index:2147483647}

@@ -1,5 +1,5 @@
-const CACHE='guhflix-shell-20261115-cinema1';
-const CINEMA=['/pwa/cinema.css','/pwa/cinema-web.css','/pwa/cinema-ui.js','/pwa/cinema-web.js','/pwa/cinema-assets/neon.png','/pwa/cinema-assets/stadium.png','/pwa/cinema-assets/universes.png','/pwa/cinema-assets/ui-regular.ttf','/pwa/cinema-assets/ui-bold.ttf','/pwa/cinema-assets/ui-bolditalic.ttf'];
+const CACHE='guhflix-shell-20261117-fullscreen1';
+const CINEMA=['/pwa/local-player.js','/pwa/cinema.css','/pwa/cinema-web.css','/pwa/cinema-ui.js','/pwa/cinema-web.js','/pwa/cinema-assets/neon.png','/pwa/cinema-assets/stadium.png','/pwa/cinema-assets/universes.png','/pwa/cinema-assets/ui-regular.ttf','/pwa/cinema-assets/ui-bold.ttf','/pwa/cinema-assets/ui-bolditalic.ttf'];
 const ASSETS=[...CINEMA,'/pwa/index.html','/pwa/','/pwa/style.css?v=20261111.1','/pwa/app.js?v=20261111.1','/pwa/local-player.js','/pwa/vendor/hls.light.min.js?v=1.7.4','/pwa/manifest.webmanifest','/pwa/icon-192.png','/pwa/icon-512.png','/pwa/apple-touch-icon.png'];
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS))));
 self.addEventListener('message',event=>{if(event.data==='ACTIVATE')self.skipWaiting()});

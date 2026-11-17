@@ -1,5 +1,5 @@
 import {startCinema} from './cinema-ui.js';
-import {createLocalPlayer} from './local-player.js';
+import {createLocalPlayer} from './local-player.js?v=20261117-fullscreen1';
 const $=id=>document.getElementById(id);
 let access='',user=null,refreshing=null,started=false,selected=[],devices=[],receiver=false,receiverTimer=null,active=null,receiverBusy=false;
 const processedCommands=new Set();
@@ -19,7 +19,7 @@ const player=createLocalPlayer({api,account:()=>user?.id||'',toast:message});
 function showLogin(){access='';user=null;receiver=false;clearInterval(receiverTimer);document.body.classList.remove('signed-in');$('web-login').hidden=false}
 function remember(item){if(!user||item.live)return;const rows=stored(historyKey(),[]).filter(i=>i.id!==item.id);rows.unshift(item);save(historyKey(),rows.slice(0,30))}
 async function history(){const rows=stored(historyKey(),[]);return {items:rows.map(item=>{const p=stored(`guhflix-progress-${user.id}-${item.id}-${item.season??''}-${item.episode??''}`,null);return {...item,progress:p?.progress||0,position:p?.time||0}}).filter(item=>item.position>0)}}
-async function localPlay(p){const item=await api((p.live?'/api/connect/live/':'/api/connect/catalog/')+encodeURIComponent(p.id));active={...item,...p};remember(active);await player.play(p.id,p.season,p.episode,p.live);}
+async function localPlay(p){player.fullscreen();const item=await api((p.live?'/api/connect/live/':'/api/connect/catalog/')+encodeURIComponent(p.id));active={...item,...p};remember(active);await player.play(p.id,p.season,p.episode,p.live);}
 async function command(command){if(!selected.length)throw Error('Selecione uma televisão em Conta e dispositivos.');await Promise.all(selected.map(id=>api('/api/connect/devices/'+encodeURIComponent(id)+'/commands',{method:'POST',body:{requestId:crypto.randomUUID(),command}})));message('Comando enviado. A TV precisa estar conectada para recebê-lo.')}
 async function play(raw){try{const p=JSON.parse(raw);if(selected.length)await command({type:'play',contentId:p.id,...(p.live?{live:true}:{}),...(p.episode!==undefined?{season:p.season,episode:p.episode}:{})});else await localPlay(p)}catch(e){message(e.message)}}
 function catalogParams(q,kind){const params=new URLSearchParams({kind:kind??q.kind??'',q:q.q||'',offset:String(q.offset||0)});for(const key of ['genre','year','sort'])if(q[key]!==undefined&&q[key]!=='')params.set(key,String(q[key]));if(q.titleOnly===true)params.set('titleOnly','true');return params}
