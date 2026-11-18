@@ -109,7 +109,7 @@ public final class GuhflixUi {
 
     public static void style(final Activity activity) {
         int i;
-        if (activity instanceof IntroActivity) {
+        if (activity instanceof IntroActivity || activity instanceof CinemaActivity) {
             return;
         }
         View decorView = activity.getWindow().getDecorView();

@@ -3,6 +3,15 @@ package com.guhflix.shell
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.view.View
+import android.view.KeyEvent
+import android.widget.FrameLayout
+import android.widget.LinearLayout
+import android.widget.TextView
+import android.widget.Button
+import android.graphics.drawable.ColorDrawable
 import android.webkit.*
 import android.graphics.Color
 import br.com.saimo.tv.BuildConfig
@@ -13,7 +22,18 @@ import java.util.concurrent.Executors
 class CinemaActivity:Activity(){
  private lateinit var web:WebView
  private val worker=Executors.newSingleThreadExecutor()
- private var closed=false
+ @Volatile private var closed=false
+ @Volatile private var uiEpoch=0
+ private var webLive=false
+ private lateinit var stage:FrameLayout
+ private lateinit var cover:LinearLayout
+ private val startup=CinemaStartupPolicy()
+ private val ui=Handler(Looper.getMainLooper())
+ private var bootTimeout:Runnable?=null
+ private var bootProbe:Runnable?=null
+ private var probing=false
+ private var initialPage="home"
+ private var compatibility=false
  private val anime=java.util.concurrent.ConcurrentHashMap<String,br.com.saimo.tv.Alvo>()
  private fun history():JSONObject {
   val user=Gate.request(this,"GET","/api/auth/me",null,true).getString("username")
@@ -72,21 +92,96 @@ class CinemaActivity:Activity(){
   JSONObject().put("id",id).put("title",a.titulo).put("year",a.ano).put("kind","series").put("collection",true).put("genres",org.json.JSONArray().put("Animes")).put("poster",br.com.saimo.tv.Generos.capa(a.titulo,true)?:"").put("backdrop",m?.fundo?:"").put("synopsis",m?.sinopse?:"").put("seasons",org.json.JSONArray(r.temporadas)).put("episodes",episodes)
  }
 
+ private fun disposeWeb(){if(::web.isInitialized&&webLive){webLive=false;stage.removeView(web);runCatching{web.removeJavascriptInterface("GfilmesNative")};runCatching{web.stopLoading()};runCatching{web.destroy()}}}
+ private fun clearBootCallbacks(){bootTimeout?.let{ui.removeCallbacks(it)};bootProbe?.let{ui.removeCallbacks(it)};bootTimeout=null;bootProbe=null;probing=false}
+ private fun showCover(failure:Boolean,reason:String=""){
+  if(::cover.isInitialized)stage.removeView(cover)
+  cover=LinearLayout(this).apply{orientation=LinearLayout.VERTICAL;gravity=android.view.Gravity.CENTER;setPadding(36,24,36,24);setBackgroundColor(Color.rgb(7,9,13));isFocusable=true;isClickable=true}
+  fun label(text:String,size:Float){cover.addView(TextView(this).apply{this.text=text;setTextColor(Color.WHITE);textSize=size;gravity=android.view.Gravity.CENTER;setPadding(12,10,12,10)})}
+  label("Gfilmes",34f)
+  label(if(failure)"Não foi possível abrir o catálogo." else "Abrindo seu catálogo…",22f)
+  label(if(failure)"Tente novamente ou altere o modo de compatibilidade." else "Se a abertura não terminar, use o modo compatível.",16f)
+  if(failure)label(reason+" · "+BuildConfig.VERSION_NAME+if(compatibility)" · Modo compatível" else "",13f)
+  val actions=LinearLayout(this).apply{gravity=android.view.Gravity.CENTER}
+  fun action(text:String,run:()->Unit):Button {val button=Button(this).apply{this.text=text;setOnClickListener{run()}};actions.addView(button);return button}
+  val retry=action("Tentar novamente"){openCinema(true,compatibility)}
+  action(if(compatibility)"Modo padrão" else "Modo compatível"){openCinema(true,!compatibility)}
+  action("Voltar à entrada"){startActivity(Intent(this,AccessActivity::class.java));finish()}
+  cover.addView(actions);stage.addView(cover,FrameLayout.LayoutParams(-1,-1));if(failure)retry.requestFocus()
+ }
+ private fun bootFailure(ticket:Int,reason:String){
+  if(closed)return
+  when(startup.fail(ticket)){
+   CinemaStartupPolicy.Failure.IGNORE->return
+   CinemaStartupPolicy.Failure.RETRY_COMPATIBLE->openCinema(false,true)
+   CinemaStartupPolicy.Failure.SHOW_RECOVERY->{clearBootCallbacks();showCover(true,reason)}
+  }
+ }
+ private fun probeBoot(ticket:Int){
+  if(closed||ticket!=uiEpoch||startup.ready||probing)return
+  probing=true
+  web.evaluateJavascript("Boolean(window.gfilmesUiReady && document.getElementById('nav') && document.getElementById('nav').children.length)"){value->
+   if(closed||ticket!=uiEpoch)return@evaluateJavascript
+   probing=false
+   if(value=="true"){
+    probing=true
+    web.postVisualStateCallback(ticket.toLong(),object:WebView.VisualStateCallback(){override fun onComplete(requestId:Long){
+     if(closed||ticket!=uiEpoch||!startup.markReady(ticket))return
+     clearBootCallbacks();cover.visibility=View.GONE;web.requestFocus()
+     if(initialPage!="home"){val page=initialPage;initialPage="home";web.evaluateJavascript("window.gfilmesNavigate&&window.gfilmesNavigate("+JSONObject.quote(page)+")",null)}
+    }})
+   }else{bootProbe=Runnable{probeBoot(ticket)};ui.postDelayed(bootProbe!!,250)}
+  }
+ }
+ private fun openCinema(manual:Boolean,compatible:Boolean){
+  if(closed)return
+  clearBootCallbacks();val ticket=startup.begin(manual);uiEpoch=ticket;compatibility=compatible
+  getSharedPreferences("cinema-display",0).edit().putBoolean("compatible",compatible).apply()
+  showCover(false)
+  disposeWeb()
+  try{
+   web=WebView(this);webLive=true;web.setBackgroundColor(Color.rgb(7,9,13));web.overScrollMode=View.OVER_SCROLL_NEVER
+   if(compatible)web.setLayerType(View.LAYER_TYPE_SOFTWARE,null)
+   web.settings.apply{javaScriptEnabled=true;domStorageEnabled=false;allowFileAccess=false;allowContentAccess=false;mixedContentMode=WebSettings.MIXED_CONTENT_NEVER_ALLOW;setSupportZoom(false);defaultTextEncodingName="UTF-8"}
+   web.webChromeClient=object:WebChromeClient(){override fun onConsoleMessage(message:ConsoleMessage):Boolean {
+    if(message.messageLevel()==ConsoleMessage.MessageLevel.ERROR&&message.message().startsWith("Uncaught ")&&!startup.ready){ui.post{bootFailure(ticket,"Falha ao iniciar a interface")}}
+    return true
+   }}
+   web.webViewClient=object:WebViewClient(){
+    override fun shouldOverrideUrlLoading(v:WebView?,url:String?)=true
+    override fun onPageFinished(v:WebView?,url:String?){if(ticket==uiEpoch&&!closed)probeBoot(ticket)}
+    override fun onReceivedError(v:WebView?,request:WebResourceRequest?,error:WebResourceError?){if(request?.isForMainFrame==true)bootFailure(ticket,"Falha ao abrir a interface")}
+    override fun onReceivedHttpError(v:WebView?,request:WebResourceRequest?,response:WebResourceResponse?){if(request?.isForMainFrame==true)bootFailure(ticket,"Interface indisponível")}
+    override fun onRenderProcessGone(v:WebView?,detail:RenderProcessGoneDetail?):Boolean {
+     if(ticket==uiEpoch&&!closed){disposeWeb();bootFailure(ticket,"A interface foi interrompida")}
+     return true
+    }
+    override fun shouldInterceptRequest(v:WebView?,request:WebResourceRequest?):WebResourceResponse?{
+     val url=request?.url?.toString()?:return null;val file=url.removePrefix("https://gfilmes.invalid/")
+     return if(url.startsWith("https://gfilmes.invalid/")&&file in listOf("stadium.png","neon.png","universes.png","ui-regular.ttf","ui-bold.ttf","ui-bolditalic.ttf")){
+      try{WebResourceResponse(if(file.endsWith(".png"))"image/png" else "font/ttf",null,assets.open("gfilmes/$file"))}catch(_:Exception){WebResourceResponse("text/plain","UTF-8",404,"Not found",emptyMap(),java.io.ByteArrayInputStream(byteArrayOf()))}
+     }else null
+    }
+   }
+   web.addJavascriptInterface(Bridge(),"GfilmesNative");stage.addView(web,0,FrameLayout.LayoutParams(-1,-1))
+   val html=assets.open("gfilmes/cinema.html").bufferedReader().use{it.readText()}
+   bootTimeout=Runnable{bootFailure(ticket,"A abertura não terminou")};ui.postDelayed(bootTimeout!!,15000)
+   web.loadDataWithBaseURL("https://gfilmes.invalid/",html,"text/html","UTF-8",null)
+  }catch(_:Exception){bootFailure(ticket,"Não foi possível iniciar a interface")}
+ }
  override fun onCreate(savedInstanceState:Bundle?){
-  super.onCreate(savedInstanceState);window.setFlags(1024,1024);window.decorView.systemUiVisibility=5894
-  web=WebView(this);web.setBackgroundColor(Color.BLACK);web.overScrollMode=android.view.View.OVER_SCROLL_NEVER
-  web.settings.apply{javaScriptEnabled=true;domStorageEnabled=false;allowFileAccess=false;allowContentAccess=false;mixedContentMode=WebSettings.MIXED_CONTENT_NEVER_ALLOW;setSupportZoom(false);defaultTextEncodingName="UTF-8"}
-  web.webViewClient=object:WebViewClient(){override fun shouldOverrideUrlLoading(v:WebView?,u:String?)=true
-   override fun onPageFinished(v:WebView?,url:String?){val page=intent.getStringExtra("cinema.page");if(page in listOf("home","catalog","search","live","account","settings"))web.evaluateJavascript("window.gfilmesNavigate&&window.gfilmesNavigate("+JSONObject.quote(page)+")",null)}
-   override fun shouldInterceptRequest(v:WebView?,r:WebResourceRequest?):WebResourceResponse?{val url=r?.url?.toString()?:return null;val file=url.removePrefix("https://gfilmes.invalid/");return if(url.startsWith("https://gfilmes.invalid/")&&file in listOf("stadium.png","neon.png","universes.png","ui-regular.ttf","ui-bold.ttf","ui-bolditalic.ttf"))WebResourceResponse(if(file.endsWith(".png"))"image/png" else "font/ttf",null,assets.open("gfilmes/$file")) else null}}
-  web.addJavascriptInterface(Bridge(),"GfilmesNative");setContentView(web)
-  val html=assets.open("gfilmes/cinema.html").bufferedReader().use{it.readText()}
-  web.loadDataWithBaseURL("https://gfilmes.invalid/",html,"text/html","UTF-8",null)
+  super.onCreate(savedInstanceState);window.setFlags(1024,1024);window.decorView.systemUiVisibility=5894;window.setBackgroundDrawable(ColorDrawable(Color.rgb(7,9,13)))
+  stage=FrameLayout(this).apply{setBackgroundColor(Color.rgb(7,9,13))};setContentView(stage)
+  initialPage=intent.getStringExtra("cinema.page")?.takeIf{it in listOf("home","catalog","search","live","account","settings")}?:"home"
+  compatibility=getSharedPreferences("cinema-display",0).getBoolean("compatible",BuildConfig.APPLICATION_ID=="com.guhflix.tv.connect")
+  openCinema(true,compatibility)
  }
  inner class Bridge{
   @JavascriptInterface fun request(id:String,raw:String){
    if(closed||!id.matches(Regex("[0-9]{1,9}")))return
+   val epoch=uiEpoch
    worker.execute{
+    if(closed||epoch!=uiEpoch)return@execute
     val result=try{
      val p=JSONObject(raw);val op=p.getString("op")
      val data=when(op){
@@ -110,7 +205,7 @@ class CinemaActivity:Activity(){
       else->throw IllegalArgumentException("Operação indisponível")
      };JSONObject().put("data",data)
     }catch(e:Exception){JSONObject().put("error",e.message?.take(240)?:"Não foi possível carregar. Tente novamente.")}
-    runOnUiThread{if(!closed)web.evaluateJavascript("window.gfilmesResult($id,${result});",null)}
+    runOnUiThread{if(!closed&&webLive&&epoch==uiEpoch)web.evaluateJavascript("window.gfilmesResult&&window.gfilmesResult($id,${result});",null)}
    }
   }
   @JavascriptInterface fun play(raw:String){worker.execute{try{val p=JSONObject(raw);val id=p.getString("id");require(id.matches(Regex("[a-f0-9]{32}")));val live=p.optBoolean("live");val collection=anime[id];if(collection!=null){runOnUiThread{if(!closed)br.com.saimo.tv.PlayerActivity.abrir(this@CinemaActivity,collection,p.optInt("season"),p.optInt("episode"))};return@execute};if(!live){val item=Gate.request(this@CinemaActivity,"GET","/api/connect/catalog/$id",null,true);val u=Gate.request(this@CinemaActivity,"GET","/api/auth/me",null,true);val prefs=getSharedPreferences("cinema-history",0);val old=org.json.JSONArray(prefs.getString(u.getString("username"),"[]"));val next=org.json.JSONArray().put(JSONObject().put("id",id).put("title",item.getString("title")).put("poster",item.optString("poster")).put("kind",item.getString("kind")));for(i in 0 until minOf(old.length(),19)){val v=old.getJSONObject(i);if(v.getString("id")!=id)next.put(v)};prefs.edit().putString(u.getString("username"),next.toString()).apply()};runOnUiThread{if(!closed){if(live)CloudRemote.playLive(this@CinemaActivity,id) else if(p.has("season"))CloudRemote.playEpisode(this@CinemaActivity,id,p.getInt("season"),p.getInt("episode")) else CloudRemote.playTitle(this@CinemaActivity,id)}}}catch(e:Exception){runOnUiThread{if(!closed)web.evaluateJavascript("window.gfilmesPlaybackError("+JSONObject.quote(e.message?:"Não foi possível abrir o vídeo")+")",null)}}}}
@@ -119,8 +214,9 @@ class CinemaActivity:Activity(){
   @JavascriptInterface fun update(){runOnUiThread{OtaManager.check(this@CinemaActivity,true)}}
   @JavascriptInterface fun settings(){runOnUiThread{startActivity(Intent().setClassName(packageName,"br.com.saimo.tv.AjustesActivity"))}}
  }
- override fun onNewIntent(next:Intent){super.onNewIntent(next);setIntent(next);val page=next.getStringExtra("cinema.page");if(page in listOf("home","catalog","search","live","account","settings"))web.evaluateJavascript("window.gfilmesNavigate&&window.gfilmesNavigate("+JSONObject.quote(page)+")",null)}
- override fun onResume(){super.onResume();OtaManager.resume(this);if(::web.isInitialized)web.evaluateJavascript("window.gfilmesResume&&window.gfilmesResume()",null)}
- @Deprecated("Android TV back key") override fun onBackPressed(){web.evaluateJavascript("window.gfilmesBack()",null)}
- override fun onDestroy(){closed=true;web.removeJavascriptInterface("GfilmesNative");web.destroy();worker.shutdownNow();super.onDestroy()}
+ override fun onNewIntent(next:Intent){super.onNewIntent(next);setIntent(next);val page=next.getStringExtra("cinema.page");if(page in listOf("home","catalog","search","live","account","settings")){if(webLive&&startup.ready)web.evaluateJavascript("window.gfilmesNavigate&&window.gfilmesNavigate("+JSONObject.quote(page)+")",null) else initialPage=page!!}}
+ override fun onResume(){super.onResume();OtaManager.resume(this);if(webLive&&startup.ready)web.evaluateJavascript("window.gfilmesResume&&window.gfilmesResume()",null)}
+ override fun onKeyDown(keyCode:Int,event:KeyEvent?):Boolean {if(keyCode==KeyEvent.KEYCODE_MENU){showCover(true,"Recuperar a interface");return true};return super.onKeyDown(keyCode,event)}
+ @Deprecated("Android TV back key") override fun onBackPressed(){if(!startup.ready||cover.visibility==View.VISIBLE){finish();return};web.evaluateJavascript("window.gfilmesBack&&window.gfilmesBack()",null)}
+ override fun onDestroy(){closed=true;uiEpoch++;clearBootCallbacks();disposeWeb();worker.shutdownNow();super.onDestroy()}
 }
