@@ -1,0 +1,20 @@
+{
+  "package": "com.guhflix.tv.connect",
+  "version": "2.8.1",
+  "versionCode": 2080001,
+  "file": "Gfilmes-Connect-TV-2.8.1.apk",
+  "bytes": 11767794,
+  "sha256": "8b3cb3afd0d7a1facf49a7443f3381c09119e91c169c8d2ab742abcb3714d6b5",
+  "signerSha256": "fe13bf8634b76a4450b70833a7a6eb6aa01429729371a33dccc75c8eaa72b76b",
+  "packagedUiMatchesSource": true,
+  "apkIntegrityVerified": true,
+  "physicalTvTested": false,
+  "apkUrl": "https://guhflix-tv-download.onrender.com/Gfilmes-Connect-TV-2.8.1.apk",
+  "api": "https://gfilmes-mary-api.onrender.com",
+  "status": "Download manual de recuperação; teste físico 2.8.1 pendente",
+  "publicRelease": true,
+  "otaPublished": false,
+  "startupRecovery": true,
+  "compatibleRenderingDefault": true,
+  "notes": "Abertura com cobertura nativa, recuperação limitada e modo compatível na TV. Menu do controle abre as opções de recuperação. Instale por cima do Gfilmes Connect existente; a correção ainda precisa ser testada na TV afetada."
+}
