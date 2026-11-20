@@ -8,6 +8,8 @@
 | [Servidor](Gfilmes-Servidor-1.0.0-homologacao.apk) | 1.0.0 / 1000000 | com.gfilmes.activationserver | 8.0 / API 26 |
 | [Recuperação online opcional](Gfilmes-Recuperacao-Online-3.0.1.apk) | 3.0.1 / 3000001 | com.guhflix.tv.connect | 6.0 / API 23 |
 
+[Links de download conferidos novamente pela internet](VERIFIED-DOWNLOADS.json). As cópias baixadas tiveram tamanho, SHA256 e assinatura conferidos.
+
 Assinatura v2 verificada nos três: **fe13bf8634b76a4450b70833a7a6eb6aa01429729371a33dccc75c8eaa72b76b**. [Hashes SHA256](SHA256SUMS.txt) · [Manifesto de verificação](APK-MANIFEST.json).
 
 ## Ordem simples de preparação
