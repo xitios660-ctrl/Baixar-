@@ -1,6 +1,6 @@
 # Gfilmes — APKs de homologação offline
 
-**Não é liberação para os clientes atuais.** Os APKs foram compilados e assinados com o certificado original. Instalação na TCL, reprodução audiovisual, importação SAF, reinício real e acesso HTTPS de outra rede continuam pendentes. O túnel gratuito não confirmou conectividade pública nos testes.
+**Não é liberação para os clientes atuais.** Os APKs foram compilados e assinados com o certificado original. Instalação na TCL, reprodução audiovisual, configuração pela LAN, reinício real e acesso HTTPS de outra rede continuam pendentes. O túnel gratuito não confirmou conectividade pública nos testes.
 
 | Arquivo | Versão / código | Pacote | Android mínimo |
 |---|---|---|---|
