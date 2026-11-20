@@ -29,9 +29,24 @@ vinculado de forma segura durante a implantação ou por pareamento verificado.
 Não aceitar uma chave enviada arbitrariamente pelo mesmo servidor no ato
 da validação da licença.
 
+## Central Android TV experimental
+
+O módulo `tv/station` agora compila como outro aplicativo, pacote
+`com.guhflix.station`, rotulado **Gfilmes Central (Desenvolvimento)**.
+Neste estágio ele:
+- cria e mantém a chave privada RSA-2048 no **Android Keystore** da TV;
+- mostra a impressão digital e permite exportar só a chave pública;
+- em compilação DEBUG, gera um token **fictício** para teste criptográfico;
+- deliberadamente não publica endpoint, não autentica clientes e não
+  sincroniza o MongoDB. **Não usar para cobrar ou renovar assinaturas reais.**
+
+Até instalar o app de central, anotar a impressão digital e embutir a chave
+pública correspondente de maneira confiável no APK dos clientes, o modo
+offline do cliente permanece desativado por segurança. Isso é intencional.
+
 ## O que precisa ser construído para um APK instalável
 
-1. **Central na TV do administrador:** Android app separado (package diferente)
+1. **Central na TV do administrador:** completar o protótipo Android separado
    que gera RSA >=2048 no Android Keystore e mantém a chave privada somente
    lá; interface de operador autenticado; banco persistente e sincronização
    autorizada dos cadastros e vencimentos existentes; emissão e renovação apenas
