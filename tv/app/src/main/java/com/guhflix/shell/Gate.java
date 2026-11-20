@@ -110,18 +110,23 @@ public final class Gate {
 
     static void clear(Context context) {
         access = "";
+        if(br.com.saimo.tv.BuildConfig.GFILMES_OFFLINE)OfflineLicense.clear(context);
         checkedAt = 0L;
         context.getSharedPreferences("guhflix-session", 0).edit().clear().commit();
     }
 
-    static synchronized JSONObject request(Context context,String method,String path,JSONObject body,boolean authenticated) throws ApiError {
+    static JSONObject request(Context context,String method,String path,JSONObject body,boolean authenticated) throws ApiError {
         try {
+            JSONObject local = OfflineRoutes.handle(context,method,path,body);
+            if(local!=null)return local;
+            synchronized(Gate.class) {
             if(authenticated && access.isEmpty()) renew(context);
             try {return raw(method,path,body,authenticated?access:"");}
             catch(ApiError e) {
                 if(!authenticated || e.status!=401)throw e;
                 renew(context);
                 return raw(method,path,body,access);
+            }
             }
         } catch(ApiError e){throw e;}
         catch(Exception e){throw new ApiError(0,"NETWORK","Não foi possível conectar. Verifique a internet e tente novamente.");}
@@ -147,7 +152,7 @@ public final class Gate {
     static JSONObject raw(String method, String path, JSONObject body, String bearer) throws ApiError {
         HttpURLConnection connection = null;
         try {
-            connection = (HttpURLConnection)new URL(API + path).openConnection();
+            connection = (HttpURLConnection)new URL((br.com.saimo.tv.BuildConfig.GFILMES_OFFLINE ? OfflineLicense.endpoint(CloudRemote.application()) : API) + path).openConnection();
             connection.setRequestMethod(method);
             connection.setConnectTimeout(10000);connection.setReadTimeout(15000);
             connection.setInstanceFollowRedirects(false);
@@ -568,7 +573,7 @@ public final class Gate {
     }
 
     static void grantLease(final Activity activity, final Playback playback, long j) {
-        playback.leaseUntil = j + 110000;
+        playback.leaseUntil = j + (br.com.saimo.tv.BuildConfig.GFILMES_OFFLINE ? Math.min(110000L,OfflineLicense.remaining(activity)) : 110000L);
         main.post(new Runnable() { // from class: com.guhflix.shell.Gate$$ExternalSyntheticLambda4
             @Override // java.lang.Runnable
             public final void run() {

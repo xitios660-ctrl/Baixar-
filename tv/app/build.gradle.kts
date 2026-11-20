@@ -12,8 +12,11 @@ plugins {
  * chave é a identidade do aplicativo: perdê-la obriga todo mundo a desinstalar
  * e instalar de novo.
  */
+val onlineRecovery = providers.gradleProperty("gfilmesOnlineRecovery").orNull == "true"
+val offlineEdition = providers.gradleProperty("gfilmesOffline").orNull == "true"
 val mobileEdition = providers.gradleProperty("guhflixAndroidMobile").orNull == "true"
-val connectEdition = mobileEdition || providers.gradleProperty("guhflixConnect").orNull == "true"
+require(!(onlineRecovery && offlineEdition)) { "Choose offline edition or online recovery, not both" }
+val connectEdition = onlineRecovery || offlineEdition || mobileEdition || providers.gradleProperty("guhflixConnect").orNull == "true"
 val chave = Properties().apply {
     val arquivo = rootProject.file(if (connectEdition) "keystore-connect.properties" else "keystore.properties")
     if (arquivo.exists()) arquivo.inputStream().use { load(it) }
@@ -29,15 +32,16 @@ android {
         // Até a 2.0.2 era o 5 (21); quem ainda tem Android 5 fica na 2.0.2.
         minSdk = 23
         targetSdk = 35
-        versionCode = if (connectEdition) 2080001 else 2050000
-        versionName = if (connectEdition) "2.8.1" else "2.5.0"
+        versionCode = if (onlineRecovery) 3000001 else if (offlineEdition) 3000000 else if (connectEdition) 2080001 else 2050000
+        versionName = if (onlineRecovery) "3.0.1" else if (offlineEdition) "3.0.0" else if (connectEdition) "2.8.1" else "2.5.0"
+        buildConfigField("boolean", "GFILMES_OFFLINE", offlineEdition.toString())
         buildConfigField("String", "GUHFLIX_API", "\"https://gfilmes-mary-api.onrender.com\"")
         val updateFile = if (mobileEdition) "release-android.json" else if (connectEdition) "release-connect.json" else "release.json"
         buildConfigField("String", "GUHFLIX_UPDATE_MANIFEST", "\"https://guhflix-tv-download.onrender.com/$updateFile\"")
         buildConfigField("String", "GUHFLIX_URI_SCHEME", if (mobileEdition) "\"guhflix-android\"" else if (connectEdition) "\"guhflix-connect\"" else "\"saimo\"")
         resValue("string", "guhflix_search_authority", if (mobileEdition) "com.guhflix.android.busca" else if (connectEdition) "com.guhflix.tv.connect.busca" else "com.guhflix.tv.busca")
         manifestPlaceholders["guhflixLeanbackRequired"] = if (mobileEdition) "false" else "true"
-        manifestPlaceholders["guhflixAppLabel"] = if (mobileEdition) "Gfilmes Android" else if (connectEdition) "Gfilmes Connect" else "Gfilmes"
+        manifestPlaceholders["guhflixAppLabel"] = if (offlineEdition) "Gfilmes Cliente" else if (mobileEdition) "Gfilmes Android" else if (connectEdition) "Gfilmes Connect" else "Gfilmes"
         manifestPlaceholders["guhflixUriScheme"] = if (mobileEdition) "guhflix-android" else if (connectEdition) "guhflix-connect" else "saimo"
 
     }
@@ -67,7 +71,8 @@ android {
             val testApi = providers.gradleProperty("guhflixTestApi").orNull
             if (testApi != null) {
                 require(testApi.matches(Regex("http://(?:10\\.0\\.2\\.2|127\\.0\\.0\\.1):[0-9]+")))
-                buildConfigField("String", "GUHFLIX_API", "\"$testApi\"")
+                buildConfigField("boolean", "GFILMES_OFFLINE", offlineEdition.toString())
+        buildConfigField("String", "GUHFLIX_API", "\"$testApi\"")
             }
             // Igual à publicada: instalar o teste por cima da versão de
             // verdade, e vice-versa, sem "assinaturas não conferem".
@@ -77,6 +82,8 @@ android {
         }
     }
 
+    sourceSets["main"].java.srcDir("../license-core/src/main/kotlin")
+    sourceSets["test"].java.srcDir("../license-core/src/test/kotlin")
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17

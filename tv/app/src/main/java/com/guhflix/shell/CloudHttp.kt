@@ -5,7 +5,10 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 object CloudHttp {
- @JvmStatic fun catalogFile(name:String):String? = synchronized(Gate::class.java){
+ @JvmStatic fun catalogFile(name:String):String? {
+  // Local source IO must never wait on Gate while its caller awaits a coroutine.
+  if(BuildConfig.GFILMES_OFFLINE)return try{val ctx=CloudRemote.application();check(OfflineLicense.valid(ctx));LocalCatalog.file(ctx,name.replace("%23","#"))}catch(_:Exception){null}
+  return synchronized(Gate::class.java){
   val safeName=name.replace("%23","#")
   require(safeName.matches(Regex("(?:[A-Za-z0-9_#-]+\\.txt|redeflix/links-(?:animes|doramas)\\.txt)")))
   try {
@@ -29,4 +32,5 @@ object CloudHttp {
    fetch(true)
   }catch(_:Exception){null}
  }
+}
 }

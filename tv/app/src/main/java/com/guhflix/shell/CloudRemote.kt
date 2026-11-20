@@ -31,7 +31,7 @@ object CloudRemote {
         if(started)return;started=true;app=application
         lastId=app.getSharedPreferences("guhflix-connect",0).getString("contentId",null)
         lastTitle=app.getSharedPreferences("guhflix-connect",0).getString("contentTitle","")?:""
-        worker.scheduleWithFixedDelay({poll()},1,2,TimeUnit.SECONDS)
+        if(!BuildConfig.GFILMES_OFFLINE)worker.scheduleWithFixedDelay({poll()},1,2,TimeUnit.SECONDS)
     }
     @JvmStatic fun resumed(activity:Activity) {
         current=WeakReference(activity)
