@@ -55,3 +55,9 @@ Resultados novos: 10 testes do servidor passaram. Quatro verificam o HTTP real e
 Teste em Chromium com viewport móvel de 430×932: download de gfilmes-server-public.txt, seleção/envio de arquivo pelo formulário, resposta de sucesso e nenhum erro JavaScript. Não é teste na TCL/Safari nem prova de outra rede. Assinatura e decifragem de pacote HTTPS foram testadas com conteúdo sintético, sem importar ou criar certificado público.
 
 Serviço novo: janela foreground iniciada manualmente, 15 minutos, bind apenas IPv4 privado, URL aleatória, sem rotas de login/administração/ativação. Senhas de backup são digitadas na TV; arquivos de configuração TLS via LAN precisam ser cifrados/assinados previamente. A atualização mantém pacote, certificado e aliases Keystore. A instalação por cima e a conexão LAN no equipamento do titular aguardam validação real.
+
+## Adaptador de exportação do conector
+
+O teste `tools/licensing/test-connector-snapshot.mjs` passou com dados sintéticos locais: assinatura original validada, decifragem pelo destinatário, IDs/hash/status/data preservados e rejeição de origem instável/hash incompatível. Não acessa produção nem provisiona clientes.
+
+A modalidade por conector verifica duas leituras completas iguais antes de cifrar. Ela não expõe opções de transação/readConcern no conector e não pode ser descrita como snapshot transacional. Metadados e relatórios de qualquer cópia real ficam privados, junto ao arquivo cifrado; não acompanham os arquivos públicos desta branch. A instalação/importação no equipamento do titular continua dependendo da confirmação na TV.

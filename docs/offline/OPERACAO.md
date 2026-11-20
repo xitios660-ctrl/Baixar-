@@ -94,3 +94,13 @@ Não altere a data da TV. Não desinstale para atualizar. Não se promete reprod
 8. Ao terminar, escolha “Encerrar configuração local” na TV. A chave Keystore, o banco e as licenças são preservados pela atualização 1.0.0 → 1.0.1.
 
 A porta de configuração local é 17861 e fica vinculada apenas ao IPv4 privado da TV. Não oferece catálogo, reprodução, login de clientes ou edição de assinaturas. A porta de ativação HTTPS continua 17862, com os requisitos de certificado/rede anteriores. Alcance da LAN na TCL ainda exige validação física; testes em loopback não provam acesso de outra casa.
+
+## Exportação privada por conector, sem URI do banco no ambiente
+
+Quando só houver acesso pelo conector Atlas, use consultas `find` paginadas com ordenação por `_id`, sem modificar dados. Faça duas leituras completas e recuse a preparação se qualquer coleção, contagem ou registro divergir. Preserve a representação EJSON dos identificadores/datas. Isso verifica estabilidade observada, mas **não é um snapshot transacional**; não substitui a conciliação antes do corte administrativo.
+
+O adaptador `tools/licensing/seal-connector-snapshot.mjs` recebe o JSON pelo stdin (nunca como argumento de shell), exige declaração de método não transacional e verificação das 12 coleções, valida IDs, contas existentes, hashes e datas, normaliza EJSON canônico e gera pacote AES-GCM cifrado para a chave da TV, com assinatura da raiz original. Recusa origem instável e saída dentro do repositório público. Nenhum administrador é criado, nenhum hash é substituído e nenhuma chamada de escrita é feita à origem.
+
+O programa deve receber stdin sem eco; não cole dados de clientes em terminal com eco ou em logs. O arquivo resultante e o relatório permanecem em diretório privado, com permissão 0600. Use os controles normais de exportação de arquivos do cliente para entregar ao titular, sem publicar o pacote, mesmo cifrado, em repositório/hospedagem pública. Clientes desktop compatíveis oferecem “Salvar como…” no visualizador de arquivo. Não invente uma URL pública para contornar indisponibilidade desse controle.
+
+Teste isolado: `JAVA_HOME=/JDK node tools/licensing/test-connector-snapshot.mjs`. Verifica assinatura original, decifragem pelo destinatário efêmero, preservação de IDs/hash/bloqueio/vencimento, recusa de leituras divergentes e hash incompatível. Não acessa produção.
