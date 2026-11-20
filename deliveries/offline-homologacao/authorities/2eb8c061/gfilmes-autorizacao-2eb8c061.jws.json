@@ -1,0 +1,9 @@
+{
+  "issuerId": "2eb8c061a3cd8c96e7c0d3e1a213037ff3cbdf56baa1f9213bb0ec054d422fa8",
+  "rootSignatureVerified": true,
+  "validFrom": "2026-11-20T02:46:22.634Z",
+  "validUntil": "2027-11-20T02:47:22.634Z",
+  "maxCustomerLicenseDays": 30,
+  "customerLicenseIssued": false,
+  "sha256": "afbab5059d3c75a190a44616e803b6b9be5f6fe17c8c9a7623ff6396ec2ccaf7"
+}

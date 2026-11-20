@@ -109,6 +109,10 @@ public final class AccessActivity extends Activity {
         this.message.setTextSize(19.0f);
         this.message.setPadding(0, dp(12.0f), 0, dp(20.0f));
         this.panel.addView(this.message);
+        if(br.com.saimo.tv.BuildConfig.GFILMES_OFFLINE)button("SERVIDOR DE ATIVAÇÃO", () -> {
+            EditText endpoint = new EditText(this); endpoint.setSingleLine(true); endpoint.setText(OfflineLicense.endpoint(this));
+            new android.app.AlertDialog.Builder(this).setTitle("Origem HTTPS do servidor").setView(endpoint).setPositiveButton("Salvar",(d,w)->{try{OfflineLicense.setEndpoint(this,endpoint.getText().toString());render("Servidor configurado. Entre para ativar a licença.",true);}catch(Exception e){render("Endereço inválido. Use HTTPS e sem caminho.",true);}}).setNegativeButton("Cancelar",null).show();
+        });
         if (z) {
             this.user = new EditText(this);
             this.user.setSingleLine(true);
@@ -196,7 +200,7 @@ public final class AccessActivity extends Activity {
         }
         if (apiError.status == 401) {
             Gate.clear(this);
-            render("Entre uma vez para assistir em até 3 telas simultâneas.", true);
+            render((br.com.saimo.tv.BuildConfig.GFILMES_OFFLINE ? "Entre para ativar este dispositivo. Até 3 dispositivos licenciados; simultaneidade offline não é fiscalizada." : "Entre uma vez para assistir em até 3 telas simultâneas."), true);
         } else {
             render(apiError.status == 0 ? "Sem conexão com o serviço. Seu acesso não foi liberado. Tente novamente em instantes." : apiError.getMessage(), false);
             button("TENTAR NOVAMENTE", new Runnable() { // from class: com.guhflix.shell.AccessActivity$$ExternalSyntheticLambda20
@@ -217,6 +221,7 @@ public final class AccessActivity extends Activity {
     /* JADX INFO: renamed from: lambda$validate$11$com-guhflix-shell-AccessActivity, reason: not valid java name */
     /* synthetic */ void m15lambda$validate$11$comguhflixshellAccessActivity() {
         try {
+            if(br.com.saimo.tv.BuildConfig.GFILMES_OFFLINE)OfflineLicense.ensureActivated(this);
             final JSONObject jSONObjectRequest = Gate.request(this, "GET", "/api/app/access", null, true);
             runOnUiThread(new Runnable() { // from class: com.guhflix.shell.AccessActivity$$ExternalSyntheticLambda0
                 @Override // java.lang.Runnable
@@ -255,7 +260,7 @@ public final class AccessActivity extends Activity {
             startActivity(new Intent().setClassName(getPackageName(), "com.guhflix.shell.CinemaActivity"));
             finish();
         } else {
-            render("Sua assinatura está ativa.\nAté 3 reproduções simultâneas por conta.\nPlano: R$ 30,00 / 30 dias.", false);
+            render(br.com.saimo.tv.BuildConfig.GFILMES_OFFLINE ? "Licença local ativa até " + new java.util.Date(jSONObject.optLong("expiresAt")) + ".\nAté 3 dispositivos licenciados. Simultaneidade não fiscalizada offline." : "Sua assinatura está ativa.\nAté 3 reproduções simultâneas por conta.\nPlano: R$ 30,00 / 30 dias.", false);
             button("VOLTAR AO CATÁLOGO", new Runnable() { // from class: com.guhflix.shell.AccessActivity$$ExternalSyntheticLambda13
                 @Override // java.lang.Runnable
                 public final void run() {
@@ -349,6 +354,7 @@ public final class AccessActivity extends Activity {
             jSONObject.put("label", Build.MANUFACTURER + " " + Build.MODEL);
             jSONObject.put("client", "tv");
             Gate.saveTokens(this, Gate.request(this, "POST", "/api/auth/login", jSONObject, false));
+            if(br.com.saimo.tv.BuildConfig.GFILMES_OFFLINE)OfflineLicense.activate(this);
             runOnUiThread(new Runnable() { // from class: com.guhflix.shell.AccessActivity$$ExternalSyntheticLambda22
                 @Override // java.lang.Runnable
                 public final void run() {

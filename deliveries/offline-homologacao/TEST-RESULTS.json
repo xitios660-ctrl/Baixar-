@@ -1,0 +1,48 @@
+{
+  "productionChanged": false,
+  "physicalTvConnected": false,
+  "apiRegression": {
+    "passed": 20,
+    "failed": 0
+  },
+  "apiFinalTargeted": {
+    "passed": 4,
+    "failed": 0
+  },
+  "migration": {
+    "fixtureOnly": true,
+    "collections": 12,
+    "originalPreserved": true,
+    "rootSignatureVerified": true,
+    "destinationDecryptionVerified": true,
+    "productionAccessed": false
+  },
+  "tunnel": {
+    "fixtureOnly": true,
+    "productionAccessed": false,
+    "androidTvTested": false,
+    "binarySha256": "97bb3b02d23a5980fc9c15a1a270e692da1923f103f920d5b16d4931d5ab55e7",
+    "publicHttpsHealthVerified": false,
+    "sameExecutionHostThroughPublicCloudflare": true,
+    "separateCustomerNetworkTested": false,
+    "blocker": "No successful public HTTPS response in test window"
+  },
+  "androidFullSuiteEarlier": {
+    "tests": 74,
+    "passed": 70,
+    "failedExternalConnections": 3,
+    "skipped": 1
+  },
+  "appTargeted": {
+    "tests": 31,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "serverTargeted": {
+    "tests": 6,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  }
+}

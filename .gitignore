@@ -25,3 +25,7 @@ pwa/admin-test-results/
 roku/node_modules/
 roku/dist/
 roku/.roku-deploy-staging/
+
+# Local-only activation keys, customer migration and certificates
+.private/
+*.gbackup
