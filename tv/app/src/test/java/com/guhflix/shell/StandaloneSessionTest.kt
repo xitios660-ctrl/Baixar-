@@ -1,0 +1,9 @@
+package com.guhflix.shell
+import org.junit.Assert.*
+import org.junit.Test
+class StandaloneSessionTest {
+ @Test fun firstOpeningPlaybackAndReopeningNeedNoAccountTokensOrLicense(){repeat(5){val access=StandaloneSession.reply("GET","/api/app/access")!!;assertEquals("active",access.getString("state"));assertTrue(access.getBoolean("local"));assertTrue(access.isNull("expiresAt"));val me=StandaloneSession.reply("GET","/api/auth/me")!!;assertEquals("local",me.getString("role"));assertEquals("Minha TV",me.getString("username"));assertTrue(me.isNull("expiresAt"));for(action in listOf("start","heartbeat","stop"))assertTrue(StandaloneSession.reply("POST","/api/app/playback/$action")!!.getBoolean("success"))}}
+ @Test fun accountServerRoutesCannotFallBackToNetwork(){for(path in listOf("/api/auth/login","/api/auth/refresh","/api/offline/challenge","/api/offline/activate","/api/admin/users","/api/connect/pairing","/api/connect/tv/poll","/api/connect/metadata/movie/1")){try{StandaloneSession.reply("POST",path);fail(path)}catch(_:StandaloneSession.Unavailable){}}}
+ @Test fun allCatalogTypesAreDelegatedToTheNativeLocalCatalog(){for(path in listOf("/api/connect/home","/api/connect/catalog?kind=movie&genre=Ação&year=2025","/api/connect/catalog?kind=series","/api/connect/catalog/id/play?season=1&episode=2","/api/connect/live","/api/connect/live/id/play","/api/connect/catalog-files/indice.txt"))assertNull(StandaloneSession.reply("GET",path))}
+ @Test fun localProfileIsStableAcrossPlaybackAndLogout(){val before=StandaloneSession.reply("GET","/api/auth/me")!!.toString();StandaloneSession.reply("POST","/api/app/playback/start");StandaloneSession.reply("POST","/api/auth/logout");assertEquals(before,StandaloneSession.reply("GET","/api/auth/me")!!.toString());assertEquals(0,StandaloneSession.reply("GET","/api/app/sessions")!!.getJSONArray("items").length())}
+}

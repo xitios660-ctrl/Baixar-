@@ -51,6 +51,7 @@ object Atualizacao {
      */
     suspend fun procurar(context: Context, manual: Boolean = false): Versao? =
         withContext(Dispatchers.IO) {
+            if(BuildConfig.GFILMES_LOCAL)return@withContext null
             val prefs = context.getSharedPreferences(ARQUIVO, Context.MODE_PRIVATE)
             val forcar = manual || prefs.getString(PENDENTE, null) != null
             prefs.edit().putLong(VISTO, System.currentTimeMillis()).apply()

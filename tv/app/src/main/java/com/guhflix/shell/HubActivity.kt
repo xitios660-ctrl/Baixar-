@@ -19,6 +19,7 @@ class HubActivity:Activity(){
  private val red=Color.rgb(229,9,20)
  override fun onCreate(savedInstanceState:Bundle?){
   super.onCreate(savedInstanceState)
+  if(BuildConfig.GFILMES_LOCAL){localScreen();return}
   if(BuildConfig.GFILMES_OFFLINE){offlineScreen();return}
   val root=LinearLayout(this).apply{orientation=LinearLayout.VERTICAL;setPadding(dp(55),dp(30),dp(55),dp(30));setBackgroundColor(Color.rgb(8,8,8))}
   val scroll=ScrollView(this);scroll.addView(root);setContentView(scroll)
@@ -41,6 +42,7 @@ class HubActivity:Activity(){
  }
  override fun onResume(){super.onResume();OtaManager.resume(this)}
  private fun add(root:LinearLayout,label:String,click:()->Unit):Button {val b=Button(this);b.text=label;b.textSize=16f;b.setTextColor(Color.WHITE);b.backgroundTintList=android.content.res.ColorStateList.valueOf(red);b.setOnClickListener{click()};b.setOnFocusChangeListener{view,focus->view.animate().scaleX(if(focus)1.03f else 1f).scaleY(if(focus)1.03f else 1f).setDuration(120).start()};root.addView(b,LinearLayout.LayoutParams(-1,dp(54)).apply{bottomMargin=dp(8)});return b}
+ private fun localScreen(){val root=LinearLayout(this).apply{orientation=LinearLayout.VERTICAL;setPadding(dp(55),dp(30),dp(55),dp(30));setBackgroundColor(Color.rgb(8,8,8))};setContentView(root);root.addView(TextView(this).apply{setTextColor(Color.WHITE);textSize=26f;text="Gfilmes · Minha TV"});root.addView(TextView(this).apply{setTextColor(Color.LTGRAY);textSize=18f;text="Favoritos, histórico e progresso ficam salvos nesta TV.\nOs vídeos e canais online precisam de internet.";setPadding(0,dp(20),0,dp(20))});add(root,"PREFERÊNCIAS DO PLAYER"){startActivity(Intent().setClassName(packageName,"br.com.saimo.tv.AjustesActivity"))};add(root,"VOLTAR AO CATÁLOGO"){finish()};root.addView(TextView(this).apply{setTextColor(Color.GRAY);text="Gfilmes Local "+BuildConfig.VERSION_NAME})}
  private fun offlineScreen(){val root=LinearLayout(this).apply{orientation=LinearLayout.VERTICAL;setPadding(dp(55),dp(30),dp(55),dp(30));setBackgroundColor(Color.rgb(8,8,8))};setContentView(root);root.addView(TextView(this).apply{setTextColor(Color.WHITE);textSize=24f;text="Gfilmes Cliente · licença local"});val state=TextView(this).apply{setTextColor(Color.WHITE);textSize=18f};root.addView(state);Gate.work.execute{val valid=OfflineLicense.valid(this);val line=try{val c=OfflineLicense.claims(this);"Conta: ${c.username}\nLicença até: ${java.util.Date(c.expiresAt)}\nEstado: "+if(valid)"válida" else "renovação necessária"}catch(_:Exception){"Ative este dispositivo"};runOnUiThread{state.text=line+"\nServidor: "+OfflineLicense.endpoint(this)+"\nO controle pela nuvem exige um serviço de coordenação separado."}};add(root,"MINHA CONTA / SERVIDOR"){startActivity(Intent(this,AccessActivity::class.java).putExtra("manage",true))};add(root,"VERIFICAR ATUALIZAÇÃO"){OtaManager.check(this,true)}}
  private fun dp(v:Int)=(resources.displayMetrics.density*v).toInt()
 }

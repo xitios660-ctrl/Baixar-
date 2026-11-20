@@ -12,11 +12,12 @@ plugins {
  * chave é a identidade do aplicativo: perdê-la obriga todo mundo a desinstalar
  * e instalar de novo.
  */
+val localEdition = providers.gradleProperty("gfilmesLocal").orNull == "true"
 val onlineRecovery = providers.gradleProperty("gfilmesOnlineRecovery").orNull == "true"
 val offlineEdition = providers.gradleProperty("gfilmesOffline").orNull == "true"
 val mobileEdition = providers.gradleProperty("guhflixAndroidMobile").orNull == "true"
-require(!(onlineRecovery && offlineEdition)) { "Choose offline edition or online recovery, not both" }
-val connectEdition = onlineRecovery || offlineEdition || mobileEdition || providers.gradleProperty("guhflixConnect").orNull == "true"
+require(listOf(localEdition,onlineRecovery,offlineEdition,mobileEdition).count{it}<=1) { "Choose one application edition" }
+val connectEdition = localEdition || onlineRecovery || offlineEdition || mobileEdition || providers.gradleProperty("guhflixConnect").orNull == "true"
 val chave = Properties().apply {
     val arquivo = rootProject.file(if (connectEdition) "keystore-connect.properties" else "keystore.properties")
     if (arquivo.exists()) arquivo.inputStream().use { load(it) }
@@ -27,22 +28,23 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = if (mobileEdition) "com.guhflix.android" else if (connectEdition) "com.guhflix.tv.connect" else "com.guhflix.tv"
+        applicationId = if (localEdition) "com.gfilmes.tv.local" else if (mobileEdition) "com.guhflix.android" else if (connectEdition) "com.guhflix.tv.connect" else "com.guhflix.tv"
         // Android 6: o mínimo do Media3 e das bibliotecas androidx atuais.
         // Até a 2.0.2 era o 5 (21); quem ainda tem Android 5 fica na 2.0.2.
         minSdk = 23
         targetSdk = 35
-        versionCode = if (onlineRecovery) 3000001 else if (offlineEdition) 3000000 else if (connectEdition) 2080001 else 2050000
-        versionName = if (onlineRecovery) "3.0.1" else if (offlineEdition) "3.0.0" else if (connectEdition) "2.8.1" else "2.5.0"
+        versionCode = if (localEdition) 1000000 else if (onlineRecovery) 3000001 else if (offlineEdition) 3000000 else if (connectEdition) 2080001 else 2050000
+        versionName = if (localEdition) "1.0.0" else if (onlineRecovery) "3.0.1" else if (offlineEdition) "3.0.0" else if (connectEdition) "2.8.1" else "2.5.0"
+        buildConfigField("boolean", "GFILMES_LOCAL", localEdition.toString())
         buildConfigField("boolean", "GFILMES_OFFLINE", offlineEdition.toString())
-        buildConfigField("String", "GUHFLIX_API", "\"https://gfilmes-mary-api.onrender.com\"")
+        buildConfigField("String", "GUHFLIX_API", if(localEdition) "\"\"" else "\"https://gfilmes-mary-api.onrender.com\"")
         val updateFile = if (mobileEdition) "release-android.json" else if (connectEdition) "release-connect.json" else "release.json"
-        buildConfigField("String", "GUHFLIX_UPDATE_MANIFEST", "\"https://guhflix-tv-download.onrender.com/$updateFile\"")
-        buildConfigField("String", "GUHFLIX_URI_SCHEME", if (mobileEdition) "\"guhflix-android\"" else if (connectEdition) "\"guhflix-connect\"" else "\"saimo\"")
-        resValue("string", "guhflix_search_authority", if (mobileEdition) "com.guhflix.android.busca" else if (connectEdition) "com.guhflix.tv.connect.busca" else "com.guhflix.tv.busca")
+        buildConfigField("String", "GUHFLIX_UPDATE_MANIFEST", if(localEdition) "\"\"" else "\"https://guhflix-tv-download.onrender.com/$updateFile\"")
+        buildConfigField("String", "GUHFLIX_URI_SCHEME", if (localEdition) "\"gfilmes-local\"" else if (mobileEdition) "\"guhflix-android\"" else if (connectEdition) "\"guhflix-connect\"" else "\"saimo\"")
+        resValue("string", "guhflix_search_authority", if (localEdition) "com.gfilmes.tv.local.busca" else if (mobileEdition) "com.guhflix.android.busca" else if (connectEdition) "com.guhflix.tv.connect.busca" else "com.guhflix.tv.busca")
         manifestPlaceholders["guhflixLeanbackRequired"] = if (mobileEdition) "false" else "true"
-        manifestPlaceholders["guhflixAppLabel"] = if (offlineEdition) "Gfilmes Cliente" else if (mobileEdition) "Gfilmes Android" else if (connectEdition) "Gfilmes Connect" else "Gfilmes"
-        manifestPlaceholders["guhflixUriScheme"] = if (mobileEdition) "guhflix-android" else if (connectEdition) "guhflix-connect" else "saimo"
+        manifestPlaceholders["guhflixAppLabel"] = if (localEdition) "Gfilmes Local" else if (offlineEdition) "Gfilmes Cliente" else if (mobileEdition) "Gfilmes Android" else if (connectEdition) "Gfilmes Connect" else "Gfilmes"
+        manifestPlaceholders["guhflixUriScheme"] = if (localEdition) "gfilmes-local" else if (mobileEdition) "guhflix-android" else if (connectEdition) "guhflix-connect" else "saimo"
 
     }
 

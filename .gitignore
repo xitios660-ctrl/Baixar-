@@ -29,3 +29,6 @@ roku/.roku-deploy-staging/
 # Local-only activation keys, customer migration and certificates
 .private/
 *.gbackup
+
+# Local browser fixture screenshots
+/test-results/

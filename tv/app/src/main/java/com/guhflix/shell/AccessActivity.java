@@ -53,6 +53,11 @@ public final class AccessActivity extends Activity {
     public void onCreate(Bundle bundle) {
         super.onCreate(bundle);
         getWindow().setFlags(1024, 1024);
+        if(br.com.saimo.tv.BuildConfig.GFILMES_LOCAL){
+            if(getIntent().getBooleanExtra("manage",false)){render("Favoritos, histórico e progresso ficam salvos nesta TV.",false);button("ABRIR CATÁLOGO",()->{startActivity(new Intent().setClassName(getPackageName(),"com.guhflix.shell.CinemaActivity"));finish();});}
+            else{startActivity(new Intent().setClassName(getPackageName(),"com.guhflix.shell.CinemaActivity"));finish();}
+            return;
+        }
         render("Verificando seu acesso…", false);
         m20lambda$validate$8$comguhflixshellAccessActivity();
     }
@@ -60,7 +65,7 @@ public final class AccessActivity extends Activity {
     @Override // android.app.Activity
     protected void onResume() {
         super.onResume();
-        this.handler.post(this.check);
+        if(!br.com.saimo.tv.BuildConfig.GFILMES_LOCAL)this.handler.post(this.check);
     }
 
     @Override // android.app.Activity

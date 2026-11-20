@@ -3,9 +3,14 @@ import android.content.Context
 import br.com.saimo.tv.BuildConfig
 import org.json.JSONObject
 
-/** Only the explicit offline APK changes access rules. Online 2.x remains unchanged. */
+/** Edition-specific dispatch: local and signed-offline builds; normal online access stays unchanged. */
 object OfflineRoutes {
  @JvmStatic fun handle(context:Context,method:String,path:String,body:JSONObject?):JSONObject? {
+  if(BuildConfig.GFILMES_LOCAL){
+   try{val response=StandaloneSession.reply(method,path);if(response!=null)return response}catch(_:StandaloneSession.Unavailable){throw Gate.ApiError(503,"LOCAL_UNAVAILABLE","Recurso indisponível nesta edição local")}
+   if(path.startsWith("/api/connect/catalog-files/"))return JSONObject().put("text",LocalCatalog.file(context,path.substringAfter("/api/connect/catalog-files/")))
+   return LocalCatalog.route(context,method,path,body)
+  }
   if(!BuildConfig.GFILMES_OFFLINE||path.startsWith("/api/auth/login")||path.startsWith("/api/auth/refresh")||path.startsWith("/api/offline/"))return null
   if(path=="/api/auth/logout"){OfflineLicense.clear(context);return JSONObject().put("success",true)}
   if(!OfflineLicense.valid(context))throw Gate.ApiError(403,"OFFLINE_EXPIRED","Licença ausente, vencida ou relógio alterado. Conecte ao servidor para autorizar novamente.")

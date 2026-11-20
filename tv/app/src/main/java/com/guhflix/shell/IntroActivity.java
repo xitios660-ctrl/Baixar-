@@ -57,7 +57,7 @@ public final class IntroActivity extends Activity {
             return;
         }
         this.leaving = true;
-        startActivity(new Intent().setClassName(getPackageName(), "com.guhflix.shell.AccessActivity").setAction("android.intent.action.MAIN"));
+        startActivity(new Intent().setClassName(getPackageName(), (br.com.saimo.tv.BuildConfig.GFILMES_LOCAL ? "com.guhflix.shell.CinemaActivity" : "com.guhflix.shell.AccessActivity")).setAction("android.intent.action.MAIN"));
         overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
         finish();
     }

@@ -150,6 +150,7 @@ public final class Gate {
     }
 
     static JSONObject raw(String method, String path, JSONObject body, String bearer) throws ApiError {
+        if(br.com.saimo.tv.BuildConfig.GFILMES_LOCAL)throw new ApiError(503,"LOCAL_ONLY","Esta edição funciona localmente e não usa servidor de contas.");
         HttpURLConnection connection = null;
         try {
             connection = (HttpURLConnection)new URL((br.com.saimo.tv.BuildConfig.GFILMES_OFFLINE ? OfflineLicense.endpoint(CloudRemote.application()) : API) + path).openConnection();
@@ -219,6 +220,7 @@ public final class Gate {
 
     public static void resumed(final Activity activity) {
         visible.add(activity);
+        if(br.com.saimo.tv.BuildConfig.GFILMES_LOCAL){catalogChecked();return;}
         if ((activity instanceof AccessActivity) || (activity instanceof IntroActivity) || activity.getClass().getSimpleName().contains("Player") || SystemClock.elapsedRealtime() - checkedAt < 30000 || checking) {
             return;
         }
@@ -529,6 +531,7 @@ public final class Gate {
 
     /* JADX INFO: Access modifiers changed from: package-private */
     public static void heartbeat(final Activity activity, final Playback playback) {
+        if(br.com.saimo.tv.BuildConfig.GFILMES_LOCAL)return;
         if (playback.stopped || activity.isDestroyed()) {
             return;
         }
@@ -573,7 +576,8 @@ public final class Gate {
     }
 
     static void grantLease(final Activity activity, final Playback playback, long j) {
-        playback.leaseUntil = j + (br.com.saimo.tv.BuildConfig.GFILMES_OFFLINE ? Math.min(110000L,OfflineLicense.remaining(activity)) : 110000L);
+        playback.leaseUntil = PlaybackLeasePolicy.deadline(br.com.saimo.tv.BuildConfig.GFILMES_LOCAL,br.com.saimo.tv.BuildConfig.GFILMES_OFFLINE,j,br.com.saimo.tv.BuildConfig.GFILMES_OFFLINE ? OfflineLicense.remaining(activity) : 0L);
+        if(br.com.saimo.tv.BuildConfig.GFILMES_LOCAL)return;
         main.post(new Runnable() { // from class: com.guhflix.shell.Gate$$ExternalSyntheticLambda4
             @Override // java.lang.Runnable
             public final void run() {

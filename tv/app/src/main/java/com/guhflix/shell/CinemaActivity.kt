@@ -18,7 +18,7 @@ import br.com.saimo.tv.BuildConfig
 import org.json.JSONObject
 import java.util.concurrent.Executors
 
-/** Packaged presentation only. Credentials and playback remain in native authenticated code. */
+/** Packaged presentation. Edition-specific access and playback remain in native code. */
 class CinemaActivity:Activity(){
  private lateinit var web:WebView
  private val worker=Executors.newSingleThreadExecutor()
@@ -173,10 +173,11 @@ class CinemaActivity:Activity(){
   super.onCreate(savedInstanceState);window.setFlags(1024,1024);window.decorView.systemUiVisibility=5894;window.setBackgroundDrawable(ColorDrawable(Color.rgb(7,9,13)))
   stage=FrameLayout(this).apply{setBackgroundColor(Color.rgb(7,9,13))};setContentView(stage)
   initialPage=intent.getStringExtra("cinema.page")?.takeIf{it in listOf("home","catalog","search","live","account","settings")}?:"home"
-  compatibility=getSharedPreferences("cinema-display",0).getBoolean("compatible",BuildConfig.APPLICATION_ID=="com.guhflix.tv.connect")
+  compatibility=getSharedPreferences("cinema-display",0).getBoolean("compatible",BuildConfig.APPLICATION_ID=="com.guhflix.tv.connect"||BuildConfig.GFILMES_LOCAL)
   openCinema(true,compatibility)
  }
  inner class Bridge{
+  @JavascriptInterface fun edition():String=if(BuildConfig.GFILMES_LOCAL)"local" else "account"
   @JavascriptInterface fun request(id:String,raw:String){
    if(closed||!id.matches(Regex("[0-9]{1,9}")))return
    val epoch=uiEpoch
@@ -197,7 +198,7 @@ class CinemaActivity:Activity(){
       }
       "live"->livePage(p.optInt("offset").coerceIn(0,100000),p.optString("q"))
       "detail"->{val content=p.getString("id");require(content.matches(Regex("[a-f0-9]{32}")));if(anime.containsKey(content))animeDetail(content) else Gate.request(this@CinemaActivity,"GET",(if(p.optBoolean("live"))"/api/connect/live/" else "/api/connect/catalog/")+content,null,true)}
-      "me"->Gate.request(this@CinemaActivity,"GET","/api/auth/me",null,true).let{JSONObject().put("username",it.optString("username")).put("version",BuildConfig.VERSION_NAME)}
+      "me"->Gate.request(this@CinemaActivity,"GET","/api/auth/me",null,true).let{JSONObject().put("username",it.optString("username")).put("version",BuildConfig.VERSION_NAME).put("local",BuildConfig.GFILMES_LOCAL)}
       "pair"->Gate.request(this@CinemaActivity,"POST","/api/connect/pairing",JSONObject(),true)
       "history"->history()
       "favorites"->{val u=Gate.request(this@CinemaActivity,"GET","/api/auth/me",null,true);JSONObject().put("items",org.json.JSONArray(getSharedPreferences("cinema-favorites",0).getString(u.getString("username"),"[]")))}

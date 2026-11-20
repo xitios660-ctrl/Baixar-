@@ -176,6 +176,7 @@ object Connect {
     }
 
     fun iniciar(context: Context) {
+        if(BuildConfig.GFILMES_LOCAL)return
         if (ativo) return
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         tvId = prefs.getString(KEY_TV_ID, null) ?: UUID.randomUUID().toString().also {

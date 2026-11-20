@@ -32,6 +32,7 @@ object OtaManager {
  private var lastCheck=0L
  private fun valid(a:Activity)=!a.isFinishing&&!a.isDestroyed
  @JvmStatic fun check(a:Activity,manual:Boolean){
+  if(BuildConfig.GFILMES_LOCAL){if(manual)notify(a,"Edição local: atualizações são instaladas manualmente pelo arquivo APK.");return}
   if(checking||downloading)return
   if(!manual&&System.currentTimeMillis()-lastCheck<6*60*60*1000)return
   checking=true;lastCheck=System.currentTimeMillis()
@@ -114,6 +115,7 @@ object OtaManager {
   }catch(_:Exception){notify(a,"O instalador não abriu. Tente novamente pelo menu Atualização.")}
  }
  @JvmStatic fun resume(a:Activity){
+  if(BuildConfig.GFILMES_LOCAL)return
   if(downloading)return
   if(Build.VERSION.SDK_INT>=26&&!a.packageManager.canRequestPackageInstalls())return
   val prefs=a.getSharedPreferences("guhflix-ota",0);val name=prefs.getString("pending",null)?:return
