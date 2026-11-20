@@ -81,8 +81,10 @@ public final class OfflinePermitSmoke {
         if (paid.expiresAt != now + 9 * day)
             throw new AssertionError("Issued grant exceeds paid subscription expiry.");
         verified++;
-        rejects("issuer rejects expired paid account", () ->
-                com.guhflix.station.LicenseIssuer.issue(key.getPrivate(), USER, DEVICE, now, now - 1));
+        try {
+            com.guhflix.station.LicenseIssuer.issue(key.getPrivate(), USER, DEVICE, now, now - 1);
+            throw new AssertionError("Issuer accepted expired paid account");
+        } catch (IllegalArgumentException expected) { verified++; }
         String capped = com.guhflix.station.LicenseIssuer.issue(key.getPrivate(), USER, DEVICE,
                 now, now + 40 * day);
         OfflinePermit.Grant capGrant = OfflinePermit.verify(capped, pem, DEVICE, now + day, now);
