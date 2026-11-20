@@ -112,6 +112,7 @@ public final class Gate {
         access = "";
         checkedAt = 0L;
         context.getSharedPreferences("guhflix-session", 0).edit().clear().commit();
+        OfflineLicenseStore.clear(context);
     }
 
     static synchronized JSONObject request(Context context,String method,String path,JSONObject body,boolean authenticated) throws ApiError {
@@ -181,6 +182,7 @@ public final class Gate {
         if ("active".equals(jSONObject.optString("state"))) {
             catalogChecked();
         } else {
+            OfflineLicenseStore.clear(activity);
             openAccess(activity);
         }
     }
@@ -203,7 +205,13 @@ public final class Gate {
                 }
             });
         } catch (ApiError e) {
-            main.post(new Runnable() { // from class: com.guhflix.shell.Gate$$ExternalSyntheticLambda1
+            // A confirmed account/session rejection overrides any cached license.
+            if (e.status == 401 || e.status == 403) OfflineLicenseStore.clear(activity);
+            if (OfflineLicenseStore.temporaryNetworkFailure(e) && OfflineLicenseStore.valid(activity)) {
+                main.post(() -> { checking = false; if (visible.contains(activity)) catalogChecked(); });
+                return;
+            }
+            main.post(new Runnable() { // from class: com.guhflix.shell.Gate$ExternalSyntheticLambda1
                 @Override // java.lang.Runnable
                 public final void run() {
                     Gate.lambda$resumed$1(activity);
@@ -306,7 +314,14 @@ public final class Gate {
                 }
             });
         } catch (Exception e) {
-            main.post(new Runnable() { // from class: com.guhflix.shell.Gate$$ExternalSyntheticLambda6
+            if (e instanceof ApiError && OfflineLicenseStore.temporaryNetworkFailure((ApiError)e)
+                    && OfflineLicenseStore.valid(activity)) {
+                // Local playback uses an authorized signed grant, not an invented online lease.
+                grantLease(activity, playback, SystemClock.elapsedRealtime());
+                main.post(() -> Gate.lambda$start$4(activity, playback));
+                return;
+            }
+            main.post(new Runnable() { // from class: com.guhflix.shell.Gate$ExternalSyntheticLambda6
                 @Override // java.lang.Runnable
                 public final void run() {
                     Gate.lambda$start$5(activity, playback, e);
@@ -558,7 +573,13 @@ public final class Gate {
             main.postDelayed(playback.tick, 35000L);
         } catch (Exception e) {
             final ApiError apiError = e instanceof ApiError ? (ApiError) e : new ApiError(0, "NETWORK", "Sem conexão");
-            main.post(new Runnable() { // from class: com.guhflix.shell.Gate$$ExternalSyntheticLambda10
+            if (OfflineLicenseStore.temporaryNetworkFailure(apiError)
+                    && OfflineLicenseStore.valid(activity)) {
+                grantLease(activity, playback, SystemClock.elapsedRealtime());
+                main.postDelayed(playback.tick, 35000L);
+                return;
+            }
+            main.post(new Runnable() { // from class: com.guhflix.shell.Gate$ExternalSyntheticLambda10
                 @Override // java.lang.Runnable
                 public final void run() {
                     Gate.lambda$heartbeat$20(playback, apiError, activity);

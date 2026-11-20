@@ -204,7 +204,22 @@ class CinemaActivity:Activity(){
       "favorite"->{val content=p.getJSONObject("item");val cid=content.getString("id");require(cid.matches(Regex("[a-f0-9]{32}")));val u=Gate.request(this@CinemaActivity,"GET","/api/auth/me",null,true);val prefs=getSharedPreferences("cinema-favorites",0);val a=org.json.JSONArray(prefs.getString(u.getString("username"),"[]"));val next=org.json.JSONArray();var found=false;for(i in 0 until a.length()){val v=a.getJSONObject(i);if(v.getString("id")==cid)found=true else next.put(v)};if(!found&&next.length()<500)next.put(JSONObject().put("id",cid).put("title",content.optString("title").take(240)).put("poster",content.optString("poster").take(4096)).put("kind",content.optString("kind")));prefs.edit().putString(u.getString("username"),next.toString()).apply();JSONObject().put("saved",!found)}
       else->throw IllegalArgumentException("Operação indisponível")
      };JSONObject().put("data",data)
-    }catch(e:Exception){JSONObject().put("error",e.message?.take(240)?:"Não foi possível carregar. Tente novamente.")}
+    }catch(e:Exception){
+      // Cloud-only cinema queries cannot work when MARY sleeps. Move an
+      // already licensed TV to the packaged native browser instead.
+      if (e is Gate.ApiError && OfflineLicenseStore.temporaryNetworkFailure(e)
+          && OfflineLicenseStore.valid(this@CinemaActivity)) {
+        runOnUiThread {
+          if (!closed && !isFinishing) {
+            android.widget.Toast.makeText(this@CinemaActivity,
+              "Servidor indisponível. Abrindo catálogo local.", android.widget.Toast.LENGTH_SHORT).show()
+            startActivity(Intent(this@CinemaActivity, br.com.saimo.tv.EscolhaActivity::class.java))
+            finish()
+          }
+        }
+      }
+      JSONObject().put("error",e.message?.take(240)?:"Não foi possível carregar. Tente novamente.")
+    }
     runOnUiThread{if(!closed&&webLive&&epoch==uiEpoch)web.evaluateJavascript("window.gfilmesResult&&window.gfilmesResult($id,${result});",null)}
    }
   }

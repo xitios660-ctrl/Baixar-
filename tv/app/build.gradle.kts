@@ -86,6 +86,8 @@ android {
         // A atualização compara a versão instalada com a do release.
         buildConfig = true
     }
+    // Only the JVM test classpath sees the signing core. Customer APK never ships it.
+    sourceSets.getByName("test").java.srcDir("../../licensing/station-core/src")
     // O parser do guia é Kotlin puro, então roda em teste de JVM contra os
     // feeds de verdade — sem isso a única forma de validá-lo seria no aparelho.
     testOptions { unitTests.isReturnDefaultValues = true }

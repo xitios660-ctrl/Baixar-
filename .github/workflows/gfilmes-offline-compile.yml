@@ -1,0 +1,56 @@
+name: Gfilmes - validação offline (API e Android)
+on:
+  push:
+    branches: ['feature/gfilmes-licenca-offline-30d-20261119']
+  pull_request:
+    branches: ['guhflix-platform']
+permissions:
+  contents: read
+jobs:
+  api:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: api/package-lock.json
+      - name: Install API dependencies
+        run: npm ci --prefix api --include=dev
+      - name: Type-check and compile
+        run: npm run build --prefix api
+      - name: Test signed license issuer
+        working-directory: api
+        run: ./node_modules/.bin/tsx --test test/offline-license.test.ts
+  android-debug:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Install Android SDK components from runner image
+        run: |
+          SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          echo "ANDROID_HOME=$SDK" >> "$GITHUB_ENV"
+          echo "sdk.dir=$SDK" > tv/local.properties
+          "$SDK/cmdline-tools/latest/bin/sdkmanager" --install "platforms;android-35" "build-tools;35.0.0"
+      - name: Compile and test Android client (not a signed release APK)
+        run: |
+          chmod +x tv/gradlew
+          cd tv
+          ./gradlew -PguhflixConnect=true :app:assembleDebug :app:testDebugUnitTest :station:assembleDebug --no-daemon --stacktrace
+
+      - name: Attach debug APKs for internal testing only
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gfilmes-offline-prototype-debug-NOT-FOR-CUSTOMERS
+          path: |
+            tv/app/build/outputs/apk/debug/*.apk
+            tv/station/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
