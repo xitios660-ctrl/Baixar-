@@ -16,3 +16,7 @@ pwa/node_modules/.bin/playwright test -c pwa/local-browser-test/playwright.confi
 ```
 
 Pendentes físicos: instalar e reiniciar na TCL, reproduzir filmes/episódios/canais autorizados, verificar codecs e fluidez, confirmar favoritos/progresso após reiniciar e observar tráfego com a API MARY indisponível. Esses resultados não foram inventados. Não houve escrita no banco de produção nesta etapa nem substituição de downloads/OTA existentes.
+
+## Resultado da compilação entregue
+
+Fonte `e2987ee`: build release concluído; **38 testes Android passaram, zero falhas/erros/ignorados**, e **5 testes Chromium passaram**. O teste adicional do atualizador confirma retorno antes de acessar contexto ou rede na edição local. APK v2 e certificado original verificados; pacote e versão conferidos com aapt; assets conferidos byte a byte. Consulte `deliveries/local/APK-MANIFEST.json` e `TEST-RESULTS.json`. Reprodução audiovisual e instalação físicas permanecem pendentes.

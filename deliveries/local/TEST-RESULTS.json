@@ -1,0 +1,14 @@
+{
+  "sourceCommit": "e2987ee",
+  "androidSelectedTests": 38,
+  "androidFailures": 0,
+  "androidErrors": 0,
+  "androidSkipped": 0,
+  "browserTests": 5,
+  "browserFailures": 0,
+  "browserUsesSyntheticCatalogAndNativeBridge": true,
+  "releaseBuildSuccessful": true,
+  "physicalTvInstallationTested": false,
+  "realPlaybackTested": false,
+  "productionChanged": false
+}

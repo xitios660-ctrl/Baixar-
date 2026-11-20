@@ -1,0 +1,19 @@
+{
+  "file": "Gfilmes-Local-TV-1.0.0.apk",
+  "package": "com.gfilmes.tv.local",
+  "version": "1.0.0",
+  "versionCode": 1000000,
+  "bytes": 11767172,
+  "sha256": "feefc4a1640487a0568b31cc99e39c60006cad2826287f3c422ccebab7d5d45d",
+  "signerSha256": "fe13bf8634b76a4450b70833a7a6eb6aa01429729371a33dccc75c8eaa72b76b",
+  "apkV2SignatureVerified": true,
+  "uiAssetsMatchSource": true,
+  "standaloneBuildFlag": true,
+  "signedOfflineLicenseMode": false,
+  "accountApiConfigured": false,
+  "productionOtaConfigured": false,
+  "activationServerPackaged": false,
+  "privateKeyFilesPackaged": false,
+  "physicalTvTested": false,
+  "productionChanged": false
+}
