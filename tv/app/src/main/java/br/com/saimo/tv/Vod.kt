@@ -513,7 +513,13 @@ object Vod {
         val local = local(context, nome)
         val etag = File(local.path + ".etag")
         val texto = runCatching {
-            if (base == Enderecos.PADRAO_FILMES) return@runCatching com.guhflix.shell.CloudHttp.catalogFile(nome)
+            if (base == Enderecos.PADRAO_FILMES) {
+                val fromApi = com.guhflix.shell.CloudHttp.catalogFile(nome)
+                if (fromApi != null) return@runCatching fromApi
+                // Direct catalog fallback only for a TV with a verified paid grant.
+                // It does not remove the internet requirement of the provider.
+                if (!com.guhflix.shell.OfflineLicenseStore.valid(context)) return@runCatching null
+            }
             val request = Request.Builder().url(base + nome)
                 .header("User-Agent", Playback.DEFAULT_USER_AGENT)
                 .apply {
