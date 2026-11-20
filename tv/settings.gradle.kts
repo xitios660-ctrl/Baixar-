@@ -6,3 +6,4 @@ dependencyResolutionManagement {
 }
 rootProject.name = "Saimo TV"
 include(":app")
+include(":station")
