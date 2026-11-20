@@ -75,6 +75,20 @@ public final class OfflinePermitSmoke {
         rejects("missing key", () -> OfflinePermit.verify(good, "", DEVICE, now, now));
         rejects("wrong kind of token", () -> OfflinePermit.verify(
                 good.replaceFirst("GFL1", "GFL2"), pem, DEVICE, now + day, now));
+        String issued = com.guhflix.station.LicenseIssuer.issue(key.getPrivate(), USER, DEVICE,
+                now, now + 9 * day);
+        OfflinePermit.Grant paid = OfflinePermit.verify(issued, pem, DEVICE, now + 8 * day, now + 2 * day);
+        if (paid.expiresAt != now + 9 * day)
+            throw new AssertionError("Issued grant exceeds paid subscription expiry.");
+        verified++;
+        rejects("issuer rejects expired paid account", () ->
+                com.guhflix.station.LicenseIssuer.issue(key.getPrivate(), USER, DEVICE, now, now - 1));
+        String capped = com.guhflix.station.LicenseIssuer.issue(key.getPrivate(), USER, DEVICE,
+                now, now + 40 * day);
+        OfflinePermit.Grant capGrant = OfflinePermit.verify(capped, pem, DEVICE, now + day, now);
+        if (capGrant.expiresAt != now + 30 * day)
+            throw new AssertionError("Issued grant exceeds 30 days.");
+        verified++;
         System.out.println("PASS: " + verified + " independent offline-license assertions");
     }
 }
