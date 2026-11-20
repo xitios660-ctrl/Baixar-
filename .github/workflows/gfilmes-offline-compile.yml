@@ -43,4 +43,14 @@ jobs:
         run: |
           chmod +x tv/gradlew
           cd tv
-          ./gradlew -PguhflixConnect=true :app:assembleDebug :app:testDebugUnitTest --no-daemon --stacktrace
+          ./gradlew -PguhflixConnect=true :app:assembleDebug :app:testDebugUnitTest :station:assembleDebug --no-daemon --stacktrace
+
+      - name: Attach debug APKs for internal testing only
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gfilmes-offline-prototype-debug-NOT-FOR-CUSTOMERS
+          path: |
+            tv/app/build/outputs/apk/debug/*.apk
+            tv/station/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
