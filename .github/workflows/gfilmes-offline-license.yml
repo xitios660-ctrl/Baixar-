@@ -6,12 +6,14 @@ on:
     paths:
       - 'tv/app/src/main/java/com/guhflix/shell/OfflinePermit.java'
       - 'tv/app/src/test/java/com/guhflix/shell/OfflinePermitSmoke.java'
+      - 'licensing/station-core/src/com/guhflix/station/LicenseIssuer.java'
       - '.github/workflows/gfilmes-offline-license.yml'
   pull_request:
     branches: ['guhflix-platform']
     paths:
       - 'tv/app/src/main/java/com/guhflix/shell/OfflinePermit.java'
       - 'tv/app/src/test/java/com/guhflix/shell/OfflinePermitSmoke.java'
+      - 'licensing/station-core/src/com/guhflix/station/LicenseIssuer.java'
       - '.github/workflows/gfilmes-offline-license.yml'
 permissions:
   contents: read
@@ -29,6 +31,7 @@ jobs:
           mkdir -p /tmp/gfl-license-tests
           javac -encoding UTF-8 -d /tmp/gfl-license-tests \
             tv/app/src/main/java/com/guhflix/shell/OfflinePermit.java \
-            tv/app/src/test/java/com/guhflix/shell/OfflinePermitSmoke.java
+            tv/app/src/test/java/com/guhflix/shell/OfflinePermitSmoke.java \
+            licensing/station-core/src/com/guhflix/station/LicenseIssuer.java
       - name: Validate RSA signed offline license rules
         run: java -cp /tmp/gfl-license-tests com.guhflix.shell.OfflinePermitSmoke
