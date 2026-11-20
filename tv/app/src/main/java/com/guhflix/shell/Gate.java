@@ -205,6 +205,8 @@ public final class Gate {
                 }
             });
         } catch (ApiError e) {
+            // A confirmed account/session rejection overrides any cached license.
+            if (e.status == 401 || e.status == 403) OfflineLicenseStore.clear(activity);
             if (OfflineLicenseStore.temporaryNetworkFailure(e) && OfflineLicenseStore.valid(activity)) {
                 main.post(() -> { checking = false; if (visible.contains(activity)) catalogChecked(); });
                 return;
