@@ -1,0 +1,47 @@
+{
+  "stage": "homologation",
+  "artifacts": [
+    {
+      "name": "Gfilmes-Cliente-3.0.0-homologacao.apk",
+      "package": "com.guhflix.tv.connect",
+      "version": "3.0.0",
+      "versionCode": 3000000,
+      "bytes": 11780454,
+      "sha256": "f9f628501ab0ab5133fc9a8ef1d8c4bf69173095c5de9c15750f57e2399dd92b",
+      "signerSha256": "fe13bf8634b76a4450b70833a7a6eb6aa01429729371a33dccc75c8eaa72b76b",
+      "apkV2SignatureVerified": true,
+      "zipIntegrityVerified": true,
+      "privateKeyFilesPackaged": false,
+      "physicalInstallationTested": false,
+      "productionReleased": false
+    },
+    {
+      "name": "Gfilmes-Servidor-1.0.0-homologacao.apk",
+      "package": "com.gfilmes.activationserver",
+      "version": "1.0.0",
+      "versionCode": 1000000,
+      "bytes": 1915797,
+      "sha256": "3502adaf39d902477e34508bb5b0f2e5c83c7c7f1a8c65a2ab4077516d7cd1de",
+      "signerSha256": "fe13bf8634b76a4450b70833a7a6eb6aa01429729371a33dccc75c8eaa72b76b",
+      "apkV2SignatureVerified": true,
+      "zipIntegrityVerified": true,
+      "privateKeyFilesPackaged": false,
+      "physicalInstallationTested": false,
+      "productionReleased": false
+    },
+    {
+      "name": "Gfilmes-Recuperacao-Online-3.0.1.apk",
+      "package": "com.guhflix.tv.connect",
+      "version": "3.0.1",
+      "versionCode": 3000001,
+      "bytes": 11780810,
+      "sha256": "0e281f4d7ffda10e2ee9c1baf2f8ebe353bee383b17da9779a04c85c7b52e535",
+      "signerSha256": "fe13bf8634b76a4450b70833a7a6eb6aa01429729371a33dccc75c8eaa72b76b",
+      "apkV2SignatureVerified": true,
+      "zipIntegrityVerified": true,
+      "privateKeyFilesPackaged": false,
+      "physicalInstallationTested": false,
+      "productionReleased": false
+    }
+  ]
+}
