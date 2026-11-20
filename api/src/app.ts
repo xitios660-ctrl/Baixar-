@@ -1,3 +1,4 @@
+import {registerOfflineLicenses,type OfflineAuthority} from './offline-license.js';
 import {ProviderLive,type LiveSource} from './live.js';
 import {registerSamsung} from './samsung.js';
 import {registerWatch} from './watch.js';
@@ -14,10 +15,12 @@ const DAY=86400000,LEASE=120000,REFRESH_DAYS=30;
 const hash=(s:string)=>createHash('sha256').update(s).digest('hex');
 const token=()=>randomBytes(40).toString('base64url');const oid=(s:string)=>{if(!ObjectId.isValid(s))throw new Fault(400,'INVALID_ID','Identificador inválido');return new ObjectId(s)};
 const username=z.string().trim().toLowerCase().regex(/^[a-z0-9._-]{3,64}$/);const password=z.string().min(8).max(128);
-type Config={db:Db;client:MongoClient;secret:string;adminOrigin:string;production?:boolean;now?:()=>Date;logger?:boolean;bootstrapToken?:string;pwaOrigin?:string;catalog?:Catalog;liveCatalog?:LiveSource;mediaOpen?:import('./media-relay.js').MediaOpen};
+type Config={offlineAuthority?:OfflineAuthority;db:Db;client:MongoClient;secret:string;adminOrigin:string;production?:boolean;now?:()=>Date;logger?:boolean;bootstrapToken?:string;pwaOrigin?:string;catalog?:Catalog;liveCatalog?:LiveSource;mediaOpen?:import('./media-relay.js').MediaOpen};
 export async function createApp(c:Config){
  if(c.secret.length<48)throw new Error('JWT_SECRET must have 48+ characters');
  const app=Fastify({logger:c.logger?{redact:['req.headers.authorization','req.headers.cookie','password','refreshToken','otp','token']}:false,bodyLimit:16384,trustProxy:(_address:string,hop:number)=>hop<1});
+ const activationOnly=process.env.GFILMES_ACTIVATION_ONLY==='1';
+ if(activationOnly)app.addHook('onRequest',async(req,reply)=>{const path=req.url.split('?')[0];if(!['/health','/api/health','/api/auth/login','/api/auth/refresh','/api/auth/me','/api/app/access','/api/offline/challenge','/api/offline/activate'].includes(path))return reply.code(404).send({error:'ACTIVATION_ONLY',message:'Este servidor não transmite vídeos nem oferece administração pública'});});
  const now=c.now??(()=>new Date()),key=new TextEncoder().encode(c.secret),db=c.db,catalog=c.catalog??new ProviderCatalog(),live=c.liveCatalog??new ProviderLive();
  const pwaOrigin=c.pwaOrigin??'https://gfilmes-mary-api.onrender.com';
  app.addHook('onRequest',async(req,reply)=>{if(req.method!=='OPTIONS'||!req.url.startsWith('/api/samsung/'))return;const origin=req.headers.origin;if(req.headers.cookie||origin&&!['null','file://'].includes(origin))return reply.code(403).send({error:'ORIGIN',message:'Origem não autorizada'});return reply.header('Access-Control-Allow-Origin',origin??'null').header('Access-Control-Allow-Headers','Content-Type, Authorization').header('Access-Control-Allow-Methods','GET, POST, OPTIONS').header('Vary','Origin').code(204).send()});
@@ -81,8 +84,9 @@ export async function createApp(c:Config){
  await registerSamsung(app);
  await registerWatch(app,{db,now,identity,requireAccess,catalog,live,secret:c.secret,lease:playbackLease,mediaOpen:c.mediaOpen});
  await registerConnect(app,{db,now,identity,requireAccess,catalog,live,pwaOrigin});
+ await registerOfflineLicenses(app,{db,client:c.client,now,identity,authority:c.offlineAuthority});
  await registerAdmin(app);
- app.get('/api/health',async()=>({ok:true,service:'guhflix-api',version:'2.0.0'}));
+ app.get('/api/health',async()=>({ok:true,service:'guhflix-api',version:'2.0.0',activationOnly}));
  await registerPwa(app);
  return app;
 }
