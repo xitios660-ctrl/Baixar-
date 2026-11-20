@@ -30,6 +30,20 @@
       "productionReleased": false
     },
     {
+      "name": "Gfilmes-Servidor-1.0.1-homologacao.apk",
+      "package": "com.gfilmes.activationserver",
+      "version": "1.0.1",
+      "versionCode": 1000001,
+      "bytes": 1925161,
+      "sha256": "1d31b1e1437820b5d642d96d12cc43d8a898632e93f08cf9a5c31bfd43c8892e",
+      "signerSha256": "fe13bf8634b76a4450b70833a7a6eb6aa01429729371a33dccc75c8eaa72b76b",
+      "apkV2SignatureVerified": true,
+      "zipIntegrityVerified": true,
+      "privateKeyFilesPackaged": false,
+      "physicalInstallationTested": false,
+      "productionReleased": false
+    },
+    {
       "name": "Gfilmes-Recuperacao-Online-3.0.1.apk",
       "package": "com.guhflix.tv.connect",
       "version": "3.0.1",

@@ -20,7 +20,7 @@ São três dispositivos com licenças ainda válidas, não três streams simult�
 
 ## Preparar o servidor Android
 
-1. Instale Gfilmes Servidor na TV do titular. Confirme que há seletor de documentos/provedor SAF para importar arquivos e salvar backups; algumas versões de Google TV não o incluem. Sem ele, o fluxo de importação na TV permanece bloqueado e a alternativa desktop continua disponível. Pacote diferente do cliente. Abra e exporte apenas **gfilmes-server-public.txt** pelos controles normais de arquivos do Android. Esse arquivo não contém segredo.
+1. Instale Gfilmes Servidor na TV do titular. Na versão 1.0.1, selecione a opção de configurar pelo celular: não depende de seletor de documentos SAF, ausente em algumas versões da TCL. A exportação pela opção antiga pode mostrar “Nenhum aplicativo pode executar esta ação”. Atualize por cima, sem desinstalar nem limpar os dados. Pacote diferente do cliente. Abra e exporte apenas **gfilmes-server-public.txt** pelos controles normais de arquivos do Android. Esse arquivo não contém segredo.
 2. Em computador seguro com a chave ORIGINAL já existente, execute na raiz do projeto:
 
 ```sh
@@ -81,3 +81,16 @@ O computador continua precisando do Atlas durante ativação/renovação. O clie
 5. Renovação: titular verifica pagamento, renova no sistema escolhido como autoridade, cliente conecta e autentica novamente depois do vencimento. Sem confirmação administrativa não há extensão automática.
 
 Não altere a data da TV. Não desinstale para atualizar. Não se promete reprodução de uma fonte indisponível ou de formato incompatível.
+
+## Servidor 1.0.1: configuração sem seletor de arquivos
+
+1. Abra “Ver chave PÚBLICA / configurar pelo celular”. Mantenha TV e celular na mesma rede Wi-Fi. A TV mostra um endereço local temporário e a impressão digital SHA256 da chave pública.
+2. Digite o endereço completo no navegador normal do celular, incluindo a barra final. Não exponha essa porta no roteador. A janela dura no máximo 15 minutos e encerra após reinício; novo início gera outro endereço secreto. Isolamento de clientes no roteador/rede de convidados pode impedir o acesso.
+3. Compare a impressão digital exibida no celular com a da TV antes de aprovar a chave. Baixe `gfilmes-server-public.txt` e envie somente esse arquivo público ao operador.
+4. No mesmo navegador, selecione o arquivo de autorização pública assinada e envie. Depois faça o mesmo com a migração cifrada/assinada já preparada. Volte à TV e escolha atualizar estado. Migração não sobrescreve um banco local já inicializado.
+5. A página usa HTTP somente dentro da LAN para a chave pública e pacotes previamente cifrados/assinados. Não possui login administrativo ou campos de senha. O servidor recusa arquivos sem autorização da raiz ou destinados a outra chave. Isso NÃO substitui o HTTPS público necessário à ativação dos clientes.
+6. O backup criado no painel pode ser baixado cifrado nessa janela local; a senha é digitada somente na TV. Para recuperar, prepare a recuperação na TV com a senha e autorização administrativa e envie o arquivo cifrado pelo celular. Recuperação é de uso único e fica limitada à janela/sessão administrativa; a senha é apagada da memória ao terminar ou fechar a janela.
+7. Para importar o PKCS12 sem o seletor, o operador usa `seal-server-config.mjs`: defina privadamente GFILMES_TLS_P12_FILE e GFILMES_TLS_PASSWORD_FILE (arquivo com senha), execute `JAVA_HOME=/JDK node tools/licensing/seal-server-config.mjs /public-key.txt /FORA/DO/REPOSITORIO/config-cifrada.json` e envie o resultado como “Certificado em pacote cifrado e assinado”. Certificado e senha ficam dentro do pacote cifrado para a TV e aprovado pela chave original; nunca envie o PKCS12 ou a senha em claro pelo portal.
+8. Ao terminar, escolha “Encerrar configuração local” na TV. A chave Keystore, o banco e as licenças são preservados pela atualização 1.0.0 → 1.0.1.
+
+A porta de configuração local é 17861 e fica vinculada apenas ao IPv4 privado da TV. Não oferece catálogo, reprodução, login de clientes ou edição de assinaturas. A porta de ativação HTTPS continua 17862, com os requisitos de certificado/rede anteriores. Alcance da LAN na TCL ainda exige validação física; testes em loopback não provam acesso de outra casa.

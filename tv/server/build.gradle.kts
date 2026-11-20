@@ -3,7 +3,7 @@ plugins {id("com.android.application");id("org.jetbrains.kotlin.android")}
 val signing=Properties().apply{val f=rootProject.file("keystore-connect.properties");if(f.exists())f.inputStream().use{load(it)}}
 android {
  namespace="com.gfilmes.server";compileSdk=35
- defaultConfig {applicationId="com.gfilmes.activationserver";minSdk=26;targetSdk=35;versionCode=1000000;versionName="1.0.0"}
+ defaultConfig {applicationId="com.gfilmes.activationserver";minSdk=26;targetSdk=35;versionCode=1000001;versionName="1.0.1"}
  signingConfigs {create("owner"){if(signing.getProperty("storeFile")!=null){storeFile=rootProject.file("app").resolve(signing.getProperty("storeFile"));storePassword=signing.getProperty("storePassword");keyAlias=signing.getProperty("keyAlias");keyPassword=signing.getProperty("keyPassword")}}}
  buildTypes {release{isMinifyEnabled=true;signingConfig=signingConfigs.getByName("owner");proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"),"proguard-rules.pro")}}
  sourceSets["main"].java.srcDir("../license-core/src/main/kotlin")

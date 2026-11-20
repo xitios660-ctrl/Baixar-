@@ -9,7 +9,7 @@ env={**os.environ,'JAVA_HOME':java,'PATH':java+'/bin:'+os.environ['PATH']}
 cert='fe13bf8634b76a4450b70833a7a6eb6aa01429729371a33dccc75c8eaa72b76b'
 folder=Path(os.environ.get('GFILMES_ARTIFACTS','/workspace/artifacts/gfilmes-offline-30d'))
 rows=[]
-for name,pkg,version,code in [('Gfilmes-Cliente-3.0.0-homologacao.apk','com.guhflix.tv.connect','3.0.0',3000000),('Gfilmes-Servidor-1.0.0-homologacao.apk','com.gfilmes.activationserver','1.0.0',1000000),('Gfilmes-Recuperacao-Online-3.0.1.apk','com.guhflix.tv.connect','3.0.1',3000001)]:
+for name,pkg,version,code in [('Gfilmes-Cliente-3.0.0-homologacao.apk','com.guhflix.tv.connect','3.0.0',3000000),('Gfilmes-Servidor-1.0.0-homologacao.apk','com.gfilmes.activationserver','1.0.0',1000000),('Gfilmes-Servidor-1.0.1-homologacao.apk','com.gfilmes.activationserver','1.0.1',1000001),('Gfilmes-Recuperacao-Online-3.0.1.apk','com.guhflix.tv.connect','3.0.1',3000001)]:
  p=folder/name
  if not p.exists():continue
  result=subprocess.run([str(sdk/'build-tools/35.0.0/apksigner'),'verify','--verbose','--print-certs',str(p)],env=env,text=True,capture_output=True,check=True).stdout

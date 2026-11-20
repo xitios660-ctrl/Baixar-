@@ -24,8 +24,7 @@ class ServerStore(context:Context):SQLiteOpenHelper(context,"gfilmes-authority.d
  fun installGrant(value:String){val a=Crypto.verifyJws(value,Crypto.publicKey(RootTrust.PUBLIC_KEY));require(a.getString("kind")=="gfilmes-authority"&&a.getString("issuerId")==ServerKeys.id()&&a.getString("publicKey")==Crypto.encode(ServerKeys.publicKey().encoded)&&a.getLong("maxLicenseMs") in 1..MAX_LICENSE_MS);put("config","authority",JSONObject().put("grant",value))}
  @Synchronized fun importSnapshot(envelope:JSONObject){
   require(!ready()){ "O banco já foi importado. Use a recuperação autenticada, sem sobrescrever renovações." }
-  val encoded=envelope.getString("data");require(encoded.length<=32*1024*1024);val bytes=decodeLarge(encoded);val signature=Signature.getInstance("SHA256withRSA");signature.initVerify(Crypto.publicKey(RootTrust.PUBLIC_KEY));signature.update(bytes);require(signature.verify(Crypto.decode(envelope.getString("signature")))){"Backup não foi autorizado pelo titular"}
-  val pack=JSONObject(String(bytes,Charsets.UTF_8));require(pack.getString("deviceId")==ServerKeys.id());val aes=ServerKeys.unwrap(Crypto.decode(pack.getString("key")));val cipher=javax.crypto.Cipher.getInstance("AES/GCM/NoPadding");cipher.init(javax.crypto.Cipher.DECRYPT_MODE,javax.crypto.spec.SecretKeySpec(aes,"AES"),javax.crypto.spec.GCMParameterSpec(128,Crypto.decode(pack.getString("iv"))));val snapshot=JSONObject(String(cipher.doFinal(decodeLarge(pack.getString("encrypted"))),Charsets.UTF_8));aes.fill(0)
+  val snapshot=openTransfer(envelope)
   require(snapshot.getInt("v")==1&&snapshot.getString("database")=="guhflix");val collections=snapshot.getJSONObject("collections");val users=collections.getJSONArray("users");require(users.length()>0&&users.length()<=100000);val count=snapshot.getJSONObject("counts");val names=collections.keys();while(names.hasNext()){val name=names.next();require(collections.getJSONArray(name).length()==count.getInt(name))}
   val db=writableDatabase;db.beginTransaction();try{
    // Keep every original byte without exceeding Android CursorWindow row limits.
@@ -39,6 +38,16 @@ class ServerStore(context:Context):SQLiteOpenHelper(context,"gfilmes-authority.d
    for(i in 0 until licenses.length()){val l=licenses.getJSONObject(i);l.put("expiresAt",dateMillis(l.opt("expiresAt"))).put("issuedAt",dateMillis(l.opt("issuedAt")));put("license",l.getString("licenseId"),l,l.getString("userId"))}
    require(ready()){ "O snapshot não contém administrador existente" };audit("migration","import_snapshot","guhflix",count);db.setTransactionSuccessful()
   }finally{db.endTransaction()}
+ }
+ private fun openTransfer(envelope:JSONObject):JSONObject {
+  val encoded=envelope.getString("data");require(encoded.length<=32*1024*1024);val bytes=decodeLarge(encoded);val signature=Signature.getInstance("SHA256withRSA");signature.initVerify(Crypto.publicKey(RootTrust.PUBLIC_KEY));signature.update(bytes);require(signature.verify(Crypto.decode(envelope.getString("signature")))){"Backup não foi autorizado pelo titular"}
+  val pack=JSONObject(String(bytes,Charsets.UTF_8));require(pack.getString("deviceId")==ServerKeys.id());val aes=ServerKeys.unwrap(Crypto.decode(pack.getString("key")));val cipher=javax.crypto.Cipher.getInstance("AES/GCM/NoPadding");cipher.init(javax.crypto.Cipher.DECRYPT_MODE,javax.crypto.spec.SecretKeySpec(aes,"AES"),javax.crypto.spec.GCMParameterSpec(128,Crypto.decode(pack.getString("iv"))));val snapshot=try{JSONObject(String(cipher.doFinal(decodeLarge(pack.getString("encrypted"))),Charsets.UTF_8))}finally{aes.fill(0)}
+  return snapshot
+ }
+ @Synchronized fun importConfiguration(envelope:JSONObject){
+  val payload=openTransfer(envelope);require(payload.getInt("v")==1&&payload.getString("kind")=="gfilmes-server-config")
+  val tls=payload.getJSONObject("tls");val bytes=decodeLarge(tls.getString("p12"));require(bytes.size<=128*1024)
+  val password=tls.getString("password").toCharArray();try{val ks=java.security.KeyStore.getInstance("PKCS12");ks.load(java.io.ByteArrayInputStream(bytes),password);require(ks.aliases().toList().any{ks.isKeyEntry(it)});put("config","tls",tls);audit("owner-root","import_https_config","server")}finally{password.fill('\u0000')}
  }
  @Synchronized fun exportRows():JSONObject {val out=JSONArray();readableDatabase.rawQuery("SELECT kind,id,owner,data FROM records",null).use{c->while(c.moveToNext())out.put(JSONObject().put("kind",c.getString(0)).put("id",c.getString(1)).put("owner",c.getString(2)).put("data",JSONObject(String(ServerKeys.open(c.getBlob(3)),Charsets.UTF_8))))};return JSONObject().put("v",1).put("records",out)}
  @Synchronized fun restoreRows(snapshot:JSONObject){require(snapshot.getInt("v")==1);val rows=snapshot.getJSONArray("records");val db=writableDatabase;db.beginTransaction();try{db.delete("records",null,null);for(i in 0 until rows.length()){val r=rows.getJSONObject(i);if(r.getString("kind")=="config"&&r.getString("id")=="authority")continue;put(r.getString("kind"),r.getString("id"),r.getJSONObject("data"),r.getString("owner"))};require(ready());audit("recovery","restore_backup","local");db.setTransactionSuccessful()}finally{db.endTransaction()}}

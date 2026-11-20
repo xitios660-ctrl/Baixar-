@@ -1,3 +1,4 @@
 f9f628501ab0ab5133fc9a8ef1d8c4bf69173095c5de9c15750f57e2399dd92b  Gfilmes-Cliente-3.0.0-homologacao.apk
 3502adaf39d902477e34508bb5b0f2e5c83c7c7f1a8c65a2ab4077516d7cd1de  Gfilmes-Servidor-1.0.0-homologacao.apk
+1d31b1e1437820b5d642d96d12cc43d8a898632e93f08cf9a5c31bfd43c8892e  Gfilmes-Servidor-1.0.1-homologacao.apk
 0e281f4d7ffda10e2ee9c1baf2f8ebe353bee383b17da9779a04c85c7b52e535  Gfilmes-Recuperacao-Online-3.0.1.apk

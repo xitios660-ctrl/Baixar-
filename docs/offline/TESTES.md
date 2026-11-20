@@ -45,3 +45,13 @@ python tools/licensing/verify-apks.py
 ```
 
 A suíte completa também necessita de conectividade às fontes de guia/capas. As chaves de testes criptográficos são efêmeras; a chave privada original nunca é impressa. O teste de migração lê somente sua réplica descartável local, mesmo se houver MONGODB_URI no ambiente do operador.
+
+## Correção 1.0.1: ausência de seletor na TCL
+
+O titular abriu o Servidor 1.0.0 na TV e enviou foto da mensagem “Nenhum aplicativo pode executar esta ação”. Isso confirma a limitação física do fluxo SAF nessa instalação. A versão 1.0.1 oferece configuração por navegador na LAN e exibição direta da chave pública, sem usar o seletor.
+
+Resultados novos: 10 testes do servidor passaram. Quatro verificam o HTTP real em sockets locais: chave exata no download, token errado, rota proibida, arquivo acima do limite, origem externa, erro de validação, backup indisponível antes de preparado, headers duplicados e chunked recusados. A proteção criptográfica continua no importador raiz/cifra já existente; os testes do transporte usam callbacks de fixture, sem clientes reais.
+
+Teste em Chromium com viewport móvel de 430×932: download de gfilmes-server-public.txt, seleção/envio de arquivo pelo formulário, resposta de sucesso e nenhum erro JavaScript. Não é teste na TCL/Safari nem prova de outra rede. Assinatura e decifragem de pacote HTTPS foram testadas com conteúdo sintético, sem importar ou criar certificado público.
+
+Serviço novo: janela foreground iniciada manualmente, 15 minutos, bind apenas IPv4 privado, URL aleatória, sem rotas de login/administração/ativação. Senhas de backup são digitadas na TV; arquivos de configuração TLS via LAN precisam ser cifrados/assinados previamente. A atualização mantém pacote, certificado e aliases Keystore. A instalação por cima e a conexão LAN no equipamento do titular aguardam validação real.
