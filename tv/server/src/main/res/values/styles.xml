@@ -1,0 +1,1 @@
+<resources><style name="ServerTheme" parent="android:style/Theme.Material.NoActionBar"><item name="android:fontFamily">sans</item><item name="android:windowBackground">#080a0d</item><item name="android:colorAccent">#f3133d</item><item name="android:windowFullscreen">true</item></style></resources>

@@ -1,0 +1,4 @@
+-keep class com.gfilmes.server.** { *; }
+-keepattributes *Annotation*,Signature,InnerClasses,EnclosingMethod
+-dontwarn javax.naming.**
+-dontwarn org.bouncycastle.jsse.**
