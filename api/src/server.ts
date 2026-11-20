@@ -1,7 +1,7 @@
 import {connect} from './db.js';import {createApp} from './app.js';import {createRuntime} from './runtime.js';
 const secret=process.env.JWT_SECRET,adminOrigin=process.env.ADMIN_ORIGIN;
 if(!secret||!adminOrigin)throw new Error('Configure JWT_SECRET and ADMIN_ORIGIN');
-const runtime=createRuntime();await runtime.listen(Number(process.env.PORT??10000));
+const runtime=createRuntime();await runtime.listen(Number(process.env.PORT??10000),process.env.GFILMES_ACTIVATION_ONLY==='1'?'127.0.0.1':'0.0.0.0');
 let connection:Awaited<ReturnType<typeof connect>>|undefined,app:Awaited<ReturnType<typeof createApp>>|undefined,stopping=false,retry:NodeJS.Timeout|undefined;
 async function initialize(){
  const uri=process.env.MONGODB_URI;
