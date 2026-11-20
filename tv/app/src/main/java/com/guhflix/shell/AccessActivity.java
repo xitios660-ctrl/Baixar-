@@ -194,6 +194,15 @@ public final class AccessActivity extends Activity {
         if (isFinishing()) {
             return;
         }
+        if (OfflineLicenseStore.temporaryNetworkFailure(apiError)
+                && OfflineLicenseStore.valid(this)) {
+            // The cloud catalog cannot respond. Open the existing on-device TV,
+            // film and series interface, which can read authorized sources.
+            startActivity(new Intent().setClassName(getPackageName(),
+                    "br.com.saimo.tv.EscolhaActivity"));
+            finish();
+            return;
+        }
         if (apiError.status == 401) {
             Gate.clear(this);
             render("Entre uma vez para assistir em até 3 telas simultâneas.", true);
@@ -218,6 +227,9 @@ public final class AccessActivity extends Activity {
     /* synthetic */ void m15lambda$validate$11$comguhflixshellAccessActivity() {
         try {
             final JSONObject jSONObjectRequest = Gate.request(this, "GET", "/api/app/access", null, true);
+            if ("active".equals(jSONObjectRequest.optString("state"))) {
+                OfflineLicenseStore.refresh(this); // best effort; fails closed if not provisioned
+            }
             runOnUiThread(new Runnable() { // from class: com.guhflix.shell.AccessActivity$$ExternalSyntheticLambda0
                 @Override // java.lang.Runnable
                 public final void run() {
@@ -247,6 +259,7 @@ public final class AccessActivity extends Activity {
         }
         String strOptString = jSONObject.optString("state");
         if (!"active".equals(strOptString)) {
+            OfflineLicenseStore.clear(this);
             blocked(strOptString);
             return;
         }
