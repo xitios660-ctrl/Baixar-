@@ -6,6 +6,7 @@ import {registerConnect} from './connect.js';
 import {ProviderCatalog,type Catalog} from './catalog.js';
 import {registerPwa} from './pwa.js';
 import {registerAdmin} from './admin.js';
+import {issueOfflinePermit} from './offline-license.js';
 import Fastify,{type FastifyRequest} from 'fastify';
 import cors from '@fastify/cors';import cookie from '@fastify/cookie';import helmet from '@fastify/helmet';import rateLimit from '@fastify/rate-limit';
 import {ObjectId,type Db,type MongoClient,type ClientSession} from 'mongodb';
@@ -57,6 +58,26 @@ export async function createApp(c:Config){
  app.post('/api/auth/logout',async(req,reply)=>{const {s,u}=await identity(req);await tx(async t=>{await db.collection('sessions').updateOne({_id:s._id},{$set:{revoked:true,playbackActive:false}},options(t));await db.collection('users').updateOne({_id:u._id},{$pull:{slots:{sessionId:s._id.toString()}}} as any,options(t));await audit(t,u._id.toString(),u._id.toString(),'logout')});reply.clearCookie('guhflix_refresh',{path:'/api/auth'});reply.clearCookie('guhflix_pwa_refresh',{path:'/api/auth'});return {success:true}});
  app.get('/api/auth/me',async req=>publicUser((await identity(req)).u));
  app.get('/api/app/access',async req=>{const {u}=await identity(req);if(u.role!=='customer')throw new Fault(403,'CUSTOMER_REQUIRED','Esta é uma conta administradora. Entre na TV com um acesso de cliente ativo criado no painel GUHFLIX.');return {state:access(u),expiresAt:u.expiresAt,serverTime:now(),priceCents:3000,currency:'BRL',maxStreams:3,contact:'https://wa.me/5511970731504'}});
+
+ // Optional issuer: remains unavailable until the operator provisions a RSA key
+ // through private environment settings. It never changes subscription expiry.
+ app.get('/api/app/offline-license',{config:{rateLimit:{max:4,timeWindow:'1 minute'}}},async req=>{
+  const {s,u}=await identity(req);
+  if(s.client!=='tv'||u.role!=='customer')throw new Fault(403,'TV_ONLY','Licenças são exclusivas para a TV do cliente.');
+  requireAccess(u);
+  const b64=process.env.GUHFLIX_OFFLINE_PRIVATE_KEY_B64;
+  if(!b64)throw new Fault(503,'LICENSE_NOT_CONFIGURED','Emissão de licença offline ainda não configurada.');
+  try{
+   const pem=Buffer.from(b64,'base64').toString('utf8');
+   const issued=Math.floor(now().getTime()/1000);
+   const paidUntil=Math.floor(new Date(u.expiresAt).getTime()/1000);
+   const signed=issueOfflinePermit(pem,u._id.toString(),s.deviceId,issued,paidUntil);
+   return {token:signed.token,expiresAt:new Date(signed.expiresAt*1000),serverTime:now()};
+  }catch{
+   throw new Fault(503,'LICENSE_UNAVAILABLE','Não foi possível emitir a licença. Tente novamente.');
+  }
+ });
+
  async function playbackLease(action:string,{s,u}:{s:any;u:any},playbackId:string){return tx(async t=>{const time=now(),fresh=await db.collection('users').findOne({_id:u._id},options(t));const session=await db.collection('sessions').findOne({_id:s._id,revoked:false,expiresAt:{$gt:time}},options(t));if(!fresh||!session||session.version!==fresh.sessionVersion)throw new Fault(401,'REVOKED','Sessão encerrada');let slots=(fresh.slots??[]).filter((x:any)=>x.expiresAt>time);const sid=s._id.toString(),existing=slots.find((x:any)=>x.sessionId===sid&&x.playbackId===playbackId);
  if(action!=='stop')requireAccess(fresh);
  if(action==='start'){if(!existing&&slots.length>=3)throw new Fault(409,'SCREEN_LIMIT','Limite de 3 telas atingido');if(!existing){slots.push({sessionId:sid,playbackId:playbackId,expiresAt:new Date(time.getTime()+LEASE)})}}
