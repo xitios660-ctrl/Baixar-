@@ -263,6 +263,9 @@ public final class Gate {
     }
 
     public static void beginPlayer(Activity activity, Bundle bundle) {
+        if(br.com.saimo.tv.BuildConfig.GFILMES_LOCAL && LocalProfiles.INSTANCE.isKids(activity) && activity.getClass().getSimpleName().equals("MainActivity")){
+            android.widget.Toast.makeText(activity,"TV ao vivo indisponível no perfil infantil",android.widget.Toast.LENGTH_LONG).show();activity.finish();return;
+        }
         Playback playback = new Playback(bundle);
         players.put(activity, playback);
         loading(activity, "Preparando reprodução…");

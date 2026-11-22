@@ -199,6 +199,7 @@ class PlayerActivity : AppCompatActivity(), Connect.Listener {
     @androidx.annotation.Keep
     fun guhflixInitialize(savedInstanceState: Bundle?) {
         alvo = Alvo.de(intent) ?: run { finish(); return }
+        if(BuildConfig.GFILMES_LOCAL){try{com.guhflix.shell.LocalCatalog.requireChildTarget(this,alvo,intent.getStringExtra("guhflix.remote"))}catch(_:Exception){android.widget.Toast.makeText(this,"Título não aprovado para o perfil infantil",android.widget.Toast.LENGTH_LONG).show();finish();return}}
         setContentView(R.layout.activity_player)
         if (Vr.ativo) Vr.videoEmTextura(this, R.id.playerVideo)
         video = findViewById(R.id.playerVideo)

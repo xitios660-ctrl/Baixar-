@@ -14,12 +14,18 @@ object Preferencias {
 
     private const val ARQUIVO = "ajustes"
 
-    private lateinit var prefs: SharedPreferences
+    private lateinit var app: Context
+    private val device: SharedPreferences get()=app.getSharedPreferences(ARQUIVO,Context.MODE_PRIVATE)
+    private val prefs: SharedPreferences get(){
+        if(!BuildConfig.GFILMES_LOCAL)return device
+        val id=com.guhflix.shell.LocalProfiles.store(app).activeId()?:return device
+        return app.getSharedPreferences("$ARQUIVO-profile-$id",Context.MODE_PRIVATE)
+    }
 
-    fun estaPronta() = ::prefs.isInitialized
+    fun estaPronta() = ::app.isInitialized
 
     fun iniciar(context: Context) {
-        prefs = context.applicationContext.getSharedPreferences(ARQUIVO, Context.MODE_PRIVATE)
+        app = context.applicationContext
     }
 
     /** "dub" ou "leg": qual versão tocar primeiro quando o título tem as duas. */
@@ -84,8 +90,8 @@ object Preferencias {
 
     /** Mandar o uso anônimo ao painel. */
     var telemetria: Boolean
-        get() = prefs.getBoolean("telemetria", true)
-        set(valor) = prefs.edit().putBoolean("telemetria", valor).apply()
+        get() = device.getBoolean("telemetria", true)
+        set(valor) = device.edit().putBoolean("telemetria", valor).apply()
 
     /** Nome do último canal assistido, para voltar nele. */
     var ultimoCanal: String?

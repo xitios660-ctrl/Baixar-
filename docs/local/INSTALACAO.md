@@ -1,3 +1,5 @@
+> **Versão atual 1.4.0:** veja [PERFIS-ANIMADOS-1.4.md](PERFIS-ANIMADOS-1.4.md): avatares do ZIP, perfis comuns sem senha e controle infantil com PIN de responsável. Instruções abaixo são históricas.
+
 > **Atualização 1.3.0:** perfis agora são pessoas, sem PIN. Veja [PERFIS-SEM-SENHA-1.3.md](PERFIS-SEM-SENHA-1.3.md). As instruções de PIN abaixo são históricas.
 
 > **Versão atual 1.2.0:** use [ABRIR-CATALOGO-1.2.md](ABRIR-CATALOGO-1.2.md). Abre sem código de TV ou APK personalizado. As orientações abaixo são históricas.

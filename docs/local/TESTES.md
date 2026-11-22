@@ -48,3 +48,7 @@ As quatro fontes existentes consultadas responderam HTTP 200 sem prefixo HTML, l
 A correção nativa fixa o ID do perfil no Intent do player, e o armazenamento de progresso lê esse ID antes de consultar a seleção global. Coleções recebem registro de histórico da interface. Estas alterações compilaram e passaram nos checks disponíveis; a persistência real no ExoPlayer e a reprodução na TCL ainda dependem de teste físico, não foram apresentadas como medidas no aparelho.
 
 O link de referência fornecido retornou a página geral ChatGPT sem imagem; foi solicitada a imagem como anexo. O layout mostrado na prévia desta entrega é uma implementação provisória consistente com o Gfilmes e não uma reprodução validada daquela referência inacessível.
+
+## Atualização 1.4.0 — avatares animados
+
+49 testes JVM e 14 Chromium passaram, incluindo persistência dos 12 avatares, controle infantil, preferências/progresso reais usando SharedPreferences em memória, movimentos dos 12 GIFs e navegação em 720p/768p/1080p. Fonte e limitações em [PERFIS-ANIMADOS-1.4.md](PERFIS-ANIMADOS-1.4.md). Reprodução e desempenho em TCL física permanecem pendentes.
