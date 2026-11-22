@@ -1,0 +1,16 @@
+{
+  "sourceCommit": "e408cf1",
+  "releaseBuildSuccessful": true,
+  "androidTests": 46,
+  "androidFailures": 0,
+  "androidErrors": 0,
+  "androidSkipped": 0,
+  "chromiumTests": 7,
+  "chromiumFailures": 0,
+  "chromiumUsesSyntheticDataAndNativeBridge": true,
+  "issuancePolicySyntheticChecks": 6,
+  "customerAuthorizationsIssued": 0,
+  "customerDatabaseChanged": false,
+  "physicalTvTested": false,
+  "productionChanged": false
+}
