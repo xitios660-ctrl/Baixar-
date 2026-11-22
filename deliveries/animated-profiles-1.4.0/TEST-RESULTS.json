@@ -1,0 +1,40 @@
+{
+  "sourceCommit": "2d63877",
+  "releaseBuildSuccessful": true,
+  "androidTests": 49,
+  "androidFailures": 0,
+  "androidErrors": 0,
+  "androidSkipped": 0,
+  "chromiumTests": 14,
+  "chromiumFailures": 0,
+  "chromiumUsesSyntheticCatalogAndNativeBridge": true,
+  "suppliedAnimatedCharacters": 12,
+  "framesPerGif": 16,
+  "distinctFramesEachGif": 16,
+  "gifLoopMs": 1760,
+  "byteIdenticalSourceGifsVerifiedInApk": true,
+  "browserPixelChangeObservedForAll12Gifs": true,
+  "backgroundAndCatalogPauseVerified": true,
+  "testedViewports": [
+    {
+      "width": 1280,
+      "height": 720
+    },
+    {
+      "width": 1366,
+      "height": 768
+    },
+    {
+      "width": 1920,
+      "height": 1080
+    }
+  ],
+  "realPreferenceAndProgressAccessorsTestedWithMemorySharedPreferences": true,
+  "parentPinExitAndApprovedOnlyCatalogTestsPassed": true,
+  "physicalTvInstallationTested": false,
+  "physicalRemoteTested": false,
+  "realVideoPlaybackTested": false,
+  "physicalTvFpsMeasured": false,
+  "customerDatabaseChanged": false,
+  "productionChanged": false
+}
