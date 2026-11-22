@@ -19,8 +19,9 @@ with zipfile.ZipFile(apk) as z:
  for asset in assetRoot.rglob('*'):
   if asset.is_file():assert z.read('assets/gfilmes/'+asset.relative_to(assetRoot).as_posix())==asset.read_bytes(),asset.name
  import gzip
+ assert {n for n in z.namelist() if n.startswith('assets/gfilmes/catalog-snapshot/')}=={'assets/gfilmes/catalog-snapshot/manifest.json','assets/gfilmes/catalog-snapshot/busca.txt.bin','assets/gfilmes/catalog-snapshot/fichas.txt.bin'}
  snapshot=json.loads(z.read('assets/gfilmes/catalog-snapshot/manifest.json'))
- for name,meta in snapshot['files'].items():assert hashlib.sha256(gzip.decompress(z.read('assets/gfilmes/catalog-snapshot/'+name+'.gz'))).hexdigest()==meta['sha256']
+ for name,meta in snapshot['files'].items():assert hashlib.sha256(gzip.decompress(z.read('assets/gfilmes/catalog-snapshot/'+name+'.bin'))).hexdigest()==meta['sha256']
  avatars=json.loads((assetRoot/'avatars/manifest.json').read_text())['avatars'];assert len(avatars)==12
  from PIL import Image
  import io

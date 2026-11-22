@@ -43,7 +43,7 @@ object LocalCatalog {
  }
  private fun store(ctx:Context,base:String)=stores.getOrPut(Crypto.sha(base.toByteArray()).take(16)){CatalogFileStore(File(ctx.filesDir,"offline-catalog"),Crypto.sha(base.toByteArray()).take(16),{name->download(base,name).also{CatalogSnapshotParser.validate(name,it)}})}
  fun file(ctx:Context,name:String):String {val safe=Uri.decode(name).replace("%23","#");val base=Enderecos.filmes?:error("Catálogo desativado nas configurações");return store(ctx,base).read(safe)}
- private fun bundled(ctx:Context,name:String):String=ctx.assets.open("gfilmes/catalog-snapshot/$name.gz").use{java.util.zip.GZIPInputStream(it).bufferedReader().use{r->r.readText()}}
+ private fun bundled(ctx:Context,name:String):String=ctx.assets.open("gfilmes/catalog-snapshot/$name.bin").use{java.util.zip.GZIPInputStream(it).bufferedReader().use{r->r.readText()}}
  private fun metadata(ctx:Context,base:String,cache:CatalogFileStore):String = cache.cached("fichas.txt")?:if(base==Enderecos.PADRAO_FILMES)runCatching{bundled(ctx,"fichas.txt")}.getOrDefault("") else ""
  private fun publish(base:String,next:List<CatalogRow>){synchronized(indexLock){if(Enderecos.filmes!=base)return;byId=next.associateBy{it.id};views.clear();sourceKey=base;rows=next}}
  private fun index(ctx:Context){

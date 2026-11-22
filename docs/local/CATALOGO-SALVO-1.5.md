@@ -15,7 +15,7 @@ Na consulta HTTPS normal das três URLs configuradas (`indice.txt`, `busca.txt`,
 
 1. O primeiro catálogo usa metadados salvos por fonte. Sem cache e apenas para a fonte padrão já existente, usa uma cópia histórica de metadados que já estava preservada no projeto.
 2. Essa cópia contém **28.362 filmes e 9.854 séries**, e foi preservada em arquivos locais com mtime de **07/11/2026**. É um catálogo histórico real, **não** uma coleta atual nem títulos fictícios. Manifesto com hashes e proveniência em `assets/gfilmes/catalog-snapshot/manifest.json`.
-3. Os arquivos incorporados são `busca.txt.gz` e `fichas.txt.gz`: nomes, tipos, letras, anos disponíveis, gêneros e referências públicas de pôster/TMDB. Não foi incorporado `indice.txt` com servidores de reprodução, vídeos, credenciais de provedor ou dados de clientes.
+3. Os arquivos incorporados são `busca.txt.bin` e `fichas.txt.bin` (conteúdo gzip): nomes, tipos, letras, anos disponíveis, gêneros e referências públicas de pôster/TMDB. Não foi incorporado `indice.txt` com servidores de reprodução, vídeos, credenciais de provedor ou dados de clientes.
 4. A nova montagem é Kotlin puro, sem requisições de rede, normalização para busca ou dependência de metadados remotos. O hexadecimal SHA-256 foi otimizado mantendo exatamente a fórmula/IDs antigos; favoritos e aprovações infantis não são reidentificados.
 5. Atualização da fonte ocorre em thread própria, depois de o catálogo estar disponível. Metadados de capa/gênero não bloqueiam a lista inicial. A falha preserva o catálogo já mostrado.
 6. O cache tem travas por arquivo: uma transferência lenta de metadados não monopoliza outro arquivo salvo. Atualizações são atômicas e páginas de bloqueio/índices inválidos são rejeitados antes de substituir dados válidos. Cache continua isolado pelo hash da origem.
@@ -40,3 +40,5 @@ Não houve alteração de pagamentos, banco MongoDB, Render, API MARY, credencia
 - **15 testes Chromium passaram**, incluindo a regressão “fonte retorna 403, catálogo salvo continua visível, sem loading vazio”. Catálogo/bridge desses testes de UI são simulados; a medição de montagem JVM usa os arquivos históricos reais. Testes de avatares, DPAD e 720p/768p/1080p continuam passando.
 - Build release e assinatura, integridade, pacote/versão, GIFs e metadados incorporados são conferidos no manifesto da entrega.
 - **Pendente físico:** instalar na TCL, medir a primeira abertura real, confirmar as respostas da fonte naquela rede, reproduzir filme/série/canal autorizado e medir codecs/desempenho. Não há TV/ADB conectada. A fonte recusou as consultas deste ambiente, portanto não foi declarado streaming funcional.
+
+A validação do primeiro APK detectou que o empacotador Android removia a extensão `.gz` dos assets. Os blobs gzip foram renomeados para `.bin`, e loader/testes/verificador ajustados. A entrega só foi preparada após conferir os bytes realmente presentes no APK; o APK intermediário não foi distribuído.
