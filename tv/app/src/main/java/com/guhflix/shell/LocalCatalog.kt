@@ -25,9 +25,9 @@ object LocalCatalog {
  @Volatile private var fresh=false
  @Volatile private var bundledSnapshot=false
  private val stores=java.util.concurrent.ConcurrentHashMap<String,CatalogFileStore>()
- private val background=java.util.concurrent.Executors.newSingleThreadExecutor{r->Thread(r,"gflix-catalog-refresh").apply{isDaemon=true}}
+ private val background=java.util.concurrent.Executors.newSingleThreadExecutor{r->Thread(r,"gflix-catalog-refresh").apply{isDaemon=true;priority=Thread.MIN_PRIORITY}}
  private val deadlines=java.util.concurrent.Executors.newSingleThreadScheduledExecutor{r->Thread(r,"gflix-source-deadline").apply{isDaemon=true}}
- private val views=object:LinkedHashMap<String,List<CatalogRow>>(16,.75f,true){override fun removeEldestEntry(e:MutableMap.MutableEntry<String,List<CatalogRow>>)=size>12}
+ private val views=CatalogViewCache()
  private fun download(base:String,name:String):String {
   val uri=java.net.URI(base);require(uri.scheme=="https"&&uri.userInfo==null&&uri.query==null&&uri.fragment==null){"Use uma fonte HTTPS válida"}
   val connection=URL(base+name.split('/').joinToString("/"){Uri.encode(it)}).openConnection() as HttpURLConnection
@@ -74,6 +74,7 @@ object LocalCatalog {
   return status()
  }
  private fun item(r:CatalogRow):JSONObject=JSONObject().put("id",r.id).put("title",r.title).put("kind",r.kind).put("year",r.year).put("letter",r.letter).put("genres",JSONArray(r.genres)).put("poster",r.poster.ifEmpty{Generos.capa(r.title,r.kind=="series")?:""}).put("tmdbId",r.tmdbId.takeIf{it>0}?:Generos.id(r.title,r.kind=="series")?:0)
+ fun preview(ctx:Context,id:String):JSONObject {index(ctx);val row=synchronized(indexLock){byId[id]}?:error("Título indisponível");require(LocalProfiles.allowed(ctx,"vod:"+id)){"Título não aprovado para o perfil infantil"};return item(row)}
  private fun target(r:CatalogRow)=Alvo(r.title,r.kind=="series",r.letter,r.year,tmdbId=r.tmdbId.takeIf{it>0}?:Generos.id(r.title,r.kind=="series")?:0)
  private fun resolve(ctx:Context,r:CatalogRow)=runBlocking{Titulos.resolver(ctx,target(r))}?:error("Título indisponível na fonte autorizada")
  private fun detail(ctx:Context,r:CatalogRow):JSONObject {val j=item(r);if(r.kind=="series"){val resolved=resolve(ctx,r);j.put("seasons",JSONArray(resolved.temporadas));j.put("episodes",JSONArray().also{a->resolved.episodios.sortedWith(compareBy({it.temporada},{it.numero})).forEach{a.put(JSONObject().put("season",it.temporada).put("episode",it.numero))}})};return j}
@@ -88,13 +89,16 @@ object LocalCatalog {
   if(p=="/api/connect/pairing"||p.contains("/devices"))throw Gate.ApiError(503,"ONLINE_REMOTE","O controle pela nuvem exige um serviço de coordenação; não é necessário para assistir localmente")
   index(ctx)
   val approved=if(kids)LocalProfiles.guardian(ctx).approvedKeys() else emptySet()
-  val visible=KidsCatalog.visible(rows,kids,approved)
-  if(p=="/api/connect/home"){val first=visible.firstOrNull{it.kind=="movie"}?:visible.firstOrNull();return JSONObject().put("status",status()).put("kids",kids).put("featured",first?.let{item(it)}?:JSONObject.NULL).put("rows",JSONArray().put(JSONObject().put("title","Filmes no seu catálogo").put("items",JSONArray(visible.filter{it.kind=="movie"}.take(18).map{item(it)}))).put(JSONObject().put("title","Séries no seu catálogo").put("items",JSONArray(visible.filter{it.kind=="series"}.take(18).map{item(it)}))))}
+  if(p=="/api/connect/home"){val visible=KidsCatalog.visible(rows,kids,approved);val first=visible.firstOrNull{it.kind=="movie"}?:visible.firstOrNull();return JSONObject().put("status",status()).put("kids",kids).put("featured",first?.let{item(it)}?:JSONObject.NULL).put("rows",JSONArray().put(JSONObject().put("title","Filmes no seu catálogo").put("items",JSONArray(visible.filter{it.kind=="movie"}.take(18).map{item(it)}))).put(JSONObject().put("title","Séries no seu catálogo").put("items",JSONArray(visible.filter{it.kind=="series"}.take(18).map{item(it)}))))}
   if(p=="/api/connect/catalog"){
-   val kind=uri.getQueryParameter("kind").orEmpty();val genre=uri.getQueryParameter("genre").orEmpty();val year=uri.getQueryParameter("year").orEmpty();val sort=uri.getQueryParameter("sort").orEmpty();val key=listOf(if(kids)"kids:"+Crypto.sha(approved.sorted().joinToString().toByteArray()) else "adult",kind,q,genre,year,sort).joinToString("\u0000");val selection=synchronized(indexLock){views[key]?:CatalogFilter.select(visible,kind,q,genre,year,sort).also{views[key]=it}};val pool=visible.filter{kind.isEmpty()||it.kind==kind};val years=pool.map{it.year}.filter{it.toIntOrNull()?.let{y->y in 1800..2200}==true}.distinct().sortedDescending();val page=selection.drop(offset).take(60)
-   return JSONObject().put("status",status()).put("items",JSONArray(page.map{item(it)})).put("total",selection.size).put("categories",JSONArray(pool.flatMap{it.genres}.distinct().sorted())).put("years",JSONArray(years)).put("pageSize",60).put("nextOffset",if(offset+page.size<selection.size)offset+page.size else JSONObject.NULL).put("availableSorts",JSONArray(if(years.isEmpty())listOf("title_asc","title_desc") else listOf("title_asc","title_desc","year_desc","year_asc")))
+   val kind=uri.getQueryParameter("kind").orEmpty();val genre=uri.getQueryParameter("genre").orEmpty();val year=uri.getQueryParameter("year").orEmpty();val sort=uri.getQueryParameter("sort").orEmpty()
+   val scope=if(kids)"kids:"+Crypto.sha(approved.sorted().joinToString().toByteArray()) else "adult"
+   val key=listOf(scope,kind,q,genre,year,sort).joinToString("\u0000")
+   val view=synchronized(indexLock){views.get(key,{KidsCatalog.visible(rows,kids,approved)},kind,q,genre,year,sort)}
+   val page=view.page(offset)
+   return JSONObject().put("status",status()).put("items",JSONArray(page.map{item(it)})).put("total",view.items.size).put("categories",JSONArray(view.categories)).put("years",JSONArray(view.years)).put("pageSize",60).put("nextOffset",if(offset+page.size<view.items.size)offset+page.size else JSONObject.NULL).put("availableSorts",JSONArray(if(view.years.isEmpty())listOf("title_asc","title_desc") else listOf("title_asc","title_desc","year_desc","year_asc")))
   }
-  if(p.startsWith("/api/connect/catalog/")){val id=p.substringAfter("/api/connect/catalog/").substringBefore('/');val row=byId[id]?:error("Título indisponível");require(!kids||"vod:"+id in approved){"Título não aprovado para o perfil infantil"};if(p.endsWith("/play")){val r=resolve(ctx,row);val season=uri.getQueryParameter("season")?.toIntOrNull();val episode=uri.getQueryParameter("episode")?.toIntOrNull();val urls=if(row.kind=="series")r.episodio(season?:0,episode?:0)?.fontes?.values?.flatten().orEmpty() else r.filme?.fontes?.values?.flatten().orEmpty();check(urls.isNotEmpty());return JSONObject().put("item",detail(ctx,row)).put("urls",JSONArray(urls)).also{if(season!=null)it.put("season",season).put("episode",episode)}};if(p.endsWith("/related"))return JSONObject().put("collections",JSONArray()).put("similar",JSONArray());return detail(ctx,row)}
+  if(p.startsWith("/api/connect/catalog/")){val id=p.substringAfter("/api/connect/catalog/").substringBefore('/');val row=byId[id]?:error("Título indisponível");require(!kids||"vod:"+id in approved){"Título não aprovado para o perfil infantil"};if(p.endsWith("/play")){val r=resolve(ctx,row);val season=uri.getQueryParameter("season")?.toIntOrNull();val episode=uri.getQueryParameter("episode")?.toIntOrNull();val urls=if(row.kind=="series")r.episodio(season?:0,episode?:0)?.fontes?.values?.flatten().orEmpty() else r.filme?.fontes?.values?.flatten().orEmpty();check(urls.isNotEmpty());return JSONObject().put("item",item(row)).put("episodes",JSONArray().also{a->r.episodios.sortedWith(compareBy({it.temporada},{it.numero})).forEach{a.put(JSONObject().put("season",it.temporada).put("episode",it.numero))}}).put("urls",JSONArray(urls)).also{if(season!=null)it.put("season",season).put("episode",episode)}};if(p.endsWith("/related"))return JSONObject().put("collections",JSONArray()).put("similar",JSONArray());return detail(ctx,row)}
   throw Gate.ApiError(503,"ONLINE_REQUIRED","Este recurso usa um serviço externo opcional")
  }
  fun requireChildTarget(ctx:Context,target:Alvo?,remote:String?){

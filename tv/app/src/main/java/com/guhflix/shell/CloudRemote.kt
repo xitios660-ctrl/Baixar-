@@ -76,10 +76,12 @@ object CloudRemote {
             lastError=""
         }catch(e:Exception){lastError=if(e is Gate.ApiError)e.message?:"Falha de conexão" else "Não foi possível sincronizar o controle. Tente novamente."}
     }
-    private fun execute(activity:Activity,command:JSONObject):JSONObject {
+    private fun execute(activity:Activity,command:JSONObject,submittedProfile:String?=null):JSONObject {
+        val requested=if(BuildConfig.GFILMES_LOCAL)submittedProfile?:LocalProfiles.store(activity).activeId() else null
         return try {
             when(command.getString("type")){
                 "play"->{
+                    if(BuildConfig.GFILMES_LOCAL&&requested!=LocalProfiles.store(activity).activeId())error("Perfil alterado")
                     val contentId=command.getString("contentId")
                     val suffix=if(command.has("season"))"?season=${command.getInt("season")}&episode=${command.getInt("episode")}" else ""
                     val isLive=command.optBoolean("live")
@@ -87,17 +89,19 @@ object CloudRemote {
                     val playable=Gate.request(app,"GET",path,null,true)
                     val item=playable.getJSONObject("item")
                     if(item.getString("id")!=contentId)throw IllegalArgumentException("Título não corresponde ao pedido")
-                    val full=if(item.optString("kind")=="series")Gate.request(app,"GET","/api/connect/catalog/$contentId",null,true) else item
-                    playable.put("episodes",full.optJSONArray("episodes")?:JSONArray())
+                    val full=if(item.optString("kind")=="series"&&!playable.has("episodes"))Gate.request(app,"GET","/api/connect/catalog/$contentId",null,true) else item
+                    if(!playable.has("episodes"))playable.put("episodes",full.optJSONArray("episodes")?:JSONArray())
                     lastId=contentId;lastTitle=item.getString("title")
                     app.getSharedPreferences("guhflix-connect",0).edit().putString("contentId",lastId).putString("contentTitle",lastTitle).commit()
                     main.post {
                         if(activity.isDestroyed||activity.isFinishing)return@post
+                        if(BuildConfig.GFILMES_LOCAL&&requested!=LocalProfiles.store(activity).activeId())return@post
                         val target=Alvo(item.getString("title"),item.getString("kind")=="series",item.optString("letter", "L"),item.optString("year"),tmdbId=item.optInt("tmdbId"))
                         val intent=target.em(Intent(activity,PlayerActivity::class.java))
                             .putExtra("player.temporada",command.optInt("season"))
                             .putExtra("player.episodio",command.optInt("episode"))
                             .putExtra("guhflix.remote",playable.toString())
+                            .putExtra("gfilmes.playback.profile",requested)
                             .addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
                         activity.startActivity(intent)
                     }
@@ -128,9 +132,10 @@ object CloudRemote {
         }catch(e:Exception){JSONObject().put("success",false).put("message",if(e is Gate.ApiError)e.message?.take(240)?:"Falha no serviço" else "Não foi possível executar. Abra o player na televisão e tente novamente.")}
     }
     @JvmStatic fun liveCatalog(offset:Int):JSONObject=Gate.request(app,"GET","/api/connect/live?offset=${offset.coerceAtLeast(0)}",null,true)
-    @JvmStatic fun playTitle(activity:Activity,contentId:String){worker.execute{execute(activity,JSONObject().put("type","play").put("contentId",contentId))}}
-    @JvmStatic fun playLive(activity:Activity,contentId:String){worker.execute{execute(activity,JSONObject().put("type","play").put("contentId",contentId).put("live",true))}}
-    @JvmStatic fun playEpisode(activity:Activity,contentId:String,season:Int,episode:Int){worker.execute{execute(activity,JSONObject().put("type","play").put("contentId",contentId).put("season",season).put("episode",episode))}}
+    private fun dispatchPlay(activity:Activity,command:JSONObject){val person=if(BuildConfig.GFILMES_LOCAL)LocalProfiles.store(activity).activeId() else null;worker.execute{execute(activity,command,person)}}
+    @JvmStatic fun playTitle(activity:Activity,contentId:String){dispatchPlay(activity,JSONObject().put("type","play").put("contentId",contentId))}
+    @JvmStatic fun playLive(activity:Activity,contentId:String){dispatchPlay(activity,JSONObject().put("type","play").put("contentId",contentId).put("live",true))}
+    @JvmStatic fun playEpisode(activity:Activity,contentId:String,season:Int,episode:Int){dispatchPlay(activity,JSONObject().put("type","play").put("contentId",contentId).put("season",season).put("episode",episode))}
     @JvmStatic fun related(id:Int,series:Boolean):JSONObject?=try{Gate.request(app,"GET","/api/connect/catalog-related/"+(if(series)"series" else "movie")+"/$id",null,true)}catch(_:Exception){null}
     @JvmStatic fun metadata(path:String):JSONObject?=try{Gate.request(app,"GET","/api/connect/metadata/"+path,null,true)}catch(_:Exception){null}
     @JvmStatic fun application():Application=app

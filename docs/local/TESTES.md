@@ -56,3 +56,7 @@ O link de referência fornecido retornou a página geral ChatGPT sem imagem; foi
 ## Atualização 1.5.0 — cache e montagem do catálogo
 
 57 testes JVM e 15 Chromium passaram. O parser leu a cópia real histórica de 28.362 filmes e 9.854 séries sem rede, em 875–1262 ms no computador. Foram verificadas manutenção do cache sob HTTP 403, rejeição de resposta inválida antes da gravação, travas por arquivo, IDs antigos e home visível durante falha da fonte. As três URLs consultadas receberam HTTP 403 / Cloudflare 1010 neste ambiente. Reprodução não confirmada e teste físico TCL pendente. Consulte [CATALOGO-SALVO-1.5.md](CATALOGO-SALVO-1.5.md).
+
+## Atualização 1.6.0 — navegação pelas capas
+
+62 testes JVM e 16 Chromium passaram. São verificados controles independentes de IO lento de episódios, planos de filtro/facetas reutilizados em 21 páginas, paginação sem copiar todo o catálogo e prévia local sem carregar episódios. O teste de UI registrou zero reposicionamentos de cartões existentes em quatro setas horizontais, nenhuma consulta de animes para abrir o hub e descarte de detalhe atrasado após navegar para Busca. FPS e resposta na TCL física ainda não foram medidos. Detalhes em [NAVEGACAO-1.6.md](NAVEGACAO-1.6.md).
