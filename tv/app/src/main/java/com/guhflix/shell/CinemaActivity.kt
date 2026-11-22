@@ -41,8 +41,8 @@ class CinemaActivity:Activity(){
   val records=br.com.saimo.tv.Progresso.emAndamento(this)
   val stored=org.json.JSONArray(prefs.getString(user,"[]"))
   fun clean(s:String)=s.replace(Regex("\\s*\\([0-9]{4}\\)\\s*$"),"").trim()
-  if(!prefs.contains("migrationOwner"))prefs.edit().putString("migrationOwner",user).commit()
-  if(prefs.getString("migrationOwner",null)==user&&!prefs.getBoolean("migrated",false)){
+  if(!BuildConfig.GFILMES_LOCAL&&!prefs.contains("migrationOwner"))prefs.edit().putString("migrationOwner",user).commit()
+  if(!BuildConfig.GFILMES_LOCAL&&prefs.getString("migrationOwner",null)==user&&!prefs.getBoolean("migrated",false)){
    for(record in records.take(12)){
     if(record.endereco?.colecao?.isNotEmpty()==true)continue
     val q=java.net.URLEncoder.encode(clean(record.titulo),"UTF-8")
@@ -177,6 +177,7 @@ class CinemaActivity:Activity(){
   openCinema(true,compatibility)
  }
  inner class Bridge{
+  @JavascriptInterface fun familyProfiles():Boolean=BuildConfig.GFILMES_LOCAL
   @JavascriptInterface fun edition():String=if(BuildConfig.GFILMES_LOCAL)"local" else "account"
   @JavascriptInterface fun request(id:String,raw:String){
    if(closed||!id.matches(Regex("[0-9]{1,9}")))return
@@ -185,7 +186,17 @@ class CinemaActivity:Activity(){
     if(closed||epoch!=uiEpoch)return@execute
     val result=try{
      val p=JSONObject(raw);val op=p.getString("op")
+     val profiles=if(BuildConfig.GFILMES_LOCAL)LocalProfiles.store(this@CinemaActivity) else null
+     if(profiles!=null&&op!="deviceStatus")LocalDeviceAccess.requireAccess(this@CinemaActivity)
+     if(profiles!=null&&op!="deviceStatus"&&!op.startsWith("profile"))LocalProfiles.requireSelected(this@CinemaActivity)
      val data=when(op){
+      "deviceStatus"->{require(profiles!=null);LocalDeviceAccess.status(this@CinemaActivity)}
+      "profiles"->{require(profiles!=null);profiles.list()}
+      "profileCreate"->{require(profiles!=null);profiles.create(p.optString("name"),p.optInt("avatar"),p.optString("pin"))}
+      "profileSelect"->{require(profiles!=null);profiles.select(p.getString("profileId"),p.optString("pin"))}
+      "profileLock"->{require(profiles!=null);profiles.lock();JSONObject()}
+      "profileUpdate"->{require(profiles!=null);profiles.update(p.getString("profileId"),p.optString("name"),p.optInt("avatar"),p.optString("oldPin"),p.optString("pin"))}
+      "profileDelete"->{require(profiles!=null);profiles.delete(p.getString("profileId"),p.optString("pin"))}
       "anime"->animePage(p.optString("q").take(120),p.optInt("offset").coerceIn(0,100000))
       "home"->Gate.request(this@CinemaActivity,"GET","/api/connect/home",null,true)
       "catalog"->{
@@ -198,7 +209,7 @@ class CinemaActivity:Activity(){
       }
       "live"->livePage(p.optInt("offset").coerceIn(0,100000),p.optString("q"))
       "detail"->{val content=p.getString("id");require(content.matches(Regex("[a-f0-9]{32}")));if(anime.containsKey(content))animeDetail(content) else Gate.request(this@CinemaActivity,"GET",(if(p.optBoolean("live"))"/api/connect/live/" else "/api/connect/catalog/")+content,null,true)}
-      "me"->Gate.request(this@CinemaActivity,"GET","/api/auth/me",null,true).let{JSONObject().put("username",it.optString("username")).put("version",BuildConfig.VERSION_NAME).put("local",BuildConfig.GFILMES_LOCAL)}
+      "me"->Gate.request(this@CinemaActivity,"GET","/api/auth/me",null,true).let{JSONObject().put("username",it.optString("displayName",it.optString("username"))).put("version",BuildConfig.VERSION_NAME).put("local",BuildConfig.GFILMES_LOCAL)}
       "pair"->Gate.request(this@CinemaActivity,"POST","/api/connect/pairing",JSONObject(),true)
       "history"->history()
       "favorites"->{val u=Gate.request(this@CinemaActivity,"GET","/api/auth/me",null,true);JSONObject().put("items",org.json.JSONArray(getSharedPreferences("cinema-favorites",0).getString(u.getString("username"),"[]")))}
@@ -209,7 +220,7 @@ class CinemaActivity:Activity(){
     runOnUiThread{if(!closed&&webLive&&epoch==uiEpoch)web.evaluateJavascript("window.gfilmesResult&&window.gfilmesResult($id,${result});",null)}
    }
   }
-  @JavascriptInterface fun play(raw:String){worker.execute{try{val p=JSONObject(raw);val id=p.getString("id");require(id.matches(Regex("[a-f0-9]{32}")));val live=p.optBoolean("live");val collection=anime[id];if(collection!=null){runOnUiThread{if(!closed)br.com.saimo.tv.PlayerActivity.abrir(this@CinemaActivity,collection,p.optInt("season"),p.optInt("episode"))};return@execute};if(!live){val item=Gate.request(this@CinemaActivity,"GET","/api/connect/catalog/$id",null,true);val u=Gate.request(this@CinemaActivity,"GET","/api/auth/me",null,true);val prefs=getSharedPreferences("cinema-history",0);val old=org.json.JSONArray(prefs.getString(u.getString("username"),"[]"));val next=org.json.JSONArray().put(JSONObject().put("id",id).put("title",item.getString("title")).put("poster",item.optString("poster")).put("kind",item.getString("kind")));for(i in 0 until minOf(old.length(),19)){val v=old.getJSONObject(i);if(v.getString("id")!=id)next.put(v)};prefs.edit().putString(u.getString("username"),next.toString()).apply()};runOnUiThread{if(!closed){if(live)CloudRemote.playLive(this@CinemaActivity,id) else if(p.has("season"))CloudRemote.playEpisode(this@CinemaActivity,id,p.getInt("season"),p.getInt("episode")) else CloudRemote.playTitle(this@CinemaActivity,id)}}}catch(e:Exception){runOnUiThread{if(!closed)web.evaluateJavascript("window.gfilmesPlaybackError("+JSONObject.quote(e.message?:"Não foi possível abrir o vídeo")+")",null)}}}}
+  @JavascriptInterface fun play(raw:String){worker.execute{try{LocalProfiles.requireSelected(this@CinemaActivity);val p=JSONObject(raw);val id=p.getString("id");require(id.matches(Regex("[a-f0-9]{32}")));val live=p.optBoolean("live");val collection=anime[id];if(collection!=null){runOnUiThread{if(!closed)br.com.saimo.tv.PlayerActivity.abrir(this@CinemaActivity,collection,p.optInt("season"),p.optInt("episode"))};return@execute};if(!live){val item=Gate.request(this@CinemaActivity,"GET","/api/connect/catalog/$id",null,true);val u=Gate.request(this@CinemaActivity,"GET","/api/auth/me",null,true);val prefs=getSharedPreferences("cinema-history",0);val old=org.json.JSONArray(prefs.getString(u.getString("username"),"[]"));val next=org.json.JSONArray().put(JSONObject().put("id",id).put("title",item.getString("title")).put("poster",item.optString("poster")).put("kind",item.getString("kind")));for(i in 0 until minOf(old.length(),19)){val v=old.getJSONObject(i);if(v.getString("id")!=id)next.put(v)};prefs.edit().putString(u.getString("username"),next.toString()).apply()};runOnUiThread{if(!closed){if(live)CloudRemote.playLive(this@CinemaActivity,id) else if(p.has("season"))CloudRemote.playEpisode(this@CinemaActivity,id,p.getInt("season"),p.getInt("episode")) else CloudRemote.playTitle(this@CinemaActivity,id)}}}catch(e:Exception){runOnUiThread{if(!closed)web.evaluateJavascript("window.gfilmesPlaybackError("+JSONObject.quote(e.message?:"Não foi possível abrir o vídeo")+")",null)}}}}
   @JavascriptInterface fun account(){runOnUiThread{startActivity(Intent(this@CinemaActivity,HubActivity::class.java))}}
   @JavascriptInterface fun exit(){runOnUiThread{android.app.AlertDialog.Builder(this@CinemaActivity).setMessage("Sair do Gfilmes?").setPositiveButton("Sair"){_,_->finish()}.setNegativeButton("Continuar assistindo",null).show()}}
   @JavascriptInterface fun update(){runOnUiThread{OtaManager.check(this@CinemaActivity,true)}}

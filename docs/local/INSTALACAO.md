@@ -1,3 +1,5 @@
+> **Atualização 1.1.0:** esta página descreve a edição anterior 1.0.0. Para perfis e acesso por TV, siga [PERFIS-E-ACESSOS.md](PERFIS-E-ACESSOS.md). O novo APK exige autorização individual antes do catálogo.
+
 # Gfilmes Local — abrir direto, sem senha ou servidor de contas
 
 Esta edição atende ao pedido posterior do titular de abandonar a configuração de API/Servidor na TV e usar o catálogo diretamente. Reaproveita a interface cinematográfica, fontes de catálogo, filtros, busca, temporadas, episódios e player nativo do projeto existente.

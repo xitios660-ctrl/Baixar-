@@ -1,0 +1,14 @@
+#!/usr/bin/env node
+/** Offline operator tool. Input is a freshly verified access record, never bundled in APK. */
+import {readFile,mkdir,writeFile,rm} from 'node:fs/promises';
+import {resolve,dirname} from 'node:path';import {createHash,createPublicKey,verify} from 'node:crypto';import {spawnSync} from 'node:child_process';
+export function claims(access,device,now=Date.now()){
+ if(!/^[a-f0-9]{64}$/.test(device))throw Error('Invalid TV code');
+ if(access.role!=='customer'||access.status!=='enabled'||!access.id||typeof access.id!=='string')throw Error('Existing enabled customer required');
+ const checked=Date.parse(access.checkedAt),expiry=Date.parse(access.expiresAt);
+ if(!Number.isFinite(checked)||Math.abs(now-checked)>300000)throw Error('Read the actual access status again (maximum age five minutes)');
+ if(!Number.isSafeInteger(expiry)||expiry<=now)throw Error('Existing subscription expired');
+ return {v:1,kind:'gfilmes-local-device',customerRef:createHash('sha256').update('gfilmes-local|'+access.id).digest('hex'),deviceId:device,issuedAt:now,expiresAt:expiry,subscriptionExpiresAt:expiry};
+}
+async function main(){const [input,device,output]=process.argv.slice(2);if(!input||!output)throw Error('Usage: issue-local-device.mjs PRIVATE_VERIFIED_ACCESS.json TV_CODE PRIVATE_GRANT.jws');const out=resolve(output);if(out.startsWith(resolve('.')+'/'))throw Error('Keep customer-specific artifacts outside repository');const p=claims(JSON.parse(await readFile(input,'utf8')),device);const java=process.env.JAVA_HOME?resolve(process.env.JAVA_HOME,'bin/java'):'java';const pub=spawnSync(java,['tools/licensing/AuthorityTool.java','public','tv'],{encoding:'utf8'});if(pub.status!==0)throw Error('Original signer unavailable');const body=Buffer.from(JSON.stringify({alg:'RS256',typ:'JWT'})).toString('base64url')+'.'+Buffer.from(JSON.stringify(p)).toString('base64url');await mkdir(dirname(out),{recursive:true,mode:0o700});const temp=out+'.signing-input',sig=out+'.signature';try{await writeFile(temp,body,{mode:0o600,flag:'wx'});const signed=spawnSync(java,['tools/licensing/AuthorityTool.java','snapshot-sign','tv',temp,sig],{stdio:['ignore','ignore','pipe']});if(signed.status!==0)throw Error('Signing failed');const signature=(await readFile(sig,'utf8')).trim();const key=createPublicKey({key:Buffer.from(pub.stdout.trim(),'base64url'),format:'der',type:'spki'});if(!verify('RSA-SHA256',Buffer.from(body),key,Buffer.from(signature,'base64url')))throw Error('Signature check failed');await writeFile(out,body+'.'+signature,{mode:0o600,flag:'wx'});console.log('Signed device grant verified and saved privately. No credentials bundled; no source database writes.')}finally{await rm(temp,{force:true});await rm(sig,{force:true})}}
+if(import.meta.url===new URL(process.argv[1],'file:').href)main().catch(()=>{console.error('Grant not issued. Check verified customer status, TV code, private paths and original signer.');process.exitCode=1});

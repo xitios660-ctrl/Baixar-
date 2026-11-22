@@ -7,6 +7,8 @@ import org.json.JSONObject
 object OfflineRoutes {
  @JvmStatic fun handle(context:Context,method:String,path:String,body:JSONObject?):JSONObject? {
   if(BuildConfig.GFILMES_LOCAL){
+   LocalProfiles.requireSelected(context)
+   if(path=="/api/auth/me")return LocalProfiles.me(context)
    try{val response=StandaloneSession.reply(method,path);if(response!=null)return response}catch(_:StandaloneSession.Unavailable){throw Gate.ApiError(503,"LOCAL_UNAVAILABLE","Recurso indisponível nesta edição local")}
    if(path.startsWith("/api/connect/catalog-files/"))return JSONObject().put("text",LocalCatalog.file(context,path.substringAfter("/api/connect/catalog-files/")))
    return LocalCatalog.route(context,method,path,body)
