@@ -1,0 +1,50 @@
+{
+  "sourceCommit": "493cc04",
+  "androidTests": 42,
+  "androidFailures": 0,
+  "androidErrors": 0,
+  "androidSkipped": 0,
+  "chromiumTests": 7,
+  "chromiumFailuresFinalRun": 0,
+  "chromiumUsesSyntheticCatalogAndNativeBridge": true,
+  "initialBrowserGeometryTimingFailureCorrected": true,
+  "physicalTvTested": false,
+  "deviceAuthorizationRequired": false,
+  "customerDatabaseChanged": false,
+  "productionChanged": false,
+  "upstreamReviewed": {
+    "repository": "https://github.com/SaimoTV/SaimoTV-Android",
+    "commit": "e3f99cb",
+    "codeVersion": "3.3.5",
+    "fullUpgradeApplied": false,
+    "adaptedFix": "Generos.capa preserves absolute poster URLs"
+  },
+  "sourceSmokeChecks": [
+    {
+      "url": "https://filmes-saimo.pages.dev/indice.txt",
+      "status": 200,
+      "prefixBytesRead": 1557,
+      "looksLikeHtml": false
+    },
+    {
+      "url": "https://filmes-saimo.pages.dev/busca.txt",
+      "status": 200,
+      "prefixBytesRead": 2048,
+      "looksLikeHtml": false
+    },
+    {
+      "url": "https://filmes-saimo.pages.dev/fichas.txt",
+      "status": 200,
+      "prefixBytesRead": 2048,
+      "looksLikeHtml": false
+    },
+    {
+      "url": "https://canais-saimo.pages.dev/canais.txt",
+      "status": 200,
+      "prefixBytesRead": 1419,
+      "looksLikeHtml": false
+    }
+  ],
+  "releaseBuildSuccessful": true,
+  "apkSignatureAndAssetsVerified": true
+}
