@@ -1,0 +1,19 @@
+{
+  "kind": "historical-catalog-metadata-only",
+  "source": "existing preserved provider capture; not a fresh fetch",
+  "capturedDate": "2026-11-07",
+  "containsVideoLinks": false,
+  "containsCustomerData": false,
+  "files": {
+    "busca.txt": {
+      "bytes": 1034474,
+      "sha256": "19e519240557a59b5811b4b42a6beacce49a3b0a39864867f2fc0218fca82afc",
+      "sourceFileMtimeUtc": "2026-11-07T01:56:42.474038+00:00"
+    },
+    "fichas.txt": {
+      "bytes": 4388572,
+      "sha256": "4a03850fb23e509ed1cabc2a53c948c69a85f3a445a1ef8d209c01104da6938d",
+      "sourceFileMtimeUtc": "2026-11-07T01:56:43.022371+00:00"
+    }
+  }
+}

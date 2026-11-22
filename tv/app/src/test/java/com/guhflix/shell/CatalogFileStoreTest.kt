@@ -1,0 +1,11 @@
+package com.guhflix.shell
+import org.junit.Test
+import org.junit.Assert.*
+import java.nio.file.Files
+import java.util.concurrent.*
+class CatalogFileStoreTest {
+ @Test fun slowMetadataDoesNotBlockOtherCachedFiles(){val dir=Files.createTempDirectory("catalog-store").toFile();val entered=CountDownLatch(1);val release=CountDownLatch(1);val pool=Executors.newFixedThreadPool(2);try{val s=CatalogFileStore(dir,"source",{name->if(name=="fichas.txt"){entered.countDown();release.await(3,TimeUnit.SECONDS)};"valid $name"});s.read("busca.txt");val slow=pool.submit<String>{s.read("fichas.txt")};assertTrue(entered.await(1,TimeUnit.SECONDS));assertEquals("valid busca.txt",pool.submit<String>{s.read("busca.txt")}.get(500,TimeUnit.MILLISECONDS));release.countDown();slow.get(1,TimeUnit.SECONDS)}finally{release.countDown();pool.shutdownNow();dir.deleteRecursively()}}
+ @Test fun forbiddenRefreshKeepsStoredBytesAndCanReportTheError(){val dir=Files.createTempDirectory("catalog-stale").toFile();try{var deny=false;val s=CatalogFileStore(dir,"source",{if(deny)throw java.io.IOException("HTTP 403");"saved real metadata"});s.read("busca.txt");deny=true;assertEquals("saved real metadata",s.read("busca.txt",force=true));try{s.read("busca.txt",force=true,staleOnFailure=false);fail()}catch(e:java.io.IOException){assertEquals("HTTP 403",e.message)};assertEquals("saved real metadata",s.cached("busca.txt"))}finally{dir.deleteRecursively()}}
+ @Test fun sourcesRemainIsolatedAndNoCachePathCanEscape(){val dir=Files.createTempDirectory("catalog-path").toFile();try{val a=CatalogFileStore(dir,"one",{"A"});val b=CatalogFileStore(dir,"two",{"B"});a.read("busca.txt");assertNull(b.cached("busca.txt"));b.read("busca.txt");assertEquals("A",a.cached("busca.txt"));try{a.read("../profiles.txt");fail()}catch(_:IllegalArgumentException){}}finally{dir.deleteRecursively()}}
+ @Test fun aPlainTextBlockPageCannotOverwriteTheLastValidSearchIndex(){val dir=Files.createTempDirectory("catalog-invalid").toFile();try{var bad=false;val data="Valid title\tf\tA";val s=CatalogFileStore(dir,"source",{name->(if(bad)"error code: 1010" else data).also{CatalogSnapshotParser.validate(name,it)}});s.read("busca.txt");bad=true;try{s.read("busca.txt",force=true,staleOnFailure=false);fail()}catch(_:IllegalArgumentException){};assertEquals(data,s.cached("busca.txt"))}finally{dir.deleteRecursively()}}
+}

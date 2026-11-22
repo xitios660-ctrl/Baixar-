@@ -3,7 +3,7 @@ import java.text.Normalizer
 import java.text.Collator
 import java.util.Locale
 
-data class CatalogRow(val id:String,val title:String,val kind:String,val letter:String="",val year:String="",val genres:List<String> = emptyList())
+data class CatalogRow(val id:String,val title:String,val kind:String,val letter:String="",val year:String="",val genres:List<String> = emptyList(),val poster:String="",val tmdbId:Int=0)
 object CatalogFilter {
  fun fold(s:String)=Normalizer.normalize(s,Normalizer.Form.NFD).replace(Regex("\\p{M}+"),"").lowercase(Locale.ROOT).trim()
  private fun genreKey(s:String):String {val k=fold(s);return mapOf("action" to "acao","comedy" to "comedia","horror" to "terror","animation" to "animacao","family" to "familia","adventure" to "aventura","science fiction" to "ficcao cientifica","documentarios" to "documentario")[k]?:k}

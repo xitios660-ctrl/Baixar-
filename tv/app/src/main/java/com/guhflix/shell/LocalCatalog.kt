@@ -16,24 +16,65 @@ import java.util.LinkedHashMap
 /** Same authorized public source files as the native player. No source password or API token. */
 object LocalCatalog {
  private val indexLock=Any()
- @Volatile private var rows:List<CatalogRow> = emptyList();private var byId:Map<String,CatalogRow> = emptyMap();private var loadedAt=0L;private var sourceKey=""
+ @Volatile private var rows:List<CatalogRow> = emptyList()
+ private var byId:Map<String,CatalogRow> = emptyMap()
+ private var sourceKey=""
+ @Volatile private var refreshing=false
+ @Volatile private var sourceError=""
+ @Volatile private var lastAttempt=0L
+ @Volatile private var fresh=false
+ @Volatile private var bundledSnapshot=false
+ private val stores=java.util.concurrent.ConcurrentHashMap<String,CatalogFileStore>()
+ private val background=java.util.concurrent.Executors.newSingleThreadExecutor{r->Thread(r,"gflix-catalog-refresh").apply{isDaemon=true}}
+ private val deadlines=java.util.concurrent.Executors.newSingleThreadScheduledExecutor{r->Thread(r,"gflix-source-deadline").apply{isDaemon=true}}
  private val views=object:LinkedHashMap<String,List<CatalogRow>>(16,.75f,true){override fun removeEldestEntry(e:MutableMap.MutableEntry<String,List<CatalogRow>>)=size>12}
- @Synchronized fun file(ctx:Context,name:String):String {
-  val safe=Uri.decode(name).replace("%23","#");require(safe.matches(Regex("(?:[A-Za-z0-9_#-]+\\.txt|redeflix/links-(?:animes|doramas)\\.txt)")))
-  val base=Enderecos.filmes?:error("Catálogo desativado");val sourceHash=Crypto.sha(base.toByteArray()).take(16);val folder=File(ctx.filesDir,"offline-catalog").apply{mkdirs()};val cache=File(folder,sourceHash+"_"+safe.replace('/','_'));val limit=if(safe.startsWith("redeflix/links-"))32*1024*1024 else 12*1024*1024
-  if(cache.isFile&&System.currentTimeMillis()-cache.lastModified()<6*3600000)return cache.readText()
+ private fun download(base:String,name:String):String {
+  val uri=java.net.URI(base);require(uri.scheme=="https"&&uri.userInfo==null&&uri.query==null&&uri.fragment==null){"Use uma fonte HTTPS válida"}
+  val connection=URL(base+name.split('/').joinToString("/"){Uri.encode(it)}).openConnection() as HttpURLConnection
+  connection.connectTimeout=8000;connection.readTimeout=6000;connection.instanceFollowRedirects=false
+  val end=System.nanoTime()+12_000_000_000L
+  val timeout=deadlines.schedule({connection.disconnect()},12,java.util.concurrent.TimeUnit.SECONDS)
   try{
-   val uri=java.net.URI(base);require(uri.scheme=="https"&&uri.userInfo==null&&uri.query==null&&uri.fragment==null)
-   val connection=URL(base+safe.split('/').joinToString("/"){Uri.encode(it)}).openConnection() as HttpURLConnection
-   try{connection.connectTimeout=10000;connection.readTimeout=15000;connection.instanceFollowRedirects=false;check(connection.responseCode==200);val text=connection.inputStream.use{input->val out=java.io.ByteArrayOutputStream();val b=ByteArray(16384);while(true){val n=input.read(b);if(n<0)break;check(out.size()+n<=limit);out.write(b,0,n)};out.toString("UTF-8")};check(!text.take(300).contains("<html",true));val tmp=File(folder,cache.name+".tmp");tmp.writeText(text);check(tmp.renameTo(cache));folder.listFiles()?.filter{it!=cache}?.sortedBy{it.lastModified()}?.let{old->var bytes=folder.listFiles()?.sumOf{it.length()}?:0;for(f in old){if(bytes<=96*1024*1024)break;bytes-=f.length();f.delete()}};return text}finally{connection.disconnect()}
-  }catch(e:Exception){if(cache.isFile)return cache.readText();throw e}
+   val code=connection.responseCode
+   if(code!=200)throw java.io.IOException("A fonte recusou a atualização (HTTP $code). Catálogo salvo mantido.")
+   val limit=if(name.startsWith("redeflix/links-"))32*1024*1024 else 12*1024*1024
+   return connection.inputStream.use{input->val out=java.io.ByteArrayOutputStream();val buffer=ByteArray(16384);while(true){check(System.nanoTime()<end){"A fonte demorou para responder"};val n=input.read(buffer);if(n<0)break;check(out.size()+n<=limit){"Resposta do catálogo excedeu o limite"};out.write(buffer,0,n)};out.toString("UTF-8")}
+  }catch(e:Exception){if(e.message?.startsWith("A fonte recusou")==true)throw e;throw java.io.IOException("Não foi possível atualizar a fonte; catálogo salvo preservado.",e)}finally{timeout.cancel(false);connection.disconnect()}
  }
- private fun index(ctx:Context)=synchronized(indexLock){if(sourceKey==Enderecos.filmes&&rows.isNotEmpty()&&System.currentTimeMillis()-loadedAt<6*3600000)return
-  val next=runBlocking{Vod.indice(ctx);Generos.carregar(ctx);(Vod.todos(ctx,false)+Vod.todos(ctx,true)).map{a->val kind=if(a.serie)"series" else "movie";CatalogRow(Crypto.sha(listOf(kind,a.titulo,a.letra,a.ano).joinToString("\u0000").toByteArray()).take(32),a.titulo,kind,a.letra,a.ano,Generos.de(a.titulo,a.serie))}}
-  check(next.isNotEmpty()){ "Nenhum catálogo em cache. Conecte à internet para atualizar as fontes autorizadas." };rows=next;byId=next.associateBy{it.id};views.clear();sourceKey=Enderecos.filmes.orEmpty();loadedAt=System.currentTimeMillis()
+ private fun store(ctx:Context,base:String)=stores.getOrPut(Crypto.sha(base.toByteArray()).take(16)){CatalogFileStore(File(ctx.filesDir,"offline-catalog"),Crypto.sha(base.toByteArray()).take(16),{name->download(base,name).also{CatalogSnapshotParser.validate(name,it)}})}
+ fun file(ctx:Context,name:String):String {val safe=Uri.decode(name).replace("%23","#");val base=Enderecos.filmes?:error("Catálogo desativado nas configurações");return store(ctx,base).read(safe)}
+ private fun bundled(ctx:Context,name:String):String=ctx.assets.open("gfilmes/catalog-snapshot/$name.gz").use{java.util.zip.GZIPInputStream(it).bufferedReader().use{r->r.readText()}}
+ private fun metadata(ctx:Context,base:String,cache:CatalogFileStore):String = cache.cached("fichas.txt")?:if(base==Enderecos.PADRAO_FILMES)runCatching{bundled(ctx,"fichas.txt")}.getOrDefault("") else ""
+ private fun publish(base:String,next:List<CatalogRow>){synchronized(indexLock){if(Enderecos.filmes!=base)return;byId=next.associateBy{it.id};views.clear();sourceKey=base;rows=next}}
+ private fun index(ctx:Context){
+  val base=Enderecos.filmes?:throw Gate.ApiError(503,"CATALOG_DISABLED","Catálogo desativado nas configurações")
+  synchronized(indexLock){
+   if(sourceKey!=base||rows.isEmpty()){
+    val cache=store(ctx,base);val meta=metadata(ctx,base,cache)
+    val saved=cache.cached("busca.txt")?.let{runCatching{CatalogSnapshotParser.parse(it,meta)}.getOrNull()}
+    val bootstrap=if(saved==null&&base==Enderecos.PADRAO_FILMES)runCatching{CatalogSnapshotParser.parse(bundled(ctx,"busca.txt"),meta)}.getOrNull() else null
+    val next=saved?:bootstrap?:try{CatalogSnapshotParser.parse(cache.read("busca.txt"),meta)}catch(e:Exception){throw Gate.ApiError(503,"CATALOG_SOURCE",e.message?:"Fonte indisponível e sem catálogo salvo")}
+    sourceError="";fresh=false;bundledSnapshot=saved==null&&bootstrap!=null;lastAttempt=0;publish(base,next)
+   }
+  }
+  if(System.currentTimeMillis()-lastAttempt>6*3600000L)refresh(ctx,false)
  }
- private fun item(r:CatalogRow):JSONObject=JSONObject().put("id",r.id).put("title",r.title).put("kind",r.kind).put("year",r.year).put("letter",r.letter).put("genres",JSONArray(r.genres)).put("poster",Generos.capa(r.title,r.kind=="series")?:"").put("tmdbId",Generos.id(r.title,r.kind=="series")?:0)
- private fun target(r:CatalogRow)=Alvo(r.title,r.kind=="series",r.letter,r.year,tmdbId=Generos.id(r.title,r.kind=="series")?:0)
+ fun status():JSONObject=JSONObject().put("state",if(fresh)"updated" else "saved").put("refreshing",refreshing).put("titles",rows.size).put("message",if(sourceError.isNotEmpty())sourceError else if(fresh)"Catálogo atualizado" else "Catálogo salvo · atualizando a fonte em segundo plano").put("error",sourceError).put("historicalSnapshotDate",if(bundledSnapshot)"2026-11-07" else JSONObject.NULL)
+ fun refresh(ctx:Context,force:Boolean=true):JSONObject {
+  val base=Enderecos.filmes?:return JSONObject().put("message","Catálogo desativado")
+  synchronized(indexLock){if(refreshing||force&&System.currentTimeMillis()-lastAttempt<60000)return status();refreshing=true;lastAttempt=System.currentTimeMillis()}
+  val app=ctx.applicationContext
+  background.execute{try{
+   val cache=store(app,base)
+   val search=cache.read("busca.txt",force=true,staleOnFailure=false)
+   val next=CatalogSnapshotParser.parse(search,metadata(app,base,cache));publish(base,next);if(Enderecos.filmes==base){fresh=true;bundledSnapshot=false;sourceError=""}
+   // Posters/genres may finish later; they never prevent the first list from rendering.
+   runCatching{val meta=cache.read("fichas.txt",force=true,staleOnFailure=false);publish(base,CatalogSnapshotParser.parse(search,meta))}
+  }catch(e:Exception){if(Enderecos.filmes==base)sourceError=e.message?:"Fonte indisponível; catálogo salvo mantido"}finally{refreshing=false}}
+  return status()
+ }
+ private fun item(r:CatalogRow):JSONObject=JSONObject().put("id",r.id).put("title",r.title).put("kind",r.kind).put("year",r.year).put("letter",r.letter).put("genres",JSONArray(r.genres)).put("poster",r.poster.ifEmpty{Generos.capa(r.title,r.kind=="series")?:""}).put("tmdbId",r.tmdbId.takeIf{it>0}?:Generos.id(r.title,r.kind=="series")?:0)
+ private fun target(r:CatalogRow)=Alvo(r.title,r.kind=="series",r.letter,r.year,tmdbId=r.tmdbId.takeIf{it>0}?:Generos.id(r.title,r.kind=="series")?:0)
  private fun resolve(ctx:Context,r:CatalogRow)=runBlocking{Titulos.resolver(ctx,target(r))}?:error("Título indisponível na fonte autorizada")
  private fun detail(ctx:Context,r:CatalogRow):JSONObject {val j=item(r);if(r.kind=="series"){val resolved=resolve(ctx,r);j.put("seasons",JSONArray(resolved.temporadas));j.put("episodes",JSONArray().also{a->resolved.episodios.sortedWith(compareBy({it.temporada},{it.numero})).forEach{a.put(JSONObject().put("season",it.temporada).put("episode",it.numero))}})};return j}
  private fun channels(ctx:Context):List<Channel>{Remote.loadCached(ctx);if(Remote.channels.isEmpty())runBlocking{Remote.refresh(ctx)};return Remote.channels.filter{it.sources.any{source->source.key==null&&source.keyId==null&&source.referer==null&&source.userAgent==null&&source.url.startsWith("https://")}}}
@@ -48,10 +89,10 @@ object LocalCatalog {
   index(ctx)
   val approved=if(kids)LocalProfiles.guardian(ctx).approvedKeys() else emptySet()
   val visible=KidsCatalog.visible(rows,kids,approved)
-  if(p=="/api/connect/home"){val first=visible.firstOrNull{it.kind=="movie"}?:visible.firstOrNull();return JSONObject().put("kids",kids).put("featured",first?.let{item(it)}?:JSONObject.NULL).put("rows",JSONArray().put(JSONObject().put("title","Filmes no seu catálogo").put("items",JSONArray(visible.filter{it.kind=="movie"}.take(18).map{item(it)}))).put(JSONObject().put("title","Séries no seu catálogo").put("items",JSONArray(visible.filter{it.kind=="series"}.take(18).map{item(it)}))))}
+  if(p=="/api/connect/home"){val first=visible.firstOrNull{it.kind=="movie"}?:visible.firstOrNull();return JSONObject().put("status",status()).put("kids",kids).put("featured",first?.let{item(it)}?:JSONObject.NULL).put("rows",JSONArray().put(JSONObject().put("title","Filmes no seu catálogo").put("items",JSONArray(visible.filter{it.kind=="movie"}.take(18).map{item(it)}))).put(JSONObject().put("title","Séries no seu catálogo").put("items",JSONArray(visible.filter{it.kind=="series"}.take(18).map{item(it)}))))}
   if(p=="/api/connect/catalog"){
    val kind=uri.getQueryParameter("kind").orEmpty();val genre=uri.getQueryParameter("genre").orEmpty();val year=uri.getQueryParameter("year").orEmpty();val sort=uri.getQueryParameter("sort").orEmpty();val key=listOf(if(kids)"kids:"+Crypto.sha(approved.sorted().joinToString().toByteArray()) else "adult",kind,q,genre,year,sort).joinToString("\u0000");val selection=synchronized(indexLock){views[key]?:CatalogFilter.select(visible,kind,q,genre,year,sort).also{views[key]=it}};val pool=visible.filter{kind.isEmpty()||it.kind==kind};val years=pool.map{it.year}.filter{it.toIntOrNull()?.let{y->y in 1800..2200}==true}.distinct().sortedDescending();val page=selection.drop(offset).take(60)
-   return JSONObject().put("items",JSONArray(page.map{item(it)})).put("total",selection.size).put("categories",JSONArray(pool.flatMap{it.genres}.distinct().sorted())).put("years",JSONArray(years)).put("pageSize",60).put("nextOffset",if(offset+page.size<selection.size)offset+page.size else JSONObject.NULL).put("availableSorts",JSONArray(if(years.isEmpty())listOf("title_asc","title_desc") else listOf("title_asc","title_desc","year_desc","year_asc")))
+   return JSONObject().put("status",status()).put("items",JSONArray(page.map{item(it)})).put("total",selection.size).put("categories",JSONArray(pool.flatMap{it.genres}.distinct().sorted())).put("years",JSONArray(years)).put("pageSize",60).put("nextOffset",if(offset+page.size<selection.size)offset+page.size else JSONObject.NULL).put("availableSorts",JSONArray(if(years.isEmpty())listOf("title_asc","title_desc") else listOf("title_asc","title_desc","year_desc","year_asc")))
   }
   if(p.startsWith("/api/connect/catalog/")){val id=p.substringAfter("/api/connect/catalog/").substringBefore('/');val row=byId[id]?:error("Título indisponível");require(!kids||"vod:"+id in approved){"Título não aprovado para o perfil infantil"};if(p.endsWith("/play")){val r=resolve(ctx,row);val season=uri.getQueryParameter("season")?.toIntOrNull();val episode=uri.getQueryParameter("episode")?.toIntOrNull();val urls=if(row.kind=="series")r.episodio(season?:0,episode?:0)?.fontes?.values?.flatten().orEmpty() else r.filme?.fontes?.values?.flatten().orEmpty();check(urls.isNotEmpty());return JSONObject().put("item",detail(ctx,row)).put("urls",JSONArray(urls)).also{if(season!=null)it.put("season",season).put("episode",episode)}};if(p.endsWith("/related"))return JSONObject().put("collections",JSONArray()).put("similar",JSONArray());return detail(ctx,row)}
   throw Gate.ApiError(503,"ONLINE_REQUIRED","Este recurso usa um serviço externo opcional")

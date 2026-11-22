@@ -52,3 +52,7 @@ O link de referência fornecido retornou a página geral ChatGPT sem imagem; foi
 ## Atualização 1.4.0 — avatares animados
 
 49 testes JVM e 14 Chromium passaram, incluindo persistência dos 12 avatares, controle infantil, preferências/progresso reais usando SharedPreferences em memória, movimentos dos 12 GIFs e navegação em 720p/768p/1080p. Fonte e limitações em [PERFIS-ANIMADOS-1.4.md](PERFIS-ANIMADOS-1.4.md). Reprodução e desempenho em TCL física permanecem pendentes.
+
+## Atualização 1.5.0 — cache e montagem do catálogo
+
+57 testes JVM e 15 Chromium passaram. O parser leu a cópia real histórica de 28.362 filmes e 9.854 séries sem rede, em 875–1262 ms no computador. Foram verificadas manutenção do cache sob HTTP 403, rejeição de resposta inválida antes da gravação, travas por arquivo, IDs antigos e home visível durante falha da fonte. As três URLs consultadas receberam HTTP 403 / Cloudflare 1010 neste ambiente. Reprodução não confirmada e teste físico TCL pendente. Consulte [CATALOGO-SALVO-1.5.md](CATALOGO-SALVO-1.5.md).

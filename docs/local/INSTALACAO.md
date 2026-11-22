@@ -1,3 +1,5 @@
+> **Atualização 1.5.0:** corrige a abertura do catálogo usando dados salvos e atualização em segundo plano. Leia [CATALOGO-SALVO-1.5.md](CATALOGO-SALVO-1.5.md), especialmente o bloqueio atual da fonte e o limite sobre reprodução.
+
 > **Versão atual 1.4.0:** veja [PERFIS-ANIMADOS-1.4.md](PERFIS-ANIMADOS-1.4.md): avatares do ZIP, perfis comuns sem senha e controle infantil com PIN de responsável. Instruções abaixo são históricas.
 
 > **Atualização 1.3.0:** perfis agora são pessoas, sem PIN. Veja [PERFIS-SEM-SENHA-1.3.md](PERFIS-SEM-SENHA-1.3.md). As instruções de PIN abaixo são históricas.

@@ -214,6 +214,8 @@ class CinemaActivity:Activity(){
       "profileDelete"->{require(profiles!=null);val parent=LocalProfiles.guardian(this@CinemaActivity);parent.requireAdult(p.optString("guardianPin"));val id=p.getString("profileId");val active=id==profiles.activeId();val result=profiles.delete(id);if(active)parent.select(false,p.optString("guardianPin"));result}
       "kidsAllow"->{require(profiles!=null);val key=(if(p.optBoolean("collection"))"anime:" else "vod:")+p.getString("id");val parent=LocalProfiles.guardian(this@CinemaActivity);val next=!parent.allowed(key);parent.approve(key,next,p.optString("guardianPin"));JSONObject().put("approved",next)}
       "anime"->animePage(p.optString("q").take(120),p.optInt("offset").coerceIn(0,100000))
+      "catalogStatus"->LocalCatalog.status()
+      "catalogRefresh"->LocalCatalog.refresh(this@CinemaActivity)
       "home"->Gate.request(this@CinemaActivity,"GET","/api/connect/home",null,true)
       "catalog"->{
        val kind=p.optString("kind");require(kind in listOf("","movie","series"))
