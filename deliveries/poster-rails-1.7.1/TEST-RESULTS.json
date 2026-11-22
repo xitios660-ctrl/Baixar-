@@ -1,0 +1,12 @@
+{
+  "sourceCommit": "c73a0cb",
+  "browserPassed": 19,
+  "browserFailed": 0,
+  "horizontalRailGeometryScans": 0,
+  "posterDimensionsStable": true,
+  "nativeFunctionalCodeUnchanged": true,
+  "jvmTestsRerun": false,
+  "previousJvmTestsPassed": 65,
+  "physicalTvTested": false,
+  "productionChanged": false
+}
