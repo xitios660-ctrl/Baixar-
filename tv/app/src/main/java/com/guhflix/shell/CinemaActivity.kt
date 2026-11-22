@@ -35,6 +35,13 @@ class CinemaActivity:Activity(){
  private var initialPage="home"
  private var compatibility=false
  private val anime=java.util.concurrent.ConcurrentHashMap<String,br.com.saimo.tv.Alvo>()
+ private fun remember(item:JSONObject){
+  val user=Gate.request(this,"GET","/api/auth/me",null,true).getString("username")
+  val prefs=getSharedPreferences("cinema-history",0);val id=item.getString("id")
+  val old=org.json.JSONArray(prefs.getString(user,"[]"));val next=org.json.JSONArray().put(item)
+  for(i in 0 until old.length()){val v=old.getJSONObject(i);if(v.optString("id")!=id&&next.length()<20)next.put(v)}
+  prefs.edit().putString(user,next.toString()).apply()
+ }
  private fun history():JSONObject {
   val user=Gate.request(this,"GET","/api/auth/me",null,true).getString("username")
   val prefs=getSharedPreferences("cinema-history",0)
@@ -61,7 +68,12 @@ class CinemaActivity:Activity(){
    prefs.edit().putString(user,stored.toString()).putBoolean("migrated",true).apply()
   }
   val out=org.json.JSONArray()
-  for(i in 0 until stored.length()){val item=stored.getJSONObject(i);val current=records.firstOrNull{clean(it.titulo).equals(clean(item.optString("title")),true)};if(current!=null&&!current.terminado){item.put("progress",current.fracao);if(current.serie)item.put("season",current.temporada).put("episode",current.episodio);out.put(item)}}
+  for(i in 0 until stored.length()){
+   val item=stored.getJSONObject(i)
+   if(item.optBoolean("collection")&&item.optString("collectionName").isNotEmpty())anime[item.getString("id")]=br.com.saimo.tv.Alvo(item.getString("title"),true,"",item.optString("year"),item.getString("collectionName"),item.optInt("tmdbId"))
+   val current=records.firstOrNull{clean(it.titulo).equals(clean(item.optString("title")),true)}
+   if(current!=null&&!current.terminado){item.put("progress",current.fracao);if(current.serie)item.put("season",current.temporada).put("episode",current.episodio);out.put(item)}
+  }
   return JSONObject().put("items",out)
  }
  private fun livePage(offset:Int,query:String=""):JSONObject {
@@ -190,11 +202,11 @@ class CinemaActivity:Activity(){
      if(profiles!=null&&!op.startsWith("profile"))LocalProfiles.requireSelected(this@CinemaActivity)
      val data=when(op){
       "profiles"->{require(profiles!=null);profiles.list()}
-      "profileCreate"->{require(profiles!=null);profiles.create(p.optString("name"),p.optInt("avatar"),p.optString("pin"))}
-      "profileSelect"->{require(profiles!=null);profiles.select(p.getString("profileId"),p.optString("pin"))}
+      "profileCreate"->{require(profiles!=null);profiles.create(p.optString("name"),p.optInt("avatar"))}
+      "profileSelect"->{require(profiles!=null);profiles.select(p.getString("profileId"))}
       "profileLock"->{require(profiles!=null);profiles.lock();JSONObject()}
-      "profileUpdate"->{require(profiles!=null);profiles.update(p.getString("profileId"),p.optString("name"),p.optInt("avatar"),p.optString("oldPin"),p.optString("pin"))}
-      "profileDelete"->{require(profiles!=null);profiles.delete(p.getString("profileId"),p.optString("pin"))}
+      "profileUpdate"->{require(profiles!=null);profiles.update(p.getString("profileId"),p.optString("name"),p.optInt("avatar"))}
+      "profileDelete"->{require(profiles!=null);profiles.delete(p.getString("profileId"))}
       "anime"->animePage(p.optString("q").take(120),p.optInt("offset").coerceIn(0,100000))
       "home"->Gate.request(this@CinemaActivity,"GET","/api/connect/home",null,true)
       "catalog"->{
@@ -218,7 +230,19 @@ class CinemaActivity:Activity(){
     runOnUiThread{if(!closed&&webLive&&epoch==uiEpoch)web.evaluateJavascript("window.gfilmesResult&&window.gfilmesResult($id,${result});",null)}
    }
   }
-  @JavascriptInterface fun play(raw:String){worker.execute{try{LocalProfiles.requireSelected(this@CinemaActivity);val p=JSONObject(raw);val id=p.getString("id");require(id.matches(Regex("[a-f0-9]{32}")));val live=p.optBoolean("live");val collection=anime[id];if(collection!=null){runOnUiThread{if(!closed)br.com.saimo.tv.PlayerActivity.abrir(this@CinemaActivity,collection,p.optInt("season"),p.optInt("episode"))};return@execute};if(!live){val item=Gate.request(this@CinemaActivity,"GET","/api/connect/catalog/$id",null,true);val u=Gate.request(this@CinemaActivity,"GET","/api/auth/me",null,true);val prefs=getSharedPreferences("cinema-history",0);val old=org.json.JSONArray(prefs.getString(u.getString("username"),"[]"));val next=org.json.JSONArray().put(JSONObject().put("id",id).put("title",item.getString("title")).put("poster",item.optString("poster")).put("kind",item.getString("kind")));for(i in 0 until minOf(old.length(),19)){val v=old.getJSONObject(i);if(v.getString("id")!=id)next.put(v)};prefs.edit().putString(u.getString("username"),next.toString()).apply()};runOnUiThread{if(!closed){if(live)CloudRemote.playLive(this@CinemaActivity,id) else if(p.has("season"))CloudRemote.playEpisode(this@CinemaActivity,id,p.getInt("season"),p.getInt("episode")) else CloudRemote.playTitle(this@CinemaActivity,id)}}}catch(e:Exception){runOnUiThread{if(!closed)web.evaluateJavascript("window.gfilmesPlaybackError("+JSONObject.quote(e.message?:"Não foi possível abrir o vídeo")+")",null)}}}}
+  @JavascriptInterface fun play(raw:String){worker.execute{try{
+   LocalProfiles.requireSelected(this@CinemaActivity)
+   val person=if(BuildConfig.GFILMES_LOCAL)LocalProfiles.store(this@CinemaActivity).activeId() else null
+   fun samePerson()=!BuildConfig.GFILMES_LOCAL||LocalProfiles.store(this@CinemaActivity).activeId()==person
+   val p=JSONObject(raw);val id=p.getString("id");require(id.matches(Regex("[a-f0-9]{32}")))
+   val live=p.optBoolean("live");val collection=anime[id]
+   if(collection!=null){
+    remember(JSONObject().put("id",id).put("title",collection.titulo).put("year",collection.ano).put("poster",br.com.saimo.tv.Generos.capa(collection.titulo,true)?:"").put("kind","series").put("collection",true).put("collectionName",collection.colecao).put("tmdbId",collection.tmdbId))
+    runOnUiThread{if(!closed&&samePerson())br.com.saimo.tv.PlayerActivity.abrir(this@CinemaActivity,collection,p.optInt("season"),p.optInt("episode"))};return@execute
+   }
+   if(!live){val item=Gate.request(this@CinemaActivity,"GET","/api/connect/catalog/$id",null,true);remember(JSONObject().put("id",id).put("title",item.getString("title")).put("year",item.optString("year")).put("poster",item.optString("poster")).put("kind",item.getString("kind")))}
+   runOnUiThread{if(!closed&&samePerson()){if(live)CloudRemote.playLive(this@CinemaActivity,id) else if(p.has("season"))CloudRemote.playEpisode(this@CinemaActivity,id,p.getInt("season"),p.getInt("episode")) else CloudRemote.playTitle(this@CinemaActivity,id)}}
+  }catch(e:Exception){runOnUiThread{if(!closed)web.evaluateJavascript("window.gfilmesPlaybackError("+JSONObject.quote(e.message?:"Não foi possível abrir o vídeo")+")",null)}}}}
   @JavascriptInterface fun account(){runOnUiThread{startActivity(Intent(this@CinemaActivity,HubActivity::class.java))}}
   @JavascriptInterface fun exit(){runOnUiThread{android.app.AlertDialog.Builder(this@CinemaActivity).setMessage("Sair do Gfilmes?").setPositiveButton("Sair"){_,_->finish()}.setNegativeButton("Continuar assistindo",null).show()}}
   @JavascriptInterface fun update(){runOnUiThread{OtaManager.check(this@CinemaActivity,true)}}

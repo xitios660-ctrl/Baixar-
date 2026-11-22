@@ -38,3 +38,13 @@ Por nova instrução do titular, o vínculo obrigatório foi removido. Não há 
 **42 testes JVM selecionados passaram**, com zero falhas/erros/ignorados (os quatro testes do vínculo descontinuado foram retirados). **7 testes Chromium passaram**, incluindo Assistir agora → perfil local → catálogo sintético → comando ao player nativo, sem código/autorização. Uma primeira execução encontrou uma falha de sincronização na medição imediata do hero durante sua substituição pelo preview. O teste foi corrigido para aguardar a mesma geometria exigida (57px/218px), sem relaxar as medidas; a suíte completa passou em seguida. Nenhuma alteração do layout foi necessária.
 
 As quatro fontes existentes consultadas responderam HTTP 200 sem prefixo HTML, lendo no máximo 2048 bytes por arquivo. Isso não é teste de reprodução ou varredura completa do catálogo. Build release, assinatura, integridade e download do APK são registrados no manifesto de entrega. Instalação real na TCL, teclado/controle remoto e reprodução audiovisual continuam pendentes de teste físico.
+
+## Atualização 1.3.0 — perfis sem senha e histórico por pessoa
+
+43 testes JVM selecionados passaram, zero falhas/erros/ignorados. Os cinco testes de FamilyProfiles verificam seleção sem credenciais, persistência, retirada do PIN antigo sem substituir IDs, edição antes de entrar, validação/capacidade, exclusão que preserva outro perfil e falha de gravação visível.
+
+9 testes Chromium passaram. A regressão de histórico atrasa deliberadamente a resposta de Ana, troca para Bruno e depois libera a resposta antiga: a fileira continua mostrando Bruno. Também foram testados criação sem qualquer campo de senha, avatar que não envia o formulário, gerenciamento de seis perfis, geometria em 720p, navegação por setas, renomeação e exclusão confirmada. Cinco testes anteriores de catálogo/layout/inicialização também passaram. Dados e bridge desses testes são sintéticos.
+
+A correção nativa fixa o ID do perfil no Intent do player, e o armazenamento de progresso lê esse ID antes de consultar a seleção global. Coleções recebem registro de histórico da interface. Estas alterações compilaram e passaram nos checks disponíveis; a persistência real no ExoPlayer e a reprodução na TCL ainda dependem de teste físico, não foram apresentadas como medidas no aparelho.
+
+O link de referência fornecido retornou a página geral ChatGPT sem imagem; foi solicitada a imagem como anexo. O layout mostrado na prévia desta entrega é uma implementação provisória consistente com o Gfilmes e não uma reprodução validada daquela referência inacessível.

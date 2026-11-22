@@ -27,7 +27,13 @@ object Progresso {
     fun chaveEpisodio(serie: String, temporada: Int, numero: Int) =
         "s|$serie|$temporada|$numero"
 
-    private fun prefs(context: Context) = context.getSharedPreferences(if(BuildConfig.GFILMES_LOCAL) ARQUIVO+"-profile-"+(com.guhflix.shell.LocalProfiles.store(context).activeId()?:"locked") else ARQUIVO, Context.MODE_PRIVATE)
+    private fun prefs(context: Context): android.content.SharedPreferences {
+        if (!BuildConfig.GFILMES_LOCAL) return context.getSharedPreferences(ARQUIVO, Context.MODE_PRIVATE)
+        // A late player save belongs to the person who started it, even if the picker has changed.
+        val person = (context as? PlayerActivity)?.intent?.getStringExtra("gfilmes.playback.profile")
+            ?: com.guhflix.shell.LocalProfiles.store(context).activeId() ?: "locked"
+        return context.getSharedPreferences("$ARQUIVO-profile-$person", Context.MODE_PRIVATE)
+    }
 
     /**
      * Guarda onde parou.

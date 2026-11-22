@@ -190,6 +190,9 @@ class PlayerActivity : AppCompatActivity(), Connect.Listener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (BuildConfig.GFILMES_LOCAL && !intent.hasExtra("gfilmes.playback.profile")) {
+            com.guhflix.shell.LocalProfiles.store(this).activeId()?.let { intent.putExtra("gfilmes.playback.profile", it) }
+        }
         com.guhflix.shell.Gate.beginPlayer(this, savedInstanceState)
     }
 

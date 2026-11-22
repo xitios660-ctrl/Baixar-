@@ -1,3 +1,5 @@
+> **Atualização 1.3.0:** perfis agora são pessoas, sem PIN. Veja [PERFIS-SEM-SENHA-1.3.md](PERFIS-SEM-SENHA-1.3.md). As instruções de PIN abaixo são históricas.
+
 # Gfilmes Local 1.2.0 — catálogo sem autorização por TV
 
 A versão 1.2.0 atende à correção do titular: um APK genérico, sem código de dispositivo, assinatura de acesso, API de contas ou configuração do Gfilmes Servidor. A versão 1.1.0 era de preparação; não é mais necessária para este fluxo.

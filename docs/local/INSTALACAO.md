@@ -1,3 +1,5 @@
+> **Atualização 1.3.0:** perfis agora são pessoas, sem PIN. Veja [PERFIS-SEM-SENHA-1.3.md](PERFIS-SEM-SENHA-1.3.md). As instruções de PIN abaixo são históricas.
+
 > **Versão atual 1.2.0:** use [ABRIR-CATALOGO-1.2.md](ABRIR-CATALOGO-1.2.md). Abre sem código de TV ou APK personalizado. As orientações abaixo são históricas.
 
 > **Atualização 1.1.0:** esta página descreve a edição anterior 1.0.0. Para perfis e acesso por TV, siga [PERFIS-E-ACESSOS.md](PERFIS-E-ACESSOS.md). O novo APK exige autorização individual antes do catálogo.
