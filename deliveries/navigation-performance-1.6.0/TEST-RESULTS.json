@@ -1,0 +1,17 @@
+{
+  "sourceCommit": "404647e",
+  "jvm": {
+    "passed": 62,
+    "failed": 0
+  },
+  "chromium": {
+    "passed": 16,
+    "failed": 0
+  },
+  "focusEpisodeRequests": 0,
+  "reusedCardNodes": true,
+  "unnecessaryGridPlacements": 0,
+  "physicalTvTested": false,
+  "tvFpsMeasured": false,
+  "productionChanged": false
+}
