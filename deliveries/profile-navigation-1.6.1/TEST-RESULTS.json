@@ -1,0 +1,11 @@
+{
+  "sourceCommit": "69e8277",
+  "browserTestsPassed": 17,
+  "browserTestsFailed": 0,
+  "profileArrowGeometryReads": 0,
+  "avatarNodesPreserved": true,
+  "physicalTvTested": false,
+  "nativeCodeUnchanged": true,
+  "priorJvmTestsPassed": 62,
+  "jvmTestsRerun": false
+}
