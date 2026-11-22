@@ -1,0 +1,47 @@
+{
+  "sourceCommit": "73794ad",
+  "androidTests": 57,
+  "androidFailures": 0,
+  "androidErrors": 0,
+  "androidSkipped": 0,
+  "chromiumTests": 15,
+  "chromiumFailures": 0,
+  "chromiumUsesMockNativeBridge": true,
+  "historicalRealMetadataParse": {
+    "historicalRealMetadata": true,
+    "movies": 28362,
+    "series": 9854,
+    "parseMs": 417,
+    "networkRequests": 0
+  },
+  "sourceHttpChecks": [
+    {
+      "file": "indice.txt",
+      "error": "HTTP Error 403: Forbidden",
+      "seconds": 0.101
+    },
+    {
+      "file": "busca.txt",
+      "error": "HTTP Error 403: Forbidden",
+      "seconds": 0.11
+    },
+    {
+      "file": "fichas.txt",
+      "error": "HTTP Error 403: Forbidden",
+      "seconds": 0.11
+    }
+  ],
+  "detailHttpProbe": {
+    "file": "busca.txt",
+    "httpStatus": 403,
+    "body": "error code: 1010",
+    "scope": "execution environment, not a TV trace"
+  },
+  "sourceAccessBypassAttempted": false,
+  "historicalSnapshotDate": "2026-11-07",
+  "physicalTvTested": false,
+  "realStreamingConfirmed": false,
+  "productionChanged": false,
+  "releaseBuildSuccessful": true,
+  "apkSignatureAssetsAndSnapshotBytesVerified": true
+}
