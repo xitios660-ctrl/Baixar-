@@ -1,0 +1,17 @@
+{
+  "sourceCommit": "c333592",
+  "jvm": {
+    "passed": 65,
+    "failed": 0
+  },
+  "chromium": {
+    "passed": 18,
+    "failed": 0
+  },
+  "sameRowGridGeometryReads": 0,
+  "localGpuMigrationTested": true,
+  "softwareRecoveryPersistenceTested": true,
+  "physicalTvTested": false,
+  "fpsMeasured": false,
+  "productionChanged": false
+}
