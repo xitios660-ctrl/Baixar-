@@ -63,3 +63,11 @@ test('profile arrows reuse avatar nodes and avoid geometry scans',async({page})=
  expect(await page.evaluate(()=>Array.from(document.querySelectorAll('.animated-avatar')).every((im,i)=>im===(window as any).profileImages[i]))).toBe(true);
  await page.keyboard.press('ArrowDown');await expect(page.getByRole('button',{name:'Gerenciar perfis',exact:true})).toBeFocused();await page.keyboard.press('ArrowUp');await expect(page.getByRole('button',{name:'Ana',exact:true})).toBeFocused();
 });
+
+test('horizontal movement between existing library tiles skips window geometry and redraw',async({page})=>{
+ await setup(page,['Ana']);await page.evaluate(()=>{const w=window as any,base=w.GfilmesNative.request;w.GfilmesNative.request=(id:string,raw:string)=>{const q=JSON.parse(raw);if(q.op!=='catalog'){base(id,raw);return}setTimeout(()=>w.gfilmesResult(id,{data:{items:Array.from({length:60},(_,i)=>({id:i.toString(16).padStart(32,'0'),title:'Título '+i,kind:'movie'})),total:60,categories:[],years:[]}}),5)}});
+ await page.getByRole('button',{name:'Ana',exact:true}).click();await page.getByRole('button',{name:'Filme/Série',exact:true}).click();await page.locator('.universe').filter({hasText:'Filmes'}).click();await page.getByRole('button',{name:'Ver resultados',exact:true}).click();await expect(page.locator('[data-library-index="0"]')).toBeFocused();
+ await page.evaluate(()=>{const w=window as any;w.gridReads=0;const original=Element.prototype.getBoundingClientRect;Element.prototype.getBoundingClientRect=function(){if(this.classList.contains('catalog-window'))w.gridReads++;return original.call(this)}});
+ for(let i=1;i<=4;i++){await page.keyboard.press('ArrowRight');await expect(page.locator('[data-library-index="'+i+'"]')).toBeFocused()}
+ expect(await page.evaluate(()=>(window as any).gridReads)).toBe(0);
+});

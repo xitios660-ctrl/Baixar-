@@ -122,7 +122,7 @@ class CinemaActivity:Activity(){
   val actions=LinearLayout(this).apply{gravity=android.view.Gravity.CENTER}
   fun action(text:String,run:()->Unit):Button {val button=Button(this).apply{this.text=text;setOnClickListener{run()}};actions.addView(button);return button}
   val retry=action("Tentar novamente"){openCinema(true,compatibility)}
-  action(if(compatibility)"Modo padrão" else "Modo compatível"){openCinema(true,!compatibility)}
+  action(if(compatibility)"Aceleração gráfica" else "Modo compatível (software)"){openCinema(true,!compatibility)}
   action("Voltar à entrada"){startActivity(Intent(this,AccessActivity::class.java));finish()}
   cover.addView(actions);stage.addView(cover,FrameLayout.LayoutParams(-1,-1));if(failure)retry.requestFocus()
  }
@@ -190,7 +190,11 @@ class CinemaActivity:Activity(){
   super.onCreate(savedInstanceState);window.setFlags(1024,1024);window.decorView.systemUiVisibility=5894;window.setBackgroundDrawable(ColorDrawable(Color.rgb(7,9,13)))
   stage=FrameLayout(this).apply{setBackgroundColor(Color.rgb(7,9,13))};setContentView(stage)
   initialPage=intent.getStringExtra("cinema.page")?.takeIf{it in listOf("home","catalog","search","live","account","settings")}?:"home"
-  compatibility=getSharedPreferences("cinema-display",0).getBoolean("compatible",BuildConfig.APPLICATION_ID=="com.guhflix.tv.connect"||BuildConfig.GFILMES_LOCAL)
+  val display=getSharedPreferences("cinema-display",0)
+  // One-time Local migration away from the old forced software default. Subsequent
+  // recovery/manual choices persist, including devices whose GPU renderer fails.
+  compatibility=CinemaRenderPolicy.compatible(BuildConfig.GFILMES_LOCAL,display.getBoolean("gpu-navigation-v1",false),if(display.contains("compatible"))display.getBoolean("compatible",false) else null,BuildConfig.APPLICATION_ID=="com.guhflix.tv.connect")
+  if(BuildConfig.GFILMES_LOCAL)display.edit().putBoolean("gpu-navigation-v1",true).apply()
   openCinema(true,compatibility)
  }
  inner class Bridge{
