@@ -1,0 +1,20 @@
+{
+  "sourceCommit": "f4675f8",
+  "releaseBuildSuccessful": true,
+  "androidTests": 43,
+  "androidFailures": 0,
+  "androidErrors": 0,
+  "androidSkipped": 0,
+  "chromiumTests": 9,
+  "chromiumFailures": 0,
+  "chromiumUsesSyntheticCatalogAndNativeBridge": true,
+  "profilePasswordRequired": false,
+  "oldPinsRemovedWithStableProfileIds": true,
+  "lateHistoryResponseRegressionTestPassed": true,
+  "physicalTvTested": false,
+  "realExoPlayerPersistenceTested": false,
+  "referenceImageAccessible": false,
+  "visualMatchToUserReferenceClaimed": false,
+  "customerDatabaseChanged": false,
+  "productionChanged": false
+}
