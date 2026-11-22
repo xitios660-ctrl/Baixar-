@@ -33,8 +33,8 @@ android {
         // Até a 2.0.2 era o 5 (21); quem ainda tem Android 5 fica na 2.0.2.
         minSdk = 23
         targetSdk = 35
-        versionCode = if (localEdition) 1007000 else if (onlineRecovery) 3000001 else if (offlineEdition) 3000000 else if (connectEdition) 2080001 else 2050000
-        versionName = if (localEdition) "1.7.0" else if (onlineRecovery) "3.0.1" else if (offlineEdition) "3.0.0" else if (connectEdition) "2.8.1" else "2.5.0"
+        versionCode = if (localEdition) 1007001 else if (onlineRecovery) 3000001 else if (offlineEdition) 3000000 else if (connectEdition) 2080001 else 2050000
+        versionName = if (localEdition) "1.7.1" else if (onlineRecovery) "3.0.1" else if (offlineEdition) "3.0.0" else if (connectEdition) "2.8.1" else "2.5.0"
         buildConfigField("boolean", "GFILMES_LOCAL", localEdition.toString())
         buildConfigField("boolean", "GFILMES_OFFLINE", offlineEdition.toString())
         buildConfigField("String", "GUHFLIX_API", if(localEdition) "\"\"" else "\"https://gfilmes-mary-api.onrender.com\"")

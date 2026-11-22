@@ -71,3 +71,11 @@ test('horizontal movement between existing library tiles skips window geometry a
  for(let i=1;i<=4;i++){await page.keyboard.press('ArrowRight');await expect(page.locator('[data-library-index="'+i+'"]')).toBeFocused()}
  expect(await page.evaluate(()=>(window as any).gridReads)).toBe(0);
 });
+
+test('home rail moves focus without scanning other controls or changing poster dimensions',async({page})=>{
+ await setup(page,['Ana']);await page.evaluate(()=>{const w=window as any,base=w.GfilmesNative.request;w.GfilmesNative.request=(id:string,raw:string)=>{const q=JSON.parse(raw);if(q.op!=='home'){base(id,raw);return}const items=Array.from({length:20},(_,i)=>({id:i.toString(16).padStart(32,'0'),title:'Filme '+i,kind:'movie'}));setTimeout(()=>w.gfilmesResult(id,{data:{featured:items[0],rows:[{title:'Filmes',items}]}}),5)}});
+ await page.getByRole('button',{name:'Ana',exact:true}).click();const row=page.locator('.rail').first();await expect(row.locator('.poster')).toHaveCount(20);await row.locator('.poster').first().focus();await page.evaluate(()=>{const w=window as any;w.railReads=0;const original=Element.prototype.getBoundingClientRect;Element.prototype.getBoundingClientRect=function(){w.railReads++;return original.call(this)}});
+ for(let i=1;i<=10;i++){await page.keyboard.press('ArrowRight');await expect(row.locator('.poster').nth(i)).toBeFocused()}
+ expect(await page.evaluate(()=>(window as any).railReads)).toBe(0);expect(await row.evaluate(n=>n.scrollLeft)).toBeGreaterThan(0);
+ const sizes=await row.locator('.poster').evaluateAll(nodes=>nodes.slice(9,11).map(n=>({width:(n as HTMLElement).offsetWidth,border:getComputedStyle(n).borderLeftWidth})));expect(sizes[0]).toEqual(sizes[1]);
+});
