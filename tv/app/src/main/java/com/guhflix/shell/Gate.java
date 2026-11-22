@@ -531,6 +531,7 @@ public final class Gate {
 
     /* JADX INFO: Access modifiers changed from: package-private */
     public static void heartbeat(final Activity activity, final Playback playback) {
+        if(br.com.saimo.tv.BuildConfig.GFILMES_LOCAL)return;
         if (playback.stopped || activity.isDestroyed()) {
             return;
         }
@@ -576,7 +577,7 @@ public final class Gate {
 
     static void grantLease(final Activity activity, final Playback playback, long j) {
         playback.leaseUntil = PlaybackLeasePolicy.deadline(br.com.saimo.tv.BuildConfig.GFILMES_LOCAL,br.com.saimo.tv.BuildConfig.GFILMES_OFFLINE,j,br.com.saimo.tv.BuildConfig.GFILMES_OFFLINE ? OfflineLicense.remaining(activity) : 0L);
-        if(br.com.saimo.tv.BuildConfig.GFILMES_LOCAL)playback.leaseUntil=j+Math.min(110000L,LocalDeviceAccess.remaining(activity));
+        if(br.com.saimo.tv.BuildConfig.GFILMES_LOCAL)return;
         main.post(new Runnable() { // from class: com.guhflix.shell.Gate$$ExternalSyntheticLambda4
             @Override // java.lang.Runnable
             public final void run() {

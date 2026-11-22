@@ -187,10 +187,8 @@ class CinemaActivity:Activity(){
     val result=try{
      val p=JSONObject(raw);val op=p.getString("op")
      val profiles=if(BuildConfig.GFILMES_LOCAL)LocalProfiles.store(this@CinemaActivity) else null
-     if(profiles!=null&&op!="deviceStatus")LocalDeviceAccess.requireAccess(this@CinemaActivity)
-     if(profiles!=null&&op!="deviceStatus"&&!op.startsWith("profile"))LocalProfiles.requireSelected(this@CinemaActivity)
+     if(profiles!=null&&!op.startsWith("profile"))LocalProfiles.requireSelected(this@CinemaActivity)
      val data=when(op){
-      "deviceStatus"->{require(profiles!=null);LocalDeviceAccess.status(this@CinemaActivity)}
       "profiles"->{require(profiles!=null);profiles.list()}
       "profileCreate"->{require(profiles!=null);profiles.create(p.optString("name"),p.optInt("avatar"),p.optString("pin"))}
       "profileSelect"->{require(profiles!=null);profiles.select(p.getString("profileId"),p.optString("pin"))}

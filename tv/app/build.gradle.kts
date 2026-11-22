@@ -12,8 +12,6 @@ plugins {
  * chave é a identidade do aplicativo: perdê-la obriga todo mundo a desinstalar
  * e instalar de novo.
  */
-val localGrant = providers.gradleProperty("gfilmesLocalGrantFile").orNull?.let { file(it).readText().trim() } ?: ""
-require(localGrant.isEmpty() || localGrant.matches(Regex("[A-Za-z0-9_.-]{1,32768}"))) { "Invalid signed device grant" }
 val localEdition = providers.gradleProperty("gfilmesLocal").orNull == "true"
 val onlineRecovery = providers.gradleProperty("gfilmesOnlineRecovery").orNull == "true"
 val offlineEdition = providers.gradleProperty("gfilmesOffline").orNull == "true"
@@ -35,10 +33,9 @@ android {
         // Até a 2.0.2 era o 5 (21); quem ainda tem Android 5 fica na 2.0.2.
         minSdk = 23
         targetSdk = 35
-        versionCode = if (localEdition) 1001000 else if (onlineRecovery) 3000001 else if (offlineEdition) 3000000 else if (connectEdition) 2080001 else 2050000
-        versionName = if (localEdition) "1.1.0" else if (onlineRecovery) "3.0.1" else if (offlineEdition) "3.0.0" else if (connectEdition) "2.8.1" else "2.5.0"
+        versionCode = if (localEdition) 1002000 else if (onlineRecovery) 3000001 else if (offlineEdition) 3000000 else if (connectEdition) 2080001 else 2050000
+        versionName = if (localEdition) "1.2.0" else if (onlineRecovery) "3.0.1" else if (offlineEdition) "3.0.0" else if (connectEdition) "2.8.1" else "2.5.0"
         buildConfigField("boolean", "GFILMES_LOCAL", localEdition.toString())
-        buildConfigField("String", "GFILMES_LOCAL_GRANT", "\"${if(localEdition) localGrant else ""}\"")
         buildConfigField("boolean", "GFILMES_OFFLINE", offlineEdition.toString())
         buildConfigField("String", "GUHFLIX_API", if(localEdition) "\"\"" else "\"https://gfilmes-mary-api.onrender.com\"")
         val updateFile = if (mobileEdition) "release-android.json" else if (connectEdition) "release-connect.json" else "release.json"

@@ -1,3 +1,5 @@
+> **Histórico da versão 1.1.0.** O titular retirou a exigência de vínculo à TV. Para a versão 1.2.0, siga [ABRIR-CATALOGO-1.2.md](ABRIR-CATALOGO-1.2.md); não é necessário emitir autorização.
+
 # Gfilmes Local 1.1.0 — família e APK por TV
 
 Esta versão continua no pacote `com.gfilmes.tv.local`, com a assinatura Android original. É atualização manual da edição Local 1.0.0. O número da versão é 1.1.0, código 1001000. As versões de clientes que usam contas e o Gfilmes Servidor são outros pacotes e não são substituídas.

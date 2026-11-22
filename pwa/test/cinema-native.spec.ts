@@ -15,7 +15,7 @@ test('packaged TV interface uses reference geometry, native playback, live filte
  const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));await page.setContent(html);
  await expect(page.locator('#page h1')).toContainText('História');await expect(page.locator('header .logo')).toHaveText('Gfilmes');
  const header=await page.locator('header').boundingBox();expect(header?.height).toBe(57);
- const hero=await page.locator('.hero').boundingBox();expect(hero?.y).toBe(57);expect(hero?.height).toBe(218);
+ await expect.poll(async()=>(await page.locator('.hero').boundingBox())?.y).toBe(57);await expect.poll(async()=>(await page.locator('.hero').boundingBox())?.height).toBe(218);
  const poster=await page.locator('.poster').first().boundingBox();expect(poster?.height).toBe(238);expect(poster?.width).toBe(190);
  await page.locator('#page .poster').nth(0).focus();await page.waitForTimeout(180);await page.locator('#page .poster').nth(1).focus();await expect(page.locator('#page .hero h1')).toHaveText('História 2');await expect.poll(()=>page.locator('#backdrop').evaluate(n=>n.style.backgroundImage)).toContain('bg-'+('0'.repeat(31)+'1'));await page.waitForTimeout(550);await expect.poll(()=>page.locator('#backdrop').evaluate(n=>n.style.backgroundImage)).toContain('bg-'+('0'.repeat(31)+'1'));
  await expect(page.getByRole('heading',{name:'Continue assistindo'})).toBeVisible();await page.screenshot({scale:'css',path:'test-results/Gfilmes-native-home-fixture-1280.png'});
