@@ -608,16 +608,10 @@ override fun onVideoSizeChanged(videoSize: VideoSize) {
         }
 
 
-        override fun onPlaybackStateChanged(state: Int) {
-            if (state == Player.STATE_ENDED && tocouAvisado && !emSegundoPlano) {
-                // TV ao vivo nunca "termina". Se o player achou o fim do arquivo, a conexão caiu
-                // limpamente sem dar erro. Devemos forçar a reconexão imediatamente!
-                Log.i("SaimoTV", "fim do stream: reconectando")
-                play(current, sourceIndex, apósFalha = true)
-                return
-            }
+        override fun onRenderedFirstFrame() { confirmarInicio() }
 
-            if (state == Player.STATE_READY) {
+        private fun confirmarInicio() {
+            run {
                 if (!tocouAvisado) {
                     tocouAvisado = true
                     val demorou = android.os.SystemClock.elapsedRealtime() - tentativaDesde
@@ -636,6 +630,20 @@ override fun onVideoSizeChanged(videoSize: VideoSize) {
                 startGuide()
                 Connect.notificarMudancaDeEstado()
             }
+        }
+
+        override fun onPlaybackStateChanged(state: Int) {
+            val tracks=player.currentTracks
+            if(state==Player.STATE_READY&&StartupMediaPolicy.audioOnlyReady(tracks.isTypeSelected(androidx.media3.common.C.TRACK_TYPE_AUDIO),tracks.isTypeSelected(androidx.media3.common.C.TRACK_TYPE_VIDEO))) confirmarInicio()
+            if (state == Player.STATE_ENDED && tocouAvisado && !emSegundoPlano) {
+                // TV ao vivo nunca "termina". Se o player achou o fim do arquivo, a conexão caiu
+                // limpamente sem dar erro. Devemos forçar a reconexão imediatamente!
+                Log.i("SaimoTV", "fim do stream: reconectando")
+                play(current, sourceIndex, apósFalha = true)
+                return
+            }
+
+
         }
         
         override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {

@@ -678,7 +678,7 @@ class PlayerActivity : AppCompatActivity(), Connect.Listener {
     /** Fonte que não abriu no prazo: vai para a seguinte. */
     private val prazo = Runnable {
         val p = player ?: return@Runnable
-        if (tocou || p.playbackState == Player.STATE_READY) return@Runnable
+        if (tocou) return@Runnable
         Telemetria.falhou("vod", nomeTelemetria(), opcoes.getOrNull(fonte)?.url.orEmpty(), fonte + 1,
             "sem imagem em ${PRAZO_MS / 1000} s")
         proximaFonte(p.currentPosition)
@@ -759,22 +759,30 @@ class PlayerActivity : AppCompatActivity(), Connect.Listener {
             resolucao.visibility = if (rotulo.isBlank()) View.GONE else View.VISIBLE
         }
 
-        override fun onPlaybackStateChanged(state: Int) {
-            val p = player ?: return
-            when (state) {
-                Player.STATE_READY -> {
-                    cancelReconnect(true)
-                    handler.removeCallbacks(prazo)
-                    esconderCarregando()
-                    if (travouDesde > 0 && SystemClock.elapsedRealtime() - travouDesde > 5_000) travadas++
-                    travouDesde = 0
-                    if (travadas >= 2 && !reduziu && !Preferencias.economia) reduzirQualidade()
+        override fun onRenderedFirstFrame() { confirmarInicio() }
+
+        private fun confirmarInicio() {
+            handler.removeCallbacks(prazo)
+            esconderCarregando()
                     if (!tocou) {
                         tocou = true
                         Telemetria.tocou("vod", nomeTelemetria(), opcoes.getOrNull(fonte)?.url.orEmpty(),
                             fonte + 1, SystemClock.elapsedRealtime() - tentativaDesde)
                         if (base.visibility != View.VISIBLE && aviso.visibility != View.VISIBLE) mostrarControles()
                     }
+        }
+
+        override fun onPlaybackStateChanged(state: Int) {
+            val p = player ?: return
+            when (state) {
+                Player.STATE_READY -> {
+                    if (StartupMediaPolicy.audioOnlyReady(p.currentTracks.isTypeSelected(C.TRACK_TYPE_AUDIO),p.currentTracks.isTypeSelected(C.TRACK_TYPE_VIDEO))) confirmarInicio()
+                    cancelReconnect(true)
+                    if (tocou) { handler.removeCallbacks(prazo); esconderCarregando() }
+                    if (travouDesde > 0 && SystemClock.elapsedRealtime() - travouDesde > 5_000) travadas++
+                    travouDesde = 0
+                    if (travadas >= 2 && !reduziu && !Preferencias.economia) reduzirQualidade()
+
                 }
                 Player.STATE_BUFFERING -> if (tocou) {
                     travouDesde = SystemClock.elapsedRealtime()

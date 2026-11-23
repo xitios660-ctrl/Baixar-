@@ -77,7 +77,22 @@ object LocalCatalog {
  fun preview(ctx:Context,id:String):JSONObject {index(ctx);val row=synchronized(indexLock){byId[id]}?:error("Título indisponível");require(LocalProfiles.allowed(ctx,"vod:"+id)){"Título não aprovado para o perfil infantil"};return item(row)}
  private fun target(r:CatalogRow)=Alvo(r.title,r.kind=="series",r.letter,r.year,tmdbId=r.tmdbId.takeIf{it>0}?:Generos.id(r.title,r.kind=="series")?:0)
  private fun resolve(ctx:Context,r:CatalogRow)=runBlocking{Titulos.resolver(ctx,target(r))}?:error("Título indisponível na fonte autorizada")
- private fun detail(ctx:Context,r:CatalogRow):JSONObject {val j=item(r);if(r.kind=="series"){val resolved=resolve(ctx,r);j.put("seasons",JSONArray(resolved.temporadas));j.put("episodes",JSONArray().also{a->resolved.episodios.sortedWith(compareBy({it.temporada},{it.numero})).forEach{a.put(JSONObject().put("season",it.temporada).put("episode",it.numero))}})};return j}
+ private fun detail(ctx:Context,r:CatalogRow):JSONObject {
+  val j=item(r).put("metadataUnavailable",true)
+  if(r.kind=="series"){
+   // Opening a series needs only its published episode list, never addon sources,
+   // a TMDB season expansion or a test stream for its first episode.
+   val episodes=runBlocking {
+    val serie=Vod.series(ctx,r.letter).firstOrNull{it.titulo==r.title&&(r.year.isBlank()||it.ano==r.year)}
+    if(serie==null)emptyList() else Vod.episodios(ctx,r.letter,serie)
+   }
+   j.put("seasons",JSONArray(episodes.map{it.temporada}.distinct().sorted()))
+   j.put("episodes",JSONArray().also{a->episodes.distinctBy{it.temporada to it.numero}.sortedWith(compareBy({it.temporada},{it.numero})).forEach{a.put(JSONObject().put("season",it.temporada).put("episode",it.numero))}})
+   if(episodes.isEmpty())j.put("episodesUnavailable",true)
+  }
+  return j
+ }
+
  private fun channels(ctx:Context):List<Channel>{Remote.loadCached(ctx);if(Remote.channels.isEmpty())runBlocking{Remote.refresh(ctx)};return Remote.channels.filter{it.sources.any{source->source.key==null&&source.keyId==null&&source.referer==null&&source.userAgent==null&&source.url.startsWith("https://")}}}
  private fun liveId(c:Channel)=Crypto.sha(("live\u0000"+c.name).toByteArray()).take(32)
  private fun live(c:Channel)=JSONObject().put("id",liveId(c)).put("title",c.name).put("kind","live").put("genres",JSONArray(listOfNotNull(c.categoria))).put("poster",c.logo?:"")

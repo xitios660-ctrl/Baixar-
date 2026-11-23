@@ -79,3 +79,8 @@ test('home rail moves focus without scanning other controls or changing poster d
  expect(await page.evaluate(()=>(window as any).railReads)).toBe(0);expect(await row.evaluate(n=>n.scrollLeft)).toBeGreaterThan(0);
  const sizes=await row.locator('.poster').evaluateAll(nodes=>nodes.slice(9,11).map(n=>({width:(n as HTMLElement).offsetWidth,border:getComputedStyle(n).borderLeftWidth})));expect(sizes[0]).toEqual(sizes[1]);
 });
+
+test('local details explain missing metadata and episodes without an empty silent panel',async({page})=>{
+ await setup(page,['Ana']);await page.evaluate(()=>{const w=window as any,base=w.GfilmesNative.request;w.GfilmesNative.request=(id:string,raw:string)=>{const q=JSON.parse(raw);if(q.op!=='detail'){base(id,raw);return}setTimeout(()=>w.gfilmesResult(id,{data:{id:q.id,title:'Série sem dados fornecidos',kind:'series',metadataUnavailable:true,episodesUnavailable:true,seasons:[],episodes:[]}}),5)}});
+ await page.getByRole('button',{name:'Ana',exact:true}).click();await page.locator('.poster').first().click();await expect(page.locator('#detail')).toContainText('Sinopse não fornecida pelo catálogo local.');await expect(page.locator('#detail')).toContainText('A fonte não disponibilizou os episódios.');await expect(page.locator('#loading')).toBeHidden();await page.locator('#detail').getByRole('button',{name:'← Voltar',exact:true}).click();await expect(page.locator('#detail')).toBeHidden();
+});
