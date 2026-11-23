@@ -1,0 +1,17 @@
+{
+  "sourceCommit": "7e5baaf",
+  "jvmPassed": 67,
+  "jvmFailed": 0,
+  "browserPassed": 20,
+  "browserFailed": 0,
+  "sourceCatalogHttp200Observed": true,
+  "sourceHttpErrorsAlsoObserved": true,
+  "seriesOpeningNoLongerResolvesStreams": true,
+  "videoSuccessRequiresFirstFrame": true,
+  "audioOnlyReadyPreserved": true,
+  "synopsisSourceConfigured": false,
+  "physicalTvTested": false,
+  "specificReportedTitlesPlaybackVerified": false,
+  "specificReportedSearchTimeoutsProvenFixed": false,
+  "productionChanged": false
+}
