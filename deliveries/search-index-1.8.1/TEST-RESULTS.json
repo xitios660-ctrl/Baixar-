@@ -1,0 +1,20 @@
+{
+  "sourceCommit": "e434316",
+  "jvmPassed": 70,
+  "jvmFailed": 0,
+  "warmQueryBenchmark": {
+    "catalogRows": 40000,
+    "queries": 20,
+    "elapsedMs": 86,
+    "desktopOnly": true
+  },
+  "filterParityTestPassed": true,
+  "typedQueriesReadScopeOnce": true,
+  "previousBrowserTestsPassed": 20,
+  "browserTestsRerun": false,
+  "uiUnchangedSince1_8_0": true,
+  "physicalTvTested": false,
+  "reportedSpecificPlaybackVerified": false,
+  "synopsisSourceConfigured": false,
+  "productionChanged": false
+}
